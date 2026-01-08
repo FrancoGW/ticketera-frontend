@@ -1,0 +1,17 @@
+
+/* .Main{
+    background-color: #D6BCFA;  
+    height: 100%;
+} */
+.Slick{
+    margin-top: 2rem;
+}
+.cardSlickImg{
+     padding: 1rem !important;
+     display: flex !important;
+     justify-content: center !important;
+     align-items: center !important;
+}
+.slick-arrow,.slick-VITE{
+    display: none !important;
+}

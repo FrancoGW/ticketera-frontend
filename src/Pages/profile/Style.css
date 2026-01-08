@@ -1,0 +1,53 @@
+.contentDataPerfil{
+    padding-top: 1rem;
+}
+.contentDataPerfil>h1{
+    font-size: 2rem;
+    font-weight: 600;
+    padding-top: 1rem;
+    padding-bottom: .5rem;
+}
+.perfilInfo{
+    margin-top: 2rem;
+}
+.lineDetail{
+    width: 20%;
+    background-color: #7253c9;
+    padding-top: .2rem;
+    padding-bottom: .2rem;
+    border-radius: 5px;
+}
+.bodyPerfil
+> h1:first-child{
+    font-size: 2rem;
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+}
+
+.cardPerfil{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border: 1px solid grey;
+    border-radius: 5px;
+    transition:  background-color 0.1s;
+    width: 300px;
+    height: 150px;
+    background-color: rgb(118, 220, 118);
+}
+.cardPerfil:hover{
+    background-color: #7253c9;
+    
+}
+a:hover{
+    color: black;
+}
+.contentInputs{
+    display: flex;
+    gap: 1rem;
+    max-width: 400px;
+}
+.inputChange{
+    margin-top: 1rem;
+}

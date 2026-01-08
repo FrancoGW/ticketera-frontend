@@ -1,0 +1,13 @@
+.titleQuestions{
+    color: #000;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+.contentQuestions{
+    width: 70%;
+    border: 1px solid rgba(128, 128, 128, 0.356);
+    border-radius: 5px;
+    margin-bottom: 3rem;
+}

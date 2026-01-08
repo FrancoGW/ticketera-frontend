@@ -1,0 +1,30 @@
+.titleProductores {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+.titleProductores > h1{
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #000;
+    
+}
+.warning > * {
+    font-weight: bold;
+    margin-top: 1rem;
+}
+ul > li{
+    list-style: none;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+.iconArrow{
+    width: 30px;
+    color: #000;
+    margin-bottom: 1rem;
+    margin-right: 1rem;
+}
+.maxH{
+    height: 80vh;
+}

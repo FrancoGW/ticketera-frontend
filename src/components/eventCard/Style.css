@@ -1,0 +1,41 @@
+.card{
+    border-radius: 5px;
+    width: auto !important;
+    height: auto !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+    background-color: #fff;
+}
+.cardImg>img{
+    border-radius:5px 5px 0px 0px;
+}
+
+.cardTitle{
+    padding-left: 1rem;
+    padding-right: 1rem;
+    
+
+    width: 100%;
+}
+.cardTitle > h1{
+    font-size: 1.5rem;
+    
+}
+.cardTitle > p{
+    padding: .3rem;
+ /* border-bottom: 1px solid grey; */
+}
+.btn-sell{
+    width: 100%;
+    background-color: #000;
+    height: 35px;
+    color: #fff;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0 5px 0 5px;
+}

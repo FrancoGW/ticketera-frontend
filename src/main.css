@@ -1,0 +1,133 @@
+body{
+    margin:0;
+}
+body::-webkit-scrollbar{
+    display: none;
+}
+
+.whatsappButton {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    font-size: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+  }
+  .message {
+    position: fixed;
+    bottom: 20px;
+    right: 80px; /* Ajusta la posición del mensaje según tus necesidades */
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 9999;
+  }
+  
+  .message p {
+    margin: 0;
+  }
+  
+  .gradient {
+	width: 100vw;
+	height: 100vh;
+	
+	background-size: 180% 180%;
+}
+
+@keyframes gradient-animation {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+
+  .arrow {
+    
+    transform: translate(-50%, -50%);
+    transform: rotate(360deg);
+    cursor: pointer;
+    
+}
+
+.arrow span {
+    display: block;
+    width: 1.5vw;
+    height: 1.5vw;
+    border-bottom: 7px solid white;
+    border-right: 7px solid white;
+    transform: rotate(45deg);
+    margin: -10px;
+    animation: animate 2s infinite;
+}
+
+.arrow span:nth-child(2) {
+    animation-delay: -0.2s;
+}
+
+.arrow span:nth-child(3) {
+    animation-delay: -0.4s;
+}
+
+@keyframes animate {
+    0% {
+        opacity: 0;
+        transform: rotate(45deg) translate(-20px, -20px);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(45deg) translate(20px, 20px);
+    }
+}
+@media screen and (max-width:48em){
+    .arrow span {
+        display: block;
+        width: 4.5vw;
+        height: 4.5vw;
+        border-bottom: 5px solid white;
+        border-right: 5px solid white;
+        transform: rotate(45deg);
+        margin: -10px;
+        animation: animate 2s infinite;
+    }
+}
+.svgFlyer{
+    /* position: fixed; */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    
+}
+@media screen and (min-width:1700px){
+    .heading1{
+        top:20rem !important;
+    }
+    .heading2{
+        top:27rem !important;
+    }
+    .textFlyer{
+        top: 40rem !important;
+    }
+    .flecha{
+        top: 47rem !important;
+    }
+}

@@ -20,14 +20,13 @@ import { IoMdContact } from "react-icons/io";
 import { motion } from "framer-motion";
 import logo from "/assets/img/logo.png";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
-import userApi from "../../Api/user";
+import { useAuth } from "../../auth/context/AuthContext";
 import "./Style.css";
 
 function Header() {
   const { getButtonProps, getDisclosureProps, isOpen } = useDisclosure();
   const [hidden, setHidden] = useState(!isOpen);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, logout, isLoading: authLoading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -55,35 +54,19 @@ function Header() {
     }
   };
 
-  const loadUserData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (token) {
-        setIsLoading(true);
-        const response = await userApi.getProfile();
-        if (response.data) {
-          console.log("Datos del usuario:", response.data);
-          setUser(response.data);
-        }
-      }
-    } catch (error) {
-      console.error("Error cargando datos del usuario:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
   useEffect(() => {
     toggleBodyClass();
   }, [isOpen]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
+  const handleLogout = async (e) => {
+    e?.preventDefault();
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Error en logout:", error);
+      // Forzar limpieza incluso si hay error
+      window.location.href = "/login";
+    }
   };
 
   // Helper function to check roles
@@ -194,13 +177,13 @@ function Header() {
                       alignItems="center"
                       justifyContent="center"
                     >
-                      {isLoading ? (
+                      {authLoading ? (
                         <Flex align="center">
                           <Text>Cargando</Text>
                           <Spinner size="sm" ml={2} color="white" />
                         </Flex>
                       ) : (
-                        user.firstname
+                        user?.firstname || user?.email?.split('@')[0] || 'Usuario'
                       )}
                       <Icon
                         ml="2"
@@ -288,7 +271,7 @@ function Header() {
                       </Link>
                       <Divider />
                       <Link
-                        href="/"
+                        href="#"
                         onClick={handleLogout}
                         _hover={{ color: "secondary", bg: "none" }}
                         fontFamily="secondary"
@@ -447,7 +430,7 @@ function Header() {
 
                 <Link
                   fontFamily="secondary"
-                  href="/"
+                  href="#"
                   onClick={handleLogout}
                   _hover={{ color: "secondary", bg: "none" }}
                   color="#fff"

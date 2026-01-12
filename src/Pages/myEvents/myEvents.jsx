@@ -22,6 +22,7 @@ import {
 import eventApi from "../../Api/event";
 import TicketsDetails from "./components/TicketsDetails";
 import EventsList from "./components/EventList";
+import SetupChecklist from "./components/SetupChecklist";
 import { qrApi } from "../../Api/qr";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -180,6 +181,15 @@ function MyEvents() {
                 Crear Evento
               </Button>
             </Flex>
+
+            {/* Checklist de Configuración - Mostrar siempre, no esperar carga completa */}
+            {!isLoading && (
+              <SetupChecklist
+                user={user}
+                userEvents={userEvents}
+                hasMercadoPago={user?.mercadoPagoConfigured || user?.hasMercadoPago || false}
+              />
+            )}
 
             <Flex 
               flexDir={{ base: "column", lg: "row" }} 

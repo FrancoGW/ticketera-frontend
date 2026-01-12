@@ -14,8 +14,13 @@ const getEventById = (id) => {
 
 const getEvents = (query) => {
   try {
-    const { page = 1, limit = 10, status = 'approved' } = query;
-    const queryString = `page=${page}&limit=${limit}&status=${status}`;
+    const { page = 1, limit = 10, status = 'approved', hasMercadoPago } = query;
+    let queryString = `page=${page}&limit=${limit}&status=${status}`;
+    
+    // Agregar filtro de Mercado Pago si se especifica
+    if (hasMercadoPago !== undefined) {
+      queryString += `&hasMercadoPago=${hasMercadoPago}`;
+    }
     
     // Asegurarnos de usar la URL base correcta
     return api.get(`/events?${queryString}`);
@@ -194,6 +199,7 @@ const eventApi = {
   getEventById,
   updateEvent,
   deleteEventById,
+  actualizeEventStatus,
   
   // Funciones de búsqueda y filtrado
   searchEvent,

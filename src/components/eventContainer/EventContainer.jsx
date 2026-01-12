@@ -18,7 +18,8 @@ function EventContainer() {
         const res = await eventApi.getEvents({
           page: 1,
           limit: 10,
-          status: 'approved'
+          status: 'approved',
+          hasMercadoPago: true // Solo mostrar eventos de organizadores con Mercado Pago configurado
         });
         if (res.data && res.data.events) {
           setEvents(res.data.events);
@@ -41,6 +42,8 @@ function EventContainer() {
       const res = await eventApi.getEvents({
         page: eventsPage + 1,
         limit: 10,
+        status: 'approved',
+        hasMercadoPago: true // Solo mostrar eventos de organizadores con Mercado Pago configurado
       });
       setEvents([...events, ...res.data.events]);
       setEventsPage(eventsPage + 1);
@@ -66,6 +69,8 @@ function EventContainer() {
           justifyItems="center"
         >
           {events?.map((event) => {
+            // El backend ya filtra los eventos por Mercado Pago configurado
+            // Solo mostramos eventos aprobados
             if (event.status === "approved") {
               return (
                 <EventCard
@@ -79,6 +84,7 @@ function EventContainer() {
                 />
               );
             }
+            return null;
           })}
         </Grid>
         {isLoading && (

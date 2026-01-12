@@ -41,11 +41,8 @@ const updateTicket = (id, data) => {
   });
 };
 
-// const getTicketsByUser = () => {
-//   return api.get("/tickets/user");
-// };
 const getTicketsByUser = () => {
-  return api.get("/tickets/getTicketsByUserForUser");
+  return api.get("/tickets/user");
 };
 
 // ticketsToSend = [ { ticketId, quantity, { date, timeStart, timeEnd } } ]

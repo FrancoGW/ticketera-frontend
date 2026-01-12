@@ -25,10 +25,11 @@ import {
   AlertIcon,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { DeleteIcon, AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import Footer from "../../components/footer/Footer";
 import Header from "../../components/header/Header";
 import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
+import Sidebar from "../../components/sideBar/sideBar";
 import img from "/assets/img/banner.png";
 import eventApi from "../../Api/event";
 import "./Style.css";
@@ -193,16 +194,30 @@ function NewEvent() {
   // Contenido del formulario mejorado (compartido para admin y seller)
   const formContent = (
     <Container maxW="6xl" px={{ base: 4, md: 8 }} py={8}>
-            <Heading 
-              as="h1" 
-              fontFamily="secondary" 
-              color="tertiary" 
-              fontSize="3xl"
-              fontWeight="bold"
-              mb={2}
-            >
-              Crear Nuevo Evento
-            </Heading>
+            <Flex align="center" mb={6}>
+              <Button
+                onClick={() => navigate(-1)}
+                variant="ghost"
+                size="sm"
+                minW="auto"
+                p={2}
+                borderRadius="full"
+                _hover={{ bg: "gray.100" }}
+                aria-label="Volver"
+                mr={4}
+              >
+                <ArrowBackIcon boxSize={5} />
+              </Button>
+              <Heading 
+                as="h1" 
+                fontFamily="secondary" 
+                color="tertiary" 
+                fontSize="3xl"
+                fontWeight="bold"
+              >
+                Crear Nuevo Evento
+              </Heading>
+            </Flex>
             <Text color="gray.600" mb={8} fontFamily="secondary">
               Completa la información de tu evento. Todos los campos marcados con * son obligatorios.
             </Text>
@@ -699,16 +714,19 @@ function NewEvent() {
     </Container>
   );
 
-  // Si es admin, renderizar sin sidebar del seller
+  // Si es admin, renderizar con sidebar del admin
   if (isAdmin) {
     return (
-      <>
-        <Header />
-        <Box minH="calc(100vh - 80px)" pb={20} bg="gray.50">
-          {formContent}
+      <Flex minH="100vh" bg="gray.50">
+        <Sidebar />
+        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
+          <Header />
+          <Box minH="calc(100vh - 80px)" pb={20} bg="gray.50" pt={8}>
+            {formContent}
+          </Box>
+          <Footer />
         </Box>
-        <Footer />
-      </>
+      </Flex>
     );
   }
 

@@ -16,10 +16,8 @@ import {
   useToast,
   Box,
 } from "@chakra-ui/react";
-import userApi from "../../Api/user";
-import { useLocation, useNavigate } from "react-router";
-import jwt_decode from "jwt-decode";
-import { useDispatch } from "react-redux";
+import { useAuth } from "../../auth/context/AuthContext";
+import { useLocation } from "react-router";
 
 function Login() {
   const [show, setShow] = useState(false);
@@ -27,43 +25,31 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
-  const dispatch = useDispatch();
+  const { login, user } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/");
+    // Si ya hay un usuario logueado, redirigir
+    if (user) {
+      const redirectTo = location?.state?.from?.pathname || "/";
+      window.location.href = redirectTo;
     }
-  }, []);
+  }, [user, location]);
 
   const handleSubmit = async (e) => {
     setIsLoading(true)
     e.preventDefault();
     try {
-      const { data } = await userApi.login(email, password);
-      const token = data.token;
-      if (token) {
-        // decode token
-        const decodedToken = jwt_decode(token);
-
-        localStorage.setItem("token", token);
-        toast({
-          title: "Ingresaste correctamente",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
+      await login(email, password);
+      toast({
+        title: "Ingresaste correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       setEmail("");
       setPassword("");
-      if (location.state) {
-        navigate(location.state.from);
-        return;
-      }
-      navigate("/");
     } catch (error) {
       console.log(error)
       if (error?.response?.status === 401) {
@@ -73,9 +59,18 @@ function Login() {
           duration: 3000,
           isClosable: true,
         });
+      } else {
+        toast({
+          title: "Error al iniciar sesión",
+          description: "Por favor, intenta nuevamente",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   };
 
   return (

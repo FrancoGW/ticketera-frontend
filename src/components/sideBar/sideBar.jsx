@@ -1,11 +1,12 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiBarChart2, FiDollarSign, FiUsers } from "react-icons/fi";
+import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser } from "react-icons/fi";
 import { RiTicket2Line } from "react-icons/ri";
 
 const Sidebar = () => {
   const location = useLocation();
   const menuItems = [
+    { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
     { path: '/admin/events', icon: FiHome, label: 'Eventos' },
     { path: '/admin/users', icon: FiUsers, label: 'Usuarios' },
     { path: '/admin/metrics', icon: FiBarChart2, label: 'Métricas' },

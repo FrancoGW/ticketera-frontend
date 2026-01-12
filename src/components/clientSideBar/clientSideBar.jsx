@@ -1,15 +1,13 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiPlus, FiUser } from "react-icons/fi";
+import { FiUser } from "react-icons/fi";
 import { RiTicket2Line } from "react-icons/ri";
 
-const SellerSidebar = () => {
+const ClientSidebar = () => {
   const location = useLocation();
   const menuItems = [
     { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
-    { path: '/profile/my-events', icon: FiHome, label: 'Mis Eventos' },
-    { path: '/seller/new-event', icon: FiPlus, label: 'Crear Evento' },
-    { path: '/seller/tickets', icon: RiTicket2Line, label: 'Gestionar Tickets' }
+    { path: '/profile/my-tickets', icon: RiTicket2Line, label: 'Mis Tickets' }
   ];
 
   const isActive = (path) => {
@@ -49,7 +47,7 @@ const SellerSidebar = () => {
           mb={2}
           px={4}
         >
-          Panel Organizador
+          Mi Cuenta
         </Heading>
         <Divider borderColor="rgba(255, 255, 255, 0.1)" mb={2} />
         {menuItems.map(item => {
@@ -105,5 +103,4 @@ const SellerSidebar = () => {
   );
 };
 
-export default SellerSidebar;
-
+export default ClientSidebar;

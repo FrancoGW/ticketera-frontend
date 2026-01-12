@@ -68,6 +68,34 @@ function GeneralEvents() {
     setIsLoading(false);
   };
 
+  const refreshEvents = async () => {
+    try {
+      const res = await eventApi.getEventsbyAdmin(initialQuery);
+      setEvents(res.data.events);
+      if (res.data.events.length < initialQuery.limit) {
+        setNoMoreEvents(true);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleEventStatusChange = (eventId, newStatus) => {
+    // Actualizar el estado del evento en la lista local
+    setEvents((prevEvents) =>
+      prevEvents.map((event) =>
+        event._id === eventId ? { ...event, status: newStatus } : event
+      )
+    );
+  };
+
+  const handleEventDelete = (eventId) => {
+    // Eliminar el evento de la lista local
+    setEvents((prevEvents) =>
+      prevEvents.filter((event) => event._id !== eventId)
+    );
+  };
+
   const filteredEvents = events.filter(event => 
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -151,6 +179,8 @@ function GeneralEvents() {
                   id={event._id}
                   title={event.title}
                   status={event.status}
+                  onStatusChange={handleEventStatusChange}
+                  onDelete={handleEventDelete}
                 />
               ))}
             </Grid>

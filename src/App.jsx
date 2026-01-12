@@ -32,6 +32,7 @@ import PdvSales from "./Pages/pdv/PdvSales";
 import PdvSpecialTickets from "./Pages/pdv/PdvSpecialTickets";
 import MyEvents from "./Pages/myEvents/myEvents";
 import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
+import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 
 import theme from "../theme";
 import "./main.css";
@@ -115,6 +116,14 @@ function App() {
               element={
                 <ProtectedRoute roles={["admin"]}>
                   <TicketsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/events/:id"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <AdminEventDetails />
                 </ProtectedRoute>
               }
             />

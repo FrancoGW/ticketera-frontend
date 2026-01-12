@@ -21,6 +21,7 @@ import {
   Center
 } from '@chakra-ui/react';
 import ticketApi from '../../Api/ticket';
+import { paymentApi } from '../../Api/payment';
 
 const LoadingState = () => (
   <Center h="50vh">
@@ -156,37 +157,19 @@ const handlePurchase = async () => {
       }))
       .filter((ticket) => ticket.quantity > 0);
 
-    // Get token from localStorage
-    const token = localStorage.getItem("token");
+    const checkoutData = {
+      ticketsToBuy: transformedTickets,
+      description: "Compra de tickets",
+      selectedDate: {
+        timestampStart: Date.now(),
+        timestampEnd: Date.now() + 3600 * 1000,
+      },
+    };
 
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}payment/create-checkout`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ticketsToBuy: transformedTickets,
-          selectedDate: {
-            timestampStart: Date.now(), // You might want to get these values from props or state
-            timestampEnd: Date.now() + 3600 * 1000, // Example: 1 hour later
-          },
-        }),
-      }
-    );
+    const { data } = await paymentApi.createCheckout(checkoutData);
 
-    //asdasd
-    if (!response.ok) {
-      throw new Error("Error creating checkout session");
-    }
-
-    const checkoutData = await response.json();
-
-    // Assuming the API returns a URL to redirect to
-    if (checkoutData.checkoutUrl) {
-      window.location.href = checkoutData.checkoutUrl;
+    if (data.checkoutUrl) {
+      window.location.href = data.checkoutUrl;
     } else {
       throw new Error("No checkout URL received");
     }

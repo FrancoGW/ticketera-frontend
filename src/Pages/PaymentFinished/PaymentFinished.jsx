@@ -13,11 +13,15 @@ const getQueryValue = (key) => {
 const PaymentComponent = ({ paymentResult, errorMessage }) => {
   switch (paymentResult) {
     case 'success':
+    case 'approved':
       return <PaymentApproved />
     case 'failure':
+    case 'rejected':
       return <PaymentDeclined message={errorMessage} />
     case 'pending':
       return <PaymentInProcess />
+    default:
+      return <PaymentDeclined message="Estado de pago desconocido" />
   }
 }
 
@@ -27,9 +31,34 @@ function PaymentFinished() {
 
 
   useEffect(() => {
-    const paymentStatus = getQueryValue('paymentStatus')
-    setPaymentResult(paymentStatus)
-  
+    // Mercado Pago Checkout Pro redirige con 'status' (approved, rejected, pending)
+    // También soportamos 'paymentStatus' para compatibilidad con versiones anteriores
+    const status = getQueryValue('status') || getQueryValue('paymentStatus')
+    
+    // Mapear estados de Mercado Pago a estados internos
+    let mappedStatus = '';
+    if (status === 'approved') {
+      mappedStatus = 'success';
+    } else if (status === 'rejected') {
+      mappedStatus = 'failure';
+    } else if (status === 'pending') {
+      mappedStatus = 'pending';
+    } else if (status === 'success' || status === 'failure') {
+      // Mantener compatibilidad con estados anteriores
+      mappedStatus = status;
+    }
+    
+    setPaymentResult(mappedStatus);
+    
+    // Obtener información adicional del pago si está disponible
+    const paymentId = getQueryValue('payment_id');
+    const collectionId = getQueryValue('collection_id');
+    const preferenceId = getQueryValue('preference_id');
+    
+    // Log para debugging (opcional)
+    if (paymentId || collectionId || preferenceId) {
+      console.log('Payment info:', { paymentId, collectionId, preferenceId, status });
+    }
   }, [])
 
   return (

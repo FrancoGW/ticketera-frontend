@@ -22,6 +22,17 @@ import {
   TableContainer,
   useToast,
   FormControl,
+  Box,
+  Card,
+  CardBody,
+  Badge,
+  Divider,
+  VStack,
+  HStack,
+  Spinner,
+  Center,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { RiCalendar2Line, RiMapPinLine, RiTicket2Line } from "react-icons/ri";
 import { paymentApi } from "../../Api/payment";
@@ -128,9 +139,20 @@ const EventDetails = () => {
 
   const selectTicketsOfSelectedDate = (eventData) => {
     console.log('Selecting tickets for event data:', eventData);
-    if (!eventData?.dates || !eventData?.tickets) {
-      console.log('No dates or tickets available in event data');
+    if (!eventData?.tickets) {
+      console.log('No tickets available in event data');
       return [];
+    }
+    
+    if (!Array.isArray(eventData.tickets)) {
+      console.log('Tickets is not an array:', eventData.tickets);
+      return [];
+    }
+
+    // Si no hay fechas en el evento, mostrar todos los tickets
+    if (!eventData?.dates || eventData.dates.length === 0) {
+      console.log('No dates in event, showing all tickets');
+      return eventData.tickets;
     }
     
     if (!eventData.dates[selectedDate]) {
@@ -143,18 +165,26 @@ const EventDetails = () => {
     const objDate = getObjDate(date);
     console.log('Parsed date object:', objDate);
     
-    if (!Array.isArray(eventData.tickets)) {
-      console.log('Tickets is not an array:', eventData.tickets);
-      return [];
-    }
-    
+    // Filtrar tickets que coincidan con la fecha seleccionada
+    // Si un ticket no tiene fechas asignadas, también se muestra (para compatibilidad)
     const tickets = eventData.tickets.filter((ticket) => {
-      if (!ticket.dates || !Array.isArray(ticket.dates)) {
-        return false;
+      // Si el ticket no tiene fechas, mostrarlo (tickets sin restricción de fecha)
+      if (!ticket.dates || !Array.isArray(ticket.dates) || ticket.dates.length === 0) {
+        return true;
       }
+      // Si tiene fechas, verificar si coincide con la fecha seleccionada
       return isDateIncluded(objDate, ticket.dates);
     });
+    
     console.log('Filtered tickets:', tickets);
+    
+    // Si no hay tickets que coincidan, mostrar todos los tickets disponibles
+    // (para evitar que no se muestre nada cuando hay tickets pero no coinciden fechas)
+    if (tickets.length === 0 && eventData.tickets.length > 0) {
+      console.log('No tickets match the selected date, showing all tickets');
+      return eventData.tickets;
+    }
+    
     return tickets;
   };
 
@@ -205,22 +235,62 @@ const EventDetails = () => {
 
   const buyTicket = async () => {
     console.log('Starting ticket purchase...');
+    
+    // Validar que haya tickets seleccionados
+    const hasSelectedTickets = Object.values(ticketsToBuy).some(
+      (ticket) => ticket.quantity > 0
+    );
+    
+    if (!hasSelectedTickets) {
+      toast({
+        title: "Error",
+        description: "Selecciona al menos un ticket para comprar",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validar que haya una fecha seleccionada si el evento tiene fechas
+    if (event.dates && event.dates.length > 0 && !event.dates[selectedDate]) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona una fecha válida",
+        status: "error",
+        duration: 3000,
+      });
+      return;
+    }
+
     setIsLoading(true);
     const tickets = [];
 
     for (const ticket in ticketsToBuy) {
-      tickets.push({
-        ticketId: ticket,
-        quantity: ticketsToBuy[ticket].quantity,
+      if (ticketsToBuy[ticket].quantity > 0) {
+        tickets.push({
+          ticketId: ticket,
+          quantity: ticketsToBuy[ticket].quantity,
+        });
+      }
+    }
+
+    if (tickets.length === 0) {
+      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: "No hay tickets válidos para comprar",
+        status: "error",
+        duration: 3000,
       });
+      return;
     }
 
     const checkoutData = {
       ticketsToBuy: tickets,
       description: event.title,
-      selectedDate: event.dates[selectedDate],
-      discountCode: discountCode,
-      discountAmount: discount,
+      selectedDate: event.dates && event.dates.length > 0 ? event.dates[selectedDate] : null,
+      discountCode: discountCode || undefined,
+      discountAmount: discount || undefined,
     };
 
     console.log('Checkout data:', checkoutData);
@@ -229,284 +299,476 @@ const EventDetails = () => {
       console.log('Creating checkout...');
       const { data } = await paymentApi.createCheckout(checkoutData);
       console.log('Checkout created:', data);
-      window.location.href = data.checkoutUrl;
+      
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error("No se recibió la URL de checkout del servidor");
+      }
     } catch (error) {
       console.error('Error creating checkout:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "No se pudo procesar la compra. Por favor intenta nuevamente.";
       toast({
         title: "Error",
-        description: "No se pudo procesar la compra",
+        description: errorMessage,
         status: "error",
-        duration: 3000,
+        duration: 5000,
+        isClosable: true,
       });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
     <>
       <Header />
-      <Container maxW="container.xl" p="0" my="8" h="auto">
-        <Flex flexDir={{ base: "column", md: "row" }} px="2">
-          <Flex
-            w={{ base: "100%", md: "75%" }}
-            flexDirection="column"
-            gap="5"
-            justify="center"
-          >
+      <Box 
+        bg="gray.50" 
+        minH="calc(100vh - 80px)" 
+        pt={{ base: "100px", md: "100px" }}
+        pb={8}
+      >
+        <Container maxW="container.xl" px={{ base: 4, md: 8 }}>
+          <Flex flexDir={{ base: "column", lg: "row" }} gap={8}>
+            {/* Columna Principal */}
             <Flex
-              p="6"
-              flexDir="column"
-              gap="6"
-              boxShadow="lg"
-              borderRadius="md"
-              fontFamily="secondary"
+              flex="1"
+              flexDirection="column"
+              gap={6}
             >
-              <Heading
-                as="h2"
-                fontSize="3xl"
-                fontWeight="700"
-                textTransform="uppercase"
-                fontFamily="secondary"
+              {/* Card de Información del Evento */}
+              <Card
+                boxShadow="xl"
+                borderRadius="xl"
+                overflow="hidden"
+                bg="white"
               >
-                {event.title}, {event.addressRef?.place}
-              </Heading>
-              <Text as="h2" fontSize="lg" fontWeight="500" color="black">
-                {event.description}.
-              </Text>
-              <Flex align="center">
-                <Icon
-                  color="primary"
-                  w="25px"
-                  h="25px"
-                  mr="6"
-                  as={RiMapPinLine}
-                />
-                <Text
-                  as="h2"
-                  fontSize="md"
-                  fontWeight="300"
-                  textTransform="uppercase"
+                <Box
+                  position="relative"
+                  h="200px"
+                  bgGradient="linear(to-r, primary, buttonHover)"
+                  display={{ base: "block", lg: "none" }}
                 >
-                  {event.addressRef?.place}, {event.addressRef?.direction}.
-                </Text>
-              </Flex>
-              <Flex color="#323DB9" alignItems="center">
-                <Icon
-                  w="25px"
-                  h="25px"
-                  mr="3"
-                  color="primary"
-                  as={RiCalendar2Line}
-                />
-                <Select
-                  onChange={handleSelectedDate}
-                  value={selectedDate}
-                  color="black"
-                  fontWeight="300"
-                  textTransform="uppercase"
-                >
-                  {event?.dates?.map((date, index) => {
-                    const objDate = getObjDate(date);
-
-                    return (
-                      <option key={index} value={index}>
-                        {objDate.date} - Inicio: {objDate.timeStart} - Fin:{" "}
-                        {objDate.timeEnd}
-                      </option>
-                    );
-                  })}
-                </Select>
-              </Flex>
-              <Text as="h3" fontSize="md" fontWeight="500" color="red">
-                {event.adultsOnly && "Evento solo para Mayores de 18 Años."}
-              </Text>
-            </Flex>
-            <Flex
-              h="100%"
-              p="6"
-              flexDir="column"
-              gap="6"
-              boxShadow="lg"
-              borderRadius="md"
-              fontFamily="secondary"
-            >
-              <TableContainer>
-                <Table variant="striped" colorScheme="purple">
-                  <Thead>
-                    <Tr>
-                      <Th fontFamily="secondary">Tipo de ticket</Th>
-                      <Th fontFamily="secondary">Valor</Th>
-                      <Th fontFamily="secondary">Cantidad</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {dateTickets && dateTickets.length > 0 ? (
-                      dateTickets.map((ticket) => {
-                        return (
-                          <Tr key={ticket._id}>
-                            <Td>{ticket.title}</Td>
-                            <Td>$ {ticket.price}</Td>
-                            <Td>
-                              {ticket.selled >= ticket?.maxEntries ? (
-                                <Text
-                                  as="h2"
-                                  fontSize="lg"
-                                  fontWeight="500"
-                                  color="red"
-                                >
-                                  Agotado
-                                </Text>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  style={{ maxWidth: 50 }}
-                                  onChange={(e) =>
-                                    addTicketToBuy(ticket, parseInt(e.target.value) || 0)
-                                  }
-                                  value={(ticketsToBuy[ticket._id]?.quantity) || ""}
-                                  border="2px"
-                                  borderColor="#000"
-                                  _hover={{ bg: "none" }}
-                                  pe="0.3rem"
-                                  ps="0.3rem"
-                                  min={0}
-                                />
-                              )}
-                            </Td>
-                          </Tr>
-                        );
-                      })
-                    ) : (
-                      <Tr>
-                        <Td colSpan={3} textAlign="center" py={8}>
-                          <Text fontSize="md" color="gray.500">
-                            No hay tickets disponibles para esta fecha
-                          </Text>
-                        </Td>
-                      </Tr>
-                    )}
-                  </Tbody>
-                </Table>
-              </TableContainer>
-
-              <Flex gap="4" alignItems="center">
-                <FormControl>
-                  <Input
-                    placeholder="Código de descuento"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value)}
-                    maxWidth="200px"
+                  <Image
+                    src={
+                      event.pictures
+                        ? (typeof event.pictures === 'string' && (event.pictures.startsWith('http://') || event.pictures.startsWith('https://'))
+                            ? event.pictures
+                            : "data:image/png;base64," + event.pictures)
+                        : "./imagenes/img1.jpeg"
+                    }
+                    alt={event.title}
+                    objectFit="cover"
+                    w="100%"
+                    h="100%"
                   />
-                </FormControl>
-                <Button
-                  onClick={validateDiscountCode}
-                  isLoading={isValidatingCode}
-                  disabled={!discountCode}
-                  size="md"
-                  bgColor="#000"
-                  color="#fff"
-                  fontWeight='300'
-                  _hover={{bgColor:'#000'}}
-                >
-                  Aplicar
-                </Button>
-              </Flex>
+                </Box>
+                
+                <CardBody p={6}>
+                  <VStack align="stretch" spacing={4}>
+                    <Box>
+                      <Heading
+                        as="h1"
+                        fontSize={{ base: "2xl", md: "3xl" }}
+                        fontWeight="700"
+                        fontFamily="secondary"
+                        color="tertiary"
+                        mb={2}
+                        lineHeight="1.2"
+                      >
+                        {event.title}
+                      </Heading>
+                      {event.addressRef?.place && (
+                        <Text fontSize="lg" color="gray.600" fontFamily="secondary">
+                          {event.addressRef.place}
+                        </Text>
+                      )}
+                    </Box>
 
-              {discount > 0 && (
-                <Text color="green.500" fontSize="md">
-                  Descuento aplicado: -${discount}
-                </Text>
-              )}
+                    {event.description && (
+                      <Text
+                        fontSize="md"
+                        color="gray.700"
+                        fontFamily="secondary"
+                        lineHeight="1.6"
+                      >
+                        {event.description}
+                      </Text>
+                    )}
 
-              <Text
-                as="h2"
-                color="red"
-                fontSize="md"
-                style={{ alignSelf: "flex-start", marginTop: 12 }}
+                    <Divider />
+
+                    <VStack align="stretch" spacing={3}>
+                      <HStack>
+                        <Icon
+                          as={RiMapPinLine}
+                          color="primary"
+                          boxSize={5}
+                        />
+                        <Text
+                          fontSize="md"
+                          color="gray.700"
+                          fontFamily="secondary"
+                        >
+                          {event.addressRef?.place}, {event.addressRef?.direction}
+                        </Text>
+                      </HStack>
+
+                      {event?.dates && event.dates.length > 0 && (
+                        <HStack>
+                          <Icon
+                            as={RiCalendar2Line}
+                            color="primary"
+                            boxSize={5}
+                          />
+                          <Select
+                            onChange={handleSelectedDate}
+                            value={selectedDate}
+                            fontFamily="secondary"
+                            borderColor="gray.300"
+                            _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
+                            borderRadius="md"
+                          >
+                            {event.dates.map((date, index) => {
+                              const objDate = getObjDate(date);
+                              return (
+                                <option key={index} value={index}>
+                                  {objDate.date} - {objDate.timeStart} a {objDate.timeEnd}
+                                </option>
+                              );
+                            })}
+                          </Select>
+                        </HStack>
+                      )}
+
+                      {event.adultsOnly && (
+                        <Badge
+                          colorScheme="red"
+                          fontSize="sm"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          w="fit-content"
+                        >
+                          +18 Años
+                        </Badge>
+                      )}
+                    </VStack>
+                  </VStack>
+                </CardBody>
+              </Card>
+
+              {/* Card de Tickets */}
+              <Card
+                boxShadow="xl"
+                borderRadius="xl"
+                bg="white"
               >
-                Cargo por servicio: $ {serviceCost}
-              </Text>
+                <CardBody p={6}>
+                  <VStack align="stretch" spacing={6}>
+                    <Heading
+                      as="h2"
+                      fontSize="xl"
+                      fontFamily="secondary"
+                      color="tertiary"
+                      fontWeight="600"
+                    >
+                      Selecciona tus entradas
+                    </Heading>
 
-              {discount > 0 && (
-                <Text
-                  as="h2"
-                  color="green.500"
-                  fontSize="md"
-                  style={{ alignSelf: "flex-start" }}
-                >
-                  Descuento: -${discount}
-                </Text>
-              )}
+                    {dateTickets && dateTickets.length > 0 ? (
+                      <VStack align="stretch" spacing={4}>
+                        {dateTickets.map((ticket) => {
+                          const isSoldOut = ticket.selled >= ticket?.maxEntries;
+                          const quantity = ticketsToBuy[ticket._id]?.quantity || 0;
+                          
+                          return (
+                            <Box
+                              key={ticket._id}
+                              p={4}
+                              border="2px solid"
+                              borderColor={isSoldOut ? "red.200" : "gray.200"}
+                              borderRadius="lg"
+                              bg={isSoldOut ? "red.50" : "white"}
+                              _hover={{
+                                borderColor: isSoldOut ? "red.300" : "primary",
+                                boxShadow: "md",
+                              }}
+                              transition="all 0.2s"
+                            >
+                              <Flex
+                                justify="space-between"
+                                align="center"
+                                flexWrap="wrap"
+                                gap={4}
+                              >
+                                <Box flex="1" minW="200px">
+                                  <Heading
+                                    as="h3"
+                                    fontSize="lg"
+                                    fontFamily="secondary"
+                                    fontWeight="600"
+                                    mb={1}
+                                  >
+                                    {ticket.title}
+                                  </Heading>
+                                  <Text
+                                    fontSize="2xl"
+                                    fontWeight="700"
+                                    color="primary"
+                                    fontFamily="secondary"
+                                  >
+                                    ${ticket.price?.toLocaleString() || 0}
+                                  </Text>
+                                  {ticket.ticketType && ticket.ticketType !== "GENERAL" && (
+                                    <Badge
+                                      colorScheme="blue"
+                                      mt={2}
+                                      fontSize="xs"
+                                    >
+                                      {ticket.ticketType}
+                                    </Badge>
+                                  )}
+                                </Box>
 
-              <Flex gap="1rem">
-                <Text
-                  as="h2"
-                  fontSize="1.5rem"
-                  style={{ alignSelf: "flex-start", marginTop: 12 }}
-                >
-                  Total: $ {total}
-                </Text>
-              </Flex>
-              {localStorage.getItem("token") ? (
-                <Button
-                  bg="primary"
-                  color="white"
-                  _hover={{ bg: "buttonHover" }}
-                  _active=""
-                  borderRadius="lg"
-                  leftIcon={<RiTicket2Line />}
-                  marginTop="12px"
-                  disabled={!total}
-                  onClick={buyTicket}
-                  isLoading={isLoading}
-                  type="button"
-                  fontWeight={500}
-                >
-                  Comprar mi entrada
-                </Button>
-              ) : (
-                <Button
-                  bg="primary"
-                  color="white"
-                  _hover={{bgColor:'#000'}}
-                  _active=""
-                  borderRadius="lg"
-                  marginTop="12px"
-                  fontWeight="500"
-                  onClick={() => navigate("/login")}
-                  
-                >
-                  Inicia sesión para comprar tu entrada
-                </Button>
-              )}
+                                <Box>
+                                  {isSoldOut ? (
+                                    <Badge
+                                      colorScheme="red"
+                                      fontSize="md"
+                                      px={4}
+                                      py={2}
+                                      borderRadius="md"
+                                    >
+                                      Agotado
+                                    </Badge>
+                                  ) : (
+                                    <HStack>
+                                      <Button
+                                        size="sm"
+                                        onClick={() =>
+                                          addTicketToBuy(
+                                            ticket,
+                                            Math.max(0, quantity - 1)
+                                          )
+                                        }
+                                        isDisabled={quantity === 0}
+                                        borderRadius="full"
+                                      >
+                                        -
+                                      </Button>
+                                      <Input
+                                        type="number"
+                                        value={quantity}
+                                        onChange={(e) =>
+                                          addTicketToBuy(
+                                            ticket,
+                                            parseInt(e.target.value) || 0
+                                          )
+                                        }
+                                        w="60px"
+                                        textAlign="center"
+                                        borderColor="gray.300"
+                                        _focus={{ borderColor: "primary" }}
+                                        min={0}
+                                        max={50}
+                                      />
+                                      <Button
+                                        size="sm"
+                                        onClick={() =>
+                                          addTicketToBuy(ticket, quantity + 1)
+                                        }
+                                        isDisabled={
+                                          quantity >= 50 ||
+                                          quantity >=
+                                            (ticket?.maxEntries - ticket?.selled || 50)
+                                        }
+                                        borderRadius="full"
+                                      >
+                                        +
+                                      </Button>
+                                    </HStack>
+                                  )}
+                                </Box>
+                              </Flex>
+                            </Box>
+                          );
+                        })}
+                      </VStack>
+                    ) : (
+                      <Alert
+                        status="info"
+                        borderRadius="md"
+                        bg="blue.50"
+                        borderColor="blue.200"
+                      >
+                        <AlertIcon />
+                        <Box>
+                          <Text fontWeight="600" fontFamily="secondary">
+                            No hay tickets disponibles
+                          </Text>
+                          <Text fontSize="sm" fontFamily="secondary">
+                            No hay tickets disponibles para esta fecha. Intenta seleccionar otra fecha.
+                          </Text>
+                        </Box>
+                      </Alert>
+                    )}
+
+                    <Divider />
+
+                    {/* Código de Descuento */}
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="600"
+                        mb={2}
+                        fontFamily="secondary"
+                        color="gray.700"
+                      >
+                        ¿Tienes un código de descuento?
+                      </Text>
+                      <HStack>
+                        <Input
+                          placeholder="Ingresa tu código"
+                          value={discountCode}
+                          onChange={(e) => setDiscountCode(e.target.value)}
+                          borderColor="gray.300"
+                          _focus={{ borderColor: "primary" }}
+                          fontFamily="secondary"
+                        />
+                        <Button
+                          onClick={validateDiscountCode}
+                          isLoading={isValidatingCode}
+                          isDisabled={!discountCode}
+                          bg="primary"
+                          color="white"
+                          _hover={{ bg: "buttonHover" }}
+                          fontFamily="secondary"
+                        >
+                          Aplicar
+                        </Button>
+                      </HStack>
+                      {discount > 0 && (
+                        <Text
+                          color="green.600"
+                          fontSize="sm"
+                          mt={2}
+                          fontWeight="600"
+                          fontFamily="secondary"
+                        >
+                          ✓ Descuento aplicado: -${discount}
+                        </Text>
+                      )}
+                    </Box>
+
+                    <Divider />
+
+                    {/* Resumen de Compra */}
+                    <VStack align="stretch" spacing={2}>
+                      {serviceCost > 0 && (
+                        <Flex justify="space-between" fontFamily="secondary">
+                          <Text color="gray.600">Cargo por servicio:</Text>
+                          <Text fontWeight="500">${serviceCost}</Text>
+                        </Flex>
+                      )}
+                      {discount > 0 && (
+                        <Flex justify="space-between" fontFamily="secondary">
+                          <Text color="green.600">Descuento:</Text>
+                          <Text color="green.600" fontWeight="600">
+                            -${discount}
+                          </Text>
+                        </Flex>
+                      )}
+                      <Divider />
+                      <Flex justify="space-between" fontFamily="secondary">
+                        <Text fontSize="xl" fontWeight="700" color="tertiary">
+                          Total:
+                        </Text>
+                        <Text fontSize="xl" fontWeight="700" color="primary">
+                          ${total.toLocaleString()}
+                        </Text>
+                      </Flex>
+                    </VStack>
+
+                    {/* Botón de Compra */}
+                    {localStorage.getItem("token") ? (
+                      <Button
+                        bg="primary"
+                        color="white"
+                        size="lg"
+                        _hover={{ bg: "buttonHover", transform: "translateY(-2px)", boxShadow: "lg" }}
+                        _active={{ bg: "buttonHover" }}
+                        borderRadius="lg"
+                        leftIcon={<RiTicket2Line />}
+                        isDisabled={!total || total === 0}
+                        onClick={buyTicket}
+                        isLoading={isLoading}
+                        fontFamily="secondary"
+                        fontWeight="600"
+                        py={6}
+                        transition="all 0.2s"
+                      >
+                        Comprar entradas
+                      </Button>
+                    ) : (
+                      <Button
+                        bg="primary"
+                        color="white"
+                        size="lg"
+                        _hover={{ bg: "buttonHover" }}
+                        borderRadius="lg"
+                        onClick={() => navigate("/login")}
+                        fontFamily="secondary"
+                        fontWeight="600"
+                        py={6}
+                      >
+                        Inicia sesión para comprar
+                      </Button>
+                    )}
+                  </VStack>
+                </CardBody>
+              </Card>
             </Flex>
+
+            {/* Sidebar con Imagen */}
+            <Box
+              w={{ base: "100%", lg: "400px" }}
+              flexShrink={0}
+            >
+              <Card
+                boxShadow="xl"
+                borderRadius="xl"
+                overflow="hidden"
+                position="sticky"
+                top="100px"
+              >
+                <Box
+                  position="relative"
+                  h="500px"
+                  bgGradient="linear(to-b, gray.100, gray.200)"
+                >
+                  <Image
+                    src={
+                      event.pictures
+                        ? (typeof event.pictures === 'string' && (event.pictures.startsWith('http://') || event.pictures.startsWith('https://'))
+                            ? event.pictures
+                            : "data:image/png;base64," + event.pictures)
+                        : "./imagenes/img1.jpeg"
+                    }
+                    alt={event.title}
+                    objectFit="cover"
+                    w="100%"
+                    h="100%"
+                  />
+                </Box>
+              </Card>
+            </Box>
           </Flex>
-          <Flex
-            w={{ base: "100%", md: "25%" }}
-            h="100%"
-            bg="#f1f1f1"
-            mt={{ base: "6", md: 0 }}
-            flexDir="column"
-            gap={{ base: 0, md: "6" }}
-            ml={{ base: 0, md: "1rem" }}
-            borderRadius="md"
-          >
-            <Image
-              src={
-                event.pictures
-                  ? (typeof event.pictures === 'string' && (event.pictures.startsWith('http://') || event.pictures.startsWith('https://'))
-                      ? event.pictures
-                      : "data:image/png;base64," + event.pictures)
-                  : "./imagenes/img1.jpeg"
-              }
-              alt=""
-              objectFit="contain"
-              w="100%"
-              borderRadius="md"
-            />
-          </Flex>
-        </Flex>
-      </Container>
+        </Container>
+      </Box>
       <Footer />
     </>
   );

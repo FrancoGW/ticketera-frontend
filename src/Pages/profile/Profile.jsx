@@ -1,7 +1,10 @@
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
+import ClientSidebar from "../../components/clientSideBar/clientSideBar";
+import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
+import Sidebar from "../../components/sideBar/sideBar";
+import { useAuth } from "../../auth/context/AuthContext";
 import { useState, useRef, useEffect } from "react";
-import { Container } from "@chakra-ui/react";
 import {
   Editable,
   EditableInput,
@@ -11,7 +14,6 @@ import {
   Flex,
   IconButton,
   ButtonGroup,
-  Link,
   Button,
   Text,
   useToast,
@@ -23,7 +25,17 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
+  Box,
+  Container,
+  Card,
+  CardBody,
+  VStack,
+  HStack,
+  Divider,
+  Icon,
+  Badge,
 } from "@chakra-ui/react";
+import { FiUser, FiMail, FiPhone, FiCreditCard, FiLock, FiEdit2 } from "react-icons/fi";
 import userApi from "../../Api/user";
 import { EditIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import jwt_decode from "jwt-decode";
@@ -45,12 +57,31 @@ function Profile() {
     getProfile,
     recoverPassword,
   } = userApi;
+  const { user: authUser } = useAuth();
   const [isRequiringPasswordUpdate, setIsRequiringPasswordUpdate] =
     useState(false);
   const [user, setUser] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const cancelRef = useRef();
+
+  // Determinar qué sidebar mostrar según el rol
+  const getUserRoles = () => {
+    if (!authUser) return [];
+    return authUser.roles || (authUser.rol ? [authUser.rol] : []);
+  };
+
+  const userRoles = getUserRoles();
+  const isSeller = userRoles.includes("seller");
+  const isAdmin = userRoles.includes("admin");
+  const isBuyer = userRoles.includes("buyer") || (!isSeller && !isAdmin);
+
+  // Determinar qué sidebar renderizar
+  const renderSidebar = () => {
+    if (isAdmin) return <Sidebar />;
+    if (isSeller) return <SellerSidebar />;
+    return <ClientSidebar />;
+  };
 
   // Función para cargar los datos del usuario
   const loadUserData = async () => {
@@ -186,199 +217,336 @@ function Profile() {
     } = useEditableControls();
 
     return isEditing ? (
-      <ButtonGroup justifyContent="center" size="sm">
-        <IconButton icon={<CheckIcon />} {...getSubmitButtonProps()} />
-        <IconButton icon={<CloseIcon />} {...getCancelButtonProps()} />
+      <ButtonGroup size="sm" spacing={2}>
+        <IconButton 
+          icon={<CheckIcon />} 
+          {...getSubmitButtonProps()} 
+          colorScheme="green"
+          aria-label="Guardar"
+        />
+        <IconButton 
+          icon={<CloseIcon />} 
+          {...getCancelButtonProps()} 
+          colorScheme="red"
+          aria-label="Cancelar"
+        />
       </ButtonGroup>
     ) : (
-      <Flex justifyContent="center">
-        <IconButton size="sm" icon={<EditIcon />} {...getEditButtonProps()} />
-      </Flex>
+      <IconButton 
+        size="sm" 
+        icon={<EditIcon />} 
+        {...getEditButtonProps()} 
+        variant="ghost"
+        colorScheme="primary"
+        aria-label="Editar"
+      />
     );
   }
 
   return (
-    <>
-      <Header />
-      <Container maxW="7xl" display="flex" flexDir="column" gap="6" minH="70vh">
-        <Flex flexDir="column" gap="6" my="10">
-          <Heading fontFamily="secondary" color="tertiary">
-            Hola {user?.firstname || ""}! 👋
-          </Heading>
-          <Text color="" size="xl">
-            Desde esta pestaña podras editar tus datos personales.
-          </Text>
+    <Flex minH="100vh" bg="gray.50">
+      {renderSidebar()}
+      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
+        <Header />
+        
+        <Box
+          as="main"
+          minH="calc(100vh - 80px)"
+          pb={20}
+          bg="white"
+          pt={8}
+        >
+          <Container maxW="6xl" px={{ base: 4, md: 8 }} py={8}>
+            <VStack align="stretch" spacing={6}>
+              {/* Header Section */}
+              <Box>
+                <Heading 
+                  fontFamily="secondary" 
+                  color="tertiary" 
+                  fontSize="3xl"
+                  fontWeight="bold"
+                  mb={2}
+                >
+                  Hola {user?.firstname || ""}! 👋
+                </Heading>
+                <Text color="gray.600" fontSize="md" fontFamily="secondary">
+                  Gestiona tu información personal y configuración de cuenta
+                </Text>
+              </Box>
 
-          <Editable
-            defaultValue={user?.firstname || ""}
-            key={`firstname-${user?.firstname}`}
-            fontFamily="secondary"
-            fontWeight={300}
-            fontSize="xl"
-            isPreviewFocusable={false}
-            display="flex"
-            gap="2"
-            alignItems="center"
-            w="30%"
-            onSubmit={(value) => updateUser(value, userFields.firstname)}
-          >
-            <Text fontFamily="secondary" fontWeight="bold">
-              Nombre:
-            </Text>
-            <EditablePreview />
-            <Input type="text" as={EditableInput} />
-            <EditableControls />
-          </Editable>
-
-          <Editable
-            defaultValue={user?.lastname || ""}
-            key={`lastname-${user?.lastname}`}
-            fontFamily="secondary"
-            fontWeight={300}
-            fontSize="xl"
-            isPreviewFocusable={false}
-            display="flex"
-            gap="2"
-            alignItems="center"
-            w="30%"
-            onSubmit={(value) => updateUser(value, userFields.lastname)}
-          >
-            <Text fontFamily="secondary" fontWeight="bold">
-              Apellido:
-            </Text>
-            <EditablePreview />
-            <Input type="text" as={EditableInput} />
-            <EditableControls />
-          </Editable>
-
-          <Editable
-            defaultValue={user?.phoneNumber || ""}
-            key={`phoneNumber-${user?.phoneNumber}`}
-            fontFamily="secondary"
-            fontWeight={300}
-            fontSize="xl"
-            isPreviewFocusable={false}
-            display="flex"
-            gap="2"
-            alignItems="center"
-            w="30%"
-            onSubmit={(value) => updateUser(value, userFields.phoneNumber)}
-          >
-            <Text fontFamily="secondary" fontWeight="bold">
-              Celular:
-            </Text>
-            <EditablePreview />
-            <Input type="number" as={EditableInput} />
-            <EditableControls />
-          </Editable>
-
-          <Editable
-            defaultValue={user?.dni || ""}
-            key={`dni-${user?.dni}`}
-            fontFamily="secondary"
-            fontWeight={300}
-            fontSize="xl"
-            isPreviewFocusable={false}
-            display="flex"
-            gap="2"
-            alignItems="center"
-            w="30%"
-            onSubmit={(value) => updateUser(value, userFields.dni)}
-          >
-            <Text fontFamily="secondary" fontWeight="bold">
-              DNI:
-            </Text>
-            <EditablePreview />
-            <Input type="number" as={EditableInput} />
-            <EditableControls />
-          </Editable>
-
-          <Flex gap="2" align="center">
-            <Text fontFamily="secondary" fontWeight="bold" fontSize="xl">
-              Email:{" "}
-            </Text>
-            <Text
-              fontSize="xl"
-              overflow="hidden"
-              fontFamily="secondary"
-              fontWeight={300}
-            >
-              {user?.email}
-            </Text>
-          </Flex>
-
-          <Flex gap="4">
-            <Button
-              bg="primary"
-              borderRadius="5px"
-              color="#fff"
-              _hover={{ bg: "buttonHover" }}
-              _active={{ bg: "buttonHover" }}
-              fontWeight="semibold"
-              onClick={() => {
-                setIsRequiringPasswordUpdate(false);
-                onOpen();
-              }}
-            >
-              CAMBIAR EMAIL
-            </Button>
-            <Button
-              bg="primary"
-              borderRadius="5px"
-              color="#fff"
-              _hover={{ bg: "buttonHover" }}
-              _active={{ bg: "buttonHover" }}
-              fontWeight="semibold"
-              onClick={() => {
-                setIsRequiringPasswordUpdate(true);
-                onOpen();
-              }}
-            >
-              CAMBIAR CONTRASEÑA
-            </Button>
-
-            <AlertDialog
-              isOpen={isOpen}
-              leastDestructiveRef={cancelRef}
-              onClose={onClose}
-            >
-              <AlertDialogOverlay>
-                <AlertDialogContent>
-                  <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                    Cambiar{" "}
-                    {!isRequiringPasswordUpdate ? "email" : "contraseña"}
-                  </AlertDialogHeader>
-
-                  <AlertDialogBody>
-                    Te enviaremos un correo electrónico para cambiar tu{" "}
-                    {!isRequiringPasswordUpdate ? "email" : "contraseña"}
-                  </AlertDialogBody>
-
-                  <AlertDialogFooter>
-                    <Button ref={cancelRef} onClick={onClose}>
-                      Cancel
-                    </Button>
-                    <Button
-                      colorScheme="green"
-                      onClick={() => {
-                        !isRequiringPasswordUpdate
-                          ? handleRequireEmailChange()
-                          : handleRequirePasswordChange();
-                        onClose();
-                      }}
-                      ml={3}
+              {/* Información Personal Card */}
+              <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
+                <CardBody p={6}>
+                  <HStack mb={6}>
+                    <Icon as={FiUser} color="primary" boxSize={6} />
+                    <Heading 
+                      as="h3" 
+                      fontSize="xl" 
+                      fontFamily="secondary" 
+                      color="tertiary"
+                      fontWeight="600"
                     >
-                      Aceptar
-                    </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialogOverlay>
-            </AlertDialog>
-          </Flex>
-        </Flex>
-      </Container>
-      <Footer />
-    </>
+                      Información Personal
+                    </Heading>
+                  </HStack>
+                  
+                  <VStack align="stretch" spacing={5}>
+                    {/* Nombre */}
+                    <Box>
+                      <Editable
+                        defaultValue={user?.firstname || ""}
+                        key={`firstname-${user?.firstname}`}
+                        fontFamily="secondary"
+                        isPreviewFocusable={false}
+                        onSubmit={(value) => updateUser(value, userFields.firstname)}
+                      >
+                        <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
+                          <HStack spacing={3} flex="1">
+                            <Icon as={FiUser} color="gray.500" boxSize={5} />
+                            <VStack align="start" spacing={0}>
+                              <Text fontFamily="secondary" fontSize="xs" color="gray.500" fontWeight="500">
+                                Nombre
+                              </Text>
+                              <EditablePreview 
+                                fontFamily="secondary" 
+                                fontSize="md" 
+                                fontWeight="500"
+                                color="gray.800"
+                              />
+                            </VStack>
+                          </HStack>
+                          <EditableControls />
+                        </Flex>
+                        <Input type="text" as={EditableInput} fontFamily="secondary" />
+                      </Editable>
+                    </Box>
+
+                    {/* Apellido */}
+                    <Box>
+                      <Editable
+                        defaultValue={user?.lastname || ""}
+                        key={`lastname-${user?.lastname}`}
+                        fontFamily="secondary"
+                        isPreviewFocusable={false}
+                        onSubmit={(value) => updateUser(value, userFields.lastname)}
+                      >
+                        <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
+                          <HStack spacing={3} flex="1">
+                            <Icon as={FiUser} color="gray.500" boxSize={5} />
+                            <VStack align="start" spacing={0}>
+                              <Text fontFamily="secondary" fontSize="xs" color="gray.500" fontWeight="500">
+                                Apellido
+                              </Text>
+                              <EditablePreview 
+                                fontFamily="secondary" 
+                                fontSize="md" 
+                                fontWeight="500"
+                                color="gray.800"
+                              />
+                            </VStack>
+                          </HStack>
+                          <EditableControls />
+                        </Flex>
+                        <Input type="text" as={EditableInput} fontFamily="secondary" />
+                      </Editable>
+                    </Box>
+
+                    {/* Celular */}
+                    <Box>
+                      <Editable
+                        defaultValue={user?.phoneNumber || ""}
+                        key={`phoneNumber-${user?.phoneNumber}`}
+                        fontFamily="secondary"
+                        isPreviewFocusable={false}
+                        onSubmit={(value) => updateUser(value, userFields.phoneNumber)}
+                      >
+                        <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
+                          <HStack spacing={3} flex="1">
+                            <Icon as={FiPhone} color="gray.500" boxSize={5} />
+                            <VStack align="start" spacing={0}>
+                              <Text fontFamily="secondary" fontSize="xs" color="gray.500" fontWeight="500">
+                                Celular
+                              </Text>
+                              <EditablePreview 
+                                fontFamily="secondary" 
+                                fontSize="md" 
+                                fontWeight="500"
+                                color="gray.800"
+                              />
+                            </VStack>
+                          </HStack>
+                          <EditableControls />
+                        </Flex>
+                        <Input type="tel" as={EditableInput} fontFamily="secondary" />
+                      </Editable>
+                    </Box>
+
+                    {/* DNI */}
+                    <Box>
+                      <Editable
+                        defaultValue={user?.dni || ""}
+                        key={`dni-${user?.dni}`}
+                        fontFamily="secondary"
+                        isPreviewFocusable={false}
+                        onSubmit={(value) => updateUser(value, userFields.dni)}
+                      >
+                        <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
+                          <HStack spacing={3} flex="1">
+                            <Icon as={FiCreditCard} color="gray.500" boxSize={5} />
+                            <VStack align="start" spacing={0}>
+                              <Text fontFamily="secondary" fontSize="xs" color="gray.500" fontWeight="500">
+                                DNI
+                              </Text>
+                              <EditablePreview 
+                                fontFamily="secondary" 
+                                fontSize="md" 
+                                fontWeight="500"
+                                color="gray.800"
+                              />
+                            </VStack>
+                          </HStack>
+                          <EditableControls />
+                        </Flex>
+                        <Input type="number" as={EditableInput} fontFamily="secondary" />
+                      </Editable>
+                    </Box>
+                  </VStack>
+                </CardBody>
+              </Card>
+
+              {/* Email y Seguridad Card */}
+              <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
+                <CardBody p={6}>
+                  <HStack mb={6}>
+                    <Icon as={FiLock} color="primary" boxSize={6} />
+                    <Heading 
+                      as="h3" 
+                      fontSize="xl" 
+                      fontFamily="secondary" 
+                      color="tertiary"
+                      fontWeight="600"
+                    >
+                      Seguridad y Acceso
+                    </Heading>
+                  </HStack>
+                  
+                  <VStack align="stretch" spacing={5}>
+                    {/* Email */}
+                    <Flex justify="space-between" align="center" p={4} bg="gray.50" borderRadius="lg">
+                      <HStack spacing={3} flex="1">
+                        <Icon as={FiMail} color="gray.500" boxSize={5} />
+                        <VStack align="start" spacing={0}>
+                          <Text fontFamily="secondary" fontSize="xs" color="gray.500" fontWeight="500">
+                            Email
+                          </Text>
+                          <Text
+                            fontSize="md"
+                            fontFamily="secondary"
+                            fontWeight="500"
+                            color="gray.800"
+                          >
+                            {user?.email}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                      <Badge colorScheme="blue" fontSize="xs" px={3} py={1} borderRadius="full">
+                        Verificado
+                      </Badge>
+                    </Flex>
+
+                    <Divider />
+
+                    {/* Botones de Acción */}
+                    <Flex gap={4} flexDir={{ base: "column", md: "row" }}>
+                      <Button
+                        flex="1"
+                        leftIcon={<FiMail />}
+                        bg="primary"
+                        color="white"
+                        borderRadius="lg"
+                        fontFamily="secondary"
+                        fontWeight="500"
+                        _hover={{ bg: "buttonHover", transform: "translateY(-2px)", boxShadow: "lg" }}
+                        _active={{ bg: "buttonHover" }}
+                        onClick={() => {
+                          setIsRequiringPasswordUpdate(false);
+                          onOpen();
+                        }}
+                        transition="all 0.2s"
+                      >
+                        Cambiar Email
+                      </Button>
+                      <Button
+                        flex="1"
+                        leftIcon={<FiLock />}
+                        bg="gray.600"
+                        color="white"
+                        borderRadius="lg"
+                        fontFamily="secondary"
+                        fontWeight="500"
+                        _hover={{ bg: "gray.700", transform: "translateY(-2px)", boxShadow: "lg" }}
+                        _active={{ bg: "gray.700" }}
+                        onClick={() => {
+                          setIsRequiringPasswordUpdate(true);
+                          onOpen();
+                        }}
+                        transition="all 0.2s"
+                      >
+                        Cambiar Contraseña
+                      </Button>
+                    </Flex>
+                  </VStack>
+                </CardBody>
+              </Card>
+            </VStack>
+          </Container>
+        </Box>
+        
+        <Footer />
+      </Box>
+
+      {/* Alert Dialog */}
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" fontFamily="secondary">
+              Cambiar{" "}
+              {!isRequiringPasswordUpdate ? "email" : "contraseña"}
+            </AlertDialogHeader>
+
+            <AlertDialogBody fontFamily="secondary">
+              Te enviaremos un correo electrónico para cambiar tu{" "}
+              {!isRequiringPasswordUpdate ? "email" : "contraseña"}
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose} fontFamily="secondary">
+                Cancelar
+              </Button>
+              <Button
+                bg="primary"
+                color="white"
+                _hover={{ bg: "buttonHover" }}
+                onClick={() => {
+                  !isRequiringPasswordUpdate
+                    ? handleRequireEmailChange()
+                    : handleRequirePasswordChange();
+                  onClose();
+                }}
+                ml={3}
+                fontFamily="secondary"
+              >
+                Aceptar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </Flex>
   );
 }
 

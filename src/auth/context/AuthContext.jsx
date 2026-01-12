@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -18,49 +18,70 @@ export const AuthProvider = ({
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const hasCheckedAuth = useRef(false);
 
-  const checkAuth = async () => {
-    // console.log("⚡ Running checkAuth");
-    // console.log("⚡ Current Path:", location.pathname);
+  const checkAuth = async (skipIfUserExists = false) => {
+    // Si ya hay un usuario y se pide saltar, no verificar
+    if (skipIfUserExists && user) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
-      if (token) {
-        // Configure axios to use the token for this request
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-        const response = await api.get("/auth/check-status");
-        // console.log("✅ Auth check success:", response.data);
-        // Normalize roles: backend returns 'rol' (string), frontend expects 'roles' (array)
-        const userData = response.data;
-        if (userData && !userData.roles) {
-          userData.roles = userData.rol ? [userData.rol] : [];
-        }
-        setUser(userData);
+      if (!token) {
+        setUser(null);
+        setIsLoading(false);
+        return;
       }
+
+      // Configure axios to use the token for this request
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      const response = await api.get("/auth/check-status");
+      // Normalize roles: backend returns 'rol' (string), frontend expects 'roles' (array)
+      const userData = response.data;
+      if (userData && !userData.roles) {
+        userData.roles = userData.rol ? [userData.rol] : [];
+      }
+      setUser(userData);
     } catch (error) {
-      // console.log("❌ Auth check error:", error);
-      setUser(null);
-      localStorage.removeItem("token");
+      // Limpiar si es un error de autenticación (401) o si no hay respuesta
+      if (error?.response?.status === 401 || !error?.response) {
+        setUser(null);
+        localStorage.removeItem("token");
+        delete api.defaults.headers.common["Authorization"];
+      }
     } finally {
-      // console.log("🏁 Setting loading false");
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // console.log("🔄 Initial auth check effect");
-    checkAuth();
+    // Solo verificar una vez al montar el componente
+    // Usar ref para evitar ejecuciones múltiples
+    if (hasCheckedAuth.current) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      hasCheckedAuth.current = true;
+      checkAuth();
+    } else {
+      setUser(null);
+      setIsLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value = {
     user,
     isLoading,
     login: async (email, password) => {
-      // console.log("🔑 Login attempt");
       try {
+        setIsLoading(true);
         const { data } = await api.post("/auth/login", { email, password });
-        // console.log("✅ Login success:", data);
 
         // Store the token in localStorage
         localStorage.setItem("token", data.token);
@@ -73,34 +94,55 @@ export const AuthProvider = ({
         if (userData && !userData.roles) {
           userData.roles = userData.rol ? [userData.rol] : [];
         }
+        
+        // Establecer el usuario inmediatamente
         setUser(userData);
-        navigate(location?.state?.from?.pathname || "/");
+        setIsLoading(false);
+        hasCheckedAuth.current = true; // Marcar que ya verificamos
+        
+        // Navegar después de establecer el usuario
+        const redirectTo = location?.state?.from?.pathname || "/";
+        navigate(redirectTo);
       } catch (error) {
+        setIsLoading(false);
         console.error("❌ Login failed:", error);
         throw error;
       }
     },
     logout: async () => {
-      // console.log("🚪 Logout attempt");
       try {
-        await api.post("/auth/logout");
-      } catch (error) {
-        console.error("❌ Logout error:", error);
-      } finally {
-        // Remove token and user data
+        // Limpiar inmediatamente el estado local
         localStorage.removeItem("token");
         setUser(null);
+        setIsLoading(false);
+        hasCheckedAuth.current = false; // Resetear el flag
+        
+        // Limpiar el header de Authorization en axios
+        delete api.defaults.headers.common["Authorization"];
+        
+        // Intentar hacer logout en el servidor (pero no bloquear si falla)
+        try {
+          await api.post("/auth/logout");
+        } catch (error) {
+          // Ignorar errores del servidor, ya limpiamos localmente
+          console.error("❌ Logout error:", error);
+        }
+        
+        // Navegar al login
+        navigate("/login");
+      } catch (error) {
+        console.error("❌ Logout error:", error);
+        // Asegurarse de limpiar todo incluso si hay error
+        localStorage.removeItem("token");
+        setUser(null);
+        setIsLoading(false);
         navigate("/login");
       }
     },
     checkAuth,
   };
 
-  if (isLoading) {
-    // console.log("⌛ Still loading, returning null");
-    return null;
-  }
-
+  // No bloquear el render mientras carga, solo mostrar un estado de carga si es necesario
   // console.log("🎨 Rendering AuthProvider with children");
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

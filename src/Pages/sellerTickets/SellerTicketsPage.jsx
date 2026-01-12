@@ -13,6 +13,7 @@ import {
   Center,
   Spinner,
 } from "@chakra-ui/react";
+import { useSearchParams } from "react-router-dom";
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
 import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
@@ -22,6 +23,7 @@ import EditTicketModal from "../ticketsAdmin/components/EditTicketModal";
 import eventApi from "../../Api/event";
 
 const SellerTicketsPage = () => {
+  const [searchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("");
   const [tickets, setTickets] = useState([]);
@@ -230,6 +232,18 @@ const SellerTicketsPage = () => {
   useEffect(() => {
     fetchEvents();
   }, [page]);
+
+  // Set selected event from URL parameter when events are loaded
+  useEffect(() => {
+    const eventIdFromUrl = searchParams.get("eventId");
+    if (eventIdFromUrl && events.length > 0 && !selectedEvent) {
+      // Verify that the event exists in the user's events
+      const eventExists = events.some(event => event._id === eventIdFromUrl);
+      if (eventExists) {
+        setSelectedEvent(eventIdFromUrl);
+      }
+    }
+  }, [events, searchParams]);
 
   useEffect(() => {
     if (selectedEvent) {

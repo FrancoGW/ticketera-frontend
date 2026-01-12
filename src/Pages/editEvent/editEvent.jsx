@@ -26,6 +26,7 @@ import {
   AlertDialogFooter,
   Alert,
   AlertIcon,
+  HStack,
 } from "@chakra-ui/react";
 import { AiOutlineEdit } from "react-icons/ai";
 import Header from "../../components/header/Header";
@@ -33,7 +34,7 @@ import Footer from "../../components/footer/Footer";
 import eventApi from "../../Api/event";
 import AsyncSelect from "react-select/async";
 import jwt_decode from "jwt-decode";
-import { DeleteIcon } from "@chakra-ui/icons";
+import { DeleteIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import {
   bufferToBase64,
@@ -314,7 +315,8 @@ function EditEvent() {
   return (
     <>
       <Header />
-      <Container maxW="7xl" minH="70vh" my="10">
+      <Box pt="100px" pb={8}>
+        <Container maxW="7xl" minH="70vh" my="10">
         <SendInvitationsModal
           eventId={eventId}
           isOpen={showSendInvitation}
@@ -326,10 +328,24 @@ function EditEvent() {
           </Flex>
         ) : (
           <>
-            <Flex justify="space-between">
-              <Heading fontFamily="secondary" color="tertiary" fontSize="2xl">
-                Detalles del evento
-              </Heading>
+            <Flex justify="space-between" align="center" mb={6}>
+              <HStack spacing={4}>
+                <Button
+                  onClick={() => navigate(-1)}
+                  variant="ghost"
+                  size="sm"
+                  minW="auto"
+                  p={2}
+                  borderRadius="full"
+                  _hover={{ bg: "gray.100" }}
+                  aria-label="Volver"
+                >
+                  <ArrowBackIcon boxSize={5} />
+                </Button>
+                <Heading fontFamily="secondary" color="tertiary" fontSize="2xl">
+                  Detalles del evento
+                </Heading>
+              </HStack>
               <Flex gap="4">
                 {!isEditing && (
                   <>
@@ -696,7 +712,8 @@ function EditEvent() {
             </AlertDialogContent>
           </AlertDialogOverlay>
         </AlertDialog>
-      </Container>
+        </Container>
+      </Box>
       <Footer />
     </>
   );

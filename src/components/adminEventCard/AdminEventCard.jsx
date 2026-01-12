@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Flex,
   Image,
@@ -46,7 +47,8 @@ import {
 import axios from "axios";
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 
-const AdminEventCard = ({ event, pictures, id, title, status }) => {
+const AdminEventCard = ({ event, pictures, id, title, status, onStatusChange, onDelete }) => {
+  const navigate = useNavigate();
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
   const cancelRef = useRef();
@@ -256,7 +258,10 @@ const AdminEventCard = ({ event, pictures, id, title, status }) => {
         status: "success",
         duration: 3000,
       });
-      window.location.reload();
+      // Actualizar el estado local sin recargar la página
+      if (onDelete) {
+        onDelete(id);
+      }
     } catch (error) {
       toast({
         title: "Error al eliminar el evento",
@@ -266,20 +271,58 @@ const AdminEventCard = ({ event, pictures, id, title, status }) => {
     }
   };
 
-  const handleRejectEvent = (id) => {
+  const handleRejectEvent = async (id) => {
     setIsLoading(true);
-    eventApi.actualizeEventStatus(id, "rejected").then((res) => {
+    try {
+      await eventApi.actualizeEventStatus(id, "rejected");
       setUpdateEventStatus({ status: "rejected" });
+      toast({
+        title: "Evento rechazado",
+        description: "El evento ha sido rechazado correctamente",
+        status: "success",
+        duration: 3000,
+      });
+      // Actualizar el estado local sin recargar la página
+      if (onStatusChange) {
+        onStatusChange(id, "rejected");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo rechazar el evento",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
       setIsLoading(false);
-    });
+    }
   };
 
-  const handleApproveEvent = (id) => {
+  const handleApproveEvent = async (id) => {
     setIsLoading(true);
-    eventApi.actualizeEventStatus(id, "approved").then((res) => {
+    try {
+      await eventApi.actualizeEventStatus(id, "approved");
       setUpdateEventStatus({ status: "approved" });
+      toast({
+        title: "Evento aprobado",
+        description: "El evento ha sido aprobado correctamente",
+        status: "success",
+        duration: 3000,
+      });
+      // Actualizar el estado local sin recargar la página
+      if (onStatusChange) {
+        onStatusChange(id, "approved");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo aprobar el evento",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
       setIsLoading(false);
-    });
+    }
   };
 
   const handleInputChange = (e) => {
@@ -448,16 +491,69 @@ const AdminEventCard = ({ event, pictures, id, title, status }) => {
               fontFamily="secondary"
               fontWeight="normal"
               w="80%"
-              onClick={() => setIsDetailsModalOpen(true)}
+              onClick={() => navigate(`/admin/events/${id}`)}
             >
               Detalles del evento
             </Button>
 
-           
+            {/* Botones de Aprobar/Rechazar según el status */}
+            {updateEventStatus.status === "pending" && (
+              <>
+                <Button
+                  w="80%"
+                  colorScheme="green"
+                  onClick={() => handleApproveEvent(id)}
+                  isLoading={isLoading}
+                  fontFamily="secondary"
+                  fontWeight="normal"
+                >
+                  Aprobar
+                </Button>
+                <Button
+                  w="80%"
+                  colorScheme="orange"
+                  onClick={() => handleRejectEvent(id)}
+                  isLoading={isLoading}
+                  fontFamily="secondary"
+                  fontWeight="normal"
+                >
+                  Rechazar
+                </Button>
+              </>
+            )}
+
+            {updateEventStatus.status === "approved" && (
+              <Button
+                w="80%"
+                colorScheme="orange"
+                onClick={() => handleRejectEvent(id)}
+                isLoading={isLoading}
+                fontFamily="secondary"
+                fontWeight="normal"
+              >
+                Rechazar
+              </Button>
+            )}
+
+            {updateEventStatus.status === "rejected" && (
+              <Button
+                w="80%"
+                colorScheme="green"
+                onClick={() => handleApproveEvent(id)}
+                isLoading={isLoading}
+                fontFamily="secondary"
+                fontWeight="normal"
+              >
+                Aprobar
+              </Button>
+            )}
+
             <Button
               w="80%"
               colorScheme="red"
               onClick={() => setIsDeleteAlertOpen(true)}
+              fontFamily="secondary"
+              fontWeight="normal"
             >
               Eliminar
             </Button>

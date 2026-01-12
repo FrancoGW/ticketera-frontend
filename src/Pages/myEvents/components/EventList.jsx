@@ -234,8 +234,7 @@ const EventsList = ({ event, setEventDetails }) => {
               _hover={{ bg: "buttonHover", transform: "translateY(-1px)", boxShadow: "md" }}
               _active={{ bg: "buttonHover" }}
               transition="all 0.2s"
-              isDisabled
-              title="Funcionalidad en desarrollo"
+              onClick={() => navigate(`/seller/tickets?eventId=${event._id}`)}
             >
               Administrar tickets
             </Button>

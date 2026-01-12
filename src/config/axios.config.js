@@ -74,14 +74,23 @@ api.interceptors.response.use(
 
     // Handle 404 Not Found
     if (status === 404) {
+      // No mostrar error para endpoints donde 404 es esperado (ej: no hay tickets)
+      const url = error.config?.url || '';
+      const silent404Endpoints = [
+        '/tickets/user',
+      ];
       
-      toast({
-        title: "Error",
-        description: "Recurso no encontrado",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      const shouldSilence = silent404Endpoints.some(endpoint => url.includes(endpoint));
+      
+      if (!shouldSilence) {
+        toast({
+          title: "Error",
+          description: "Recurso no encontrado",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
       return Promise.reject(error);
     }
 

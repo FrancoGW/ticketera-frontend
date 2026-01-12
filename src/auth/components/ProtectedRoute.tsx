@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Center, Spinner } from "@chakra-ui/react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,16 +12,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   roles,
 }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
-  // console.log("🛡️ ProtectedRoute Check");
-  // console.log("🛡️ Current Path:", location.pathname);
-  // console.log("🛡️ User State:", user);
-  // console.log("🛡️ Required Roles:", roles);
+  // Esperar a que termine de cargar antes de decidir
+  if (isLoading) {
+    return (
+      <Center minH="100vh">
+        <Spinner
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="primary"
+          size="xl"
+        />
+      </Center>
+    );
+  }
 
+  // Si no hay usuario después de cargar, redirigir al login
   if (!user) {
-    // console.log("🚫 No user, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -28,10 +39,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const userRoles = user.roles || (user.rol ? [user.rol] : []);
   
   if (roles && roles.length > 0 && !roles.some((role) => userRoles.includes(role))) {
-    // console.log("🚫 User lacks required roles");
     return <Navigate to="/" replace />;
   }
 
-  // console.log("✅ Access granted to protected route");
   return <>{children}</>;
 };

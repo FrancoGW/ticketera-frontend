@@ -37,8 +37,7 @@ const TicketListing = () => {
   const [tickets, setTickets] = useState([]);
   const [event, setEvent] = useState(null);
   const [ticketsToBuy, setTicketsToBuy] = useState({});
-  const [serviceCost, setServiceCost] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [subtotal, setSubtotal] = useState(0); // Solo subtotal de tickets, sin cargo por servicio
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
@@ -106,51 +105,23 @@ const TicketListing = () => {
     
     if (validQuantity < 0 || validQuantity > 50) return;
     
-    // Obtener el porcentaje de comisión del evento (por defecto 0 si no está configurado)
-    // IMPORTANTE: En el backend se guarda como decimal (0.2 = 20%, 0.15 = 15%)
-    const commissionPercentage = event?.commissionPercentage || 0;
-    
-    // Calcular el precio total del ticket
-    const totalPrice = ticket.price * validQuantity;
-    
-    // Calcular el cargo por servicio basado en el porcentaje de comisión
-    // Como commissionPercentage ya viene como decimal (0.2 = 20%), solo multiplicamos
-    // serviceCost = totalPrice * commissionPercentage
-    const serviceCost = totalPrice * commissionPercentage;
-    
+    // Solo guardar la cantidad y el precio del ticket
+    // El backend calculará el cargo por servicio y el total
     const ticketToBuy = {
       [ticket._id]: {
         quantity: validQuantity,
-        serviceCost: serviceCost,
-        totalPrice: totalPrice,
+        price: ticket.price, // Guardar el precio unitario
       },
     };
     
     const tickets = { ...ticketsToBuy, ...ticketToBuy };
     setTicketsToBuy(tickets);
     
-    const newServiceCost = calculateServiceCost(tickets);
-    setServiceCost(newServiceCost);
-    
-    const newTotal = calculateTotal(tickets);
-    setTotal(newTotal);
-  };
-
-  const calculateServiceCost = (tickets) => {
-    let serviceCost = 0;
-    for (const ticket in tickets) {
-      serviceCost += tickets[ticket].serviceCost;
-    }
-    return serviceCost;
-  };
-
-  const calculateTotal = (tickets) => {
-    let total = 0;
-    const serviceCost = calculateServiceCost(tickets);
-    for (const ticket in tickets) {
-      total += tickets[ticket].totalPrice;
-    }
-    return total + serviceCost;
+    // Calcular solo el subtotal de tickets (sin cargo por servicio)
+    const newSubtotal = Object.values(tickets).reduce((sum, ticketData) => {
+      return sum + (ticketData.price * ticketData.quantity);
+    }, 0);
+    setSubtotal(newSubtotal);
   };
 
 const handlePurchase = async () => {
@@ -272,19 +243,19 @@ const handlePurchase = async () => {
 
           <Box mt={6} p={4} borderTop="1px" borderColor="gray.200">
             <Text color="gray.600" fontSize="md" mb={2}>
-              Cargo por servicio: $ {serviceCost}
+              Subtotal: $ {subtotal.toLocaleString()}
             </Text>
-            <Text fontSize="xl" fontWeight="bold" mb={4}>
-              Total a pagar: $ {total}
+            <Text fontSize="xs" color="gray.500" mb={4} fontStyle="italic">
+              El cargo por servicio y el total final se calcularán al procesar el pago
             </Text>
             <Button
               colorScheme="blue"
               size="lg"
               width="full"
               onClick={handlePurchase}
-              isDisabled={isAuthenticated && total === 0}
+              isDisabled={isAuthenticated && subtotal === 0}
             >
-              {isAuthenticated ? `Comprar Tickets - $ ${total}` : 'Iniciar sesión para comprar'}
+              {isAuthenticated ? `Comprar Tickets` : 'Iniciar sesión para comprar'}
             </Button>
           </Box>
         </>

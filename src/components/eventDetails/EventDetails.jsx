@@ -45,8 +45,7 @@ const EventDetails = () => {
   const [event, setEvent] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [ticketsToBuy, setTicketsToBuy] = useState({});
-  const [serviceCost, setServiceCost] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [subtotal, setSubtotal] = useState(0); // Solo subtotal de tickets, sin cargo por servicio
   const [selectedDate, setSelectedDate] = useState(0);
   const [dateTickets, setDateTickets] = useState([]);
   const [discountCode, setDiscountCode] = useState("");
@@ -98,8 +97,7 @@ const EventDetails = () => {
   const resetTicketsToBuy = () => {
     console.log('Resetting tickets to buy');
     setTicketsToBuy({});
-    setServiceCost(0);
-    setTotal(0);
+    setSubtotal(0);
     setDiscount(0);
     setDiscountCode("");
   };
@@ -193,55 +191,23 @@ const EventDetails = () => {
     if (quantity < 0) return;
     if (quantity > 50) return;
 
-    // Obtener el porcentaje de comisión del evento (por defecto 0 si no está configurado)
-    // IMPORTANTE: En el backend se guarda como decimal (0.2 = 20%, 0.15 = 15%)
-    const commissionPercentage = event?.commissionPercentage || 0;
-    
-    // Calcular el precio total del ticket
-    const totalPrice = ticket.price * quantity;
-    
-    // Calcular el cargo por servicio basado en el porcentaje de comisión
-    // Como commissionPercentage ya viene como decimal (0.2 = 20%), solo multiplicamos
-    // serviceCost = totalPrice * commissionPercentage
-    const serviceCost = totalPrice * commissionPercentage;
-
+    // Solo guardar la cantidad y el precio del ticket
+    // El backend calculará el cargo por servicio y el total
     const ticketToBuy = {
       [ticket._id]: {
         quantity,
-        serviceCost: serviceCost,
-        totalPrice: totalPrice,
+        price: ticket.price, // Guardar el precio unitario
       },
     };
     const tickets = { ...ticketsToBuy, ...ticketToBuy };
     console.log('Updated tickets to buy:', tickets);
-    console.log('Commission percentage:', commissionPercentage, '%');
     setTicketsToBuy(tickets);
-    const newServiceCost = calculateServiceCost(tickets);
-    console.log('New service cost:', newServiceCost);
-    setServiceCost(newServiceCost);
-    const newTotal = calculateTotal(tickets);
-    console.log('New total:', newTotal);
-    setTotal(newTotal);
-  };
-
-  const calculateServiceCost = (tickets) => {
-    let serviceCost = 0;
-    for (const ticket in tickets) {
-      serviceCost += tickets[ticket].serviceCost;
-    }
-    console.log('Calculated service cost:', serviceCost);
-    return serviceCost;
-  };
-
-  const calculateTotal = (tickets) => {
-    let total = 0;
-    const serviceCost = calculateServiceCost(tickets);
-    for (const ticket in tickets) {
-      total += tickets[ticket].totalPrice;
-    }
-    const finalTotal = total + serviceCost - discount;
-    console.log('Calculated total:', finalTotal);
-    return finalTotal;
+    
+    // Calcular solo el subtotal de tickets (sin cargo por servicio)
+    const newSubtotal = Object.values(tickets).reduce((sum, ticketData) => {
+      return sum + (ticketData.price * ticketData.quantity);
+    }, 0);
+    setSubtotal(newSubtotal);
   };
 
   const buyTicket = async () => {
@@ -679,12 +645,10 @@ const EventDetails = () => {
 
                     {/* Resumen de Compra */}
                     <VStack align="stretch" spacing={2}>
-                      {serviceCost > 0 && (
-                        <Flex justify="space-between" fontFamily="secondary">
-                          <Text color="gray.600">Cargo por servicio:</Text>
-                          <Text fontWeight="500">${serviceCost}</Text>
-                        </Flex>
-                      )}
+                      <Flex justify="space-between" fontFamily="secondary">
+                        <Text color="gray.600">Subtotal:</Text>
+                        <Text fontWeight="500">${subtotal.toLocaleString()}</Text>
+                      </Flex>
                       {discount > 0 && (
                         <Flex justify="space-between" fontFamily="secondary">
                           <Text color="green.600">Descuento:</Text>
@@ -693,15 +657,9 @@ const EventDetails = () => {
                           </Text>
                         </Flex>
                       )}
-                      <Divider />
-                      <Flex justify="space-between" fontFamily="secondary">
-                        <Text fontSize="xl" fontWeight="700" color="tertiary">
-                          Total:
-                        </Text>
-                        <Text fontSize="xl" fontWeight="700" color="primary">
-                          ${total.toLocaleString()}
-                        </Text>
-                      </Flex>
+                      <Text fontSize="xs" color="gray.500" fontFamily="secondary" fontStyle="italic">
+                        El cargo por servicio y el total final se calcularán al procesar el pago
+                      </Text>
                     </VStack>
 
                     {/* Botón de Compra */}
@@ -714,7 +672,7 @@ const EventDetails = () => {
                         _active={{ bg: "buttonHover" }}
                         borderRadius="lg"
                         leftIcon={<RiTicket2Line />}
-                        isDisabled={!total || total === 0}
+                        isDisabled={!subtotal || subtotal === 0}
                         onClick={buyTicket}
                         isLoading={isLoading}
                         fontFamily="secondary"

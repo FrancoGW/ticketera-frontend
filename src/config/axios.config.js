@@ -74,10 +74,11 @@ api.interceptors.response.use(
 
     // Handle 404 Not Found
     if (status === 404) {
-      // No mostrar error para endpoints donde 404 es esperado (ej: no hay tickets)
+      // No mostrar error para endpoints donde 404 es esperado (ej: no hay tickets, preview opcional)
       const url = error.config?.url || '';
       const silent404Endpoints = [
         '/tickets/user',
+        '/payment/preview-checkout', // Preview es opcional, no mostrar error si no existe
       ];
       
       const shouldSilence = silent404Endpoints.some(endpoint => url.includes(endpoint));

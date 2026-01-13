@@ -58,7 +58,7 @@ const CommissionPage = () => {
               return {
                 ...event,
                 commissionPercentage: fullEvent?.commissionPercentage !== undefined && fullEvent?.commissionPercentage !== null
-                  ? Number(fullEvent.commissionPercentage)
+                  ? Number(fullEvent.commissionPercentage) // Ya viene como decimal (0.2 = 20%)
                   : 0
               };
             } catch (error) {
@@ -73,7 +73,7 @@ const CommissionPage = () => {
           return {
             ...event,
             commissionPercentage: event.commissionPercentage !== undefined && event.commissionPercentage !== null
-              ? Number(event.commissionPercentage)
+              ? Number(event.commissionPercentage) // Ya viene como decimal (0.2 = 20%)
               : 0
           };
         })
@@ -108,7 +108,9 @@ const CommissionPage = () => {
 
     try {
       setUpdatingEventId(eventId);
-      await eventApi.updateCommissionPercentage(eventId, newCommission);
+      // Convertir el porcentaje ingresado (20) a decimal (0.2) para el backend
+      const commissionDecimal = newCommission / 100;
+      await eventApi.updateCommissionPercentage(eventId, commissionDecimal);
       
       // Recargar los eventos desde el servidor para asegurar que tenemos los datos actualizados
       await loadEvents();
@@ -234,10 +236,13 @@ const CommissionPage = () => {
 
 const EventRow = ({ event, onCommissionChange, isLoading }) => {
   // Inicializar con el valor actual del commissionPercentage
-  // Asegurarse de manejar null, undefined, y valores numéricos
-  const currentCommission = event.commissionPercentage !== undefined && event.commissionPercentage !== null 
+  // IMPORTANTE: En el backend se guarda como decimal (0.2 = 20%, 0.15 = 15%)
+  // Para mostrarlo como porcentaje, multiplicamos por 100
+  const commissionDecimal = event.commissionPercentage !== undefined && event.commissionPercentage !== null 
     ? Number(event.commissionPercentage) 
     : 0;
+  // Convertir a porcentaje para mostrar (0.2 -> 20, 0.15 -> 15)
+  const currentCommission = commissionDecimal * 100;
   const [newCommission, setNewCommission] = useState('');
 
   // Log para debugging - verificar que el valor se está recibiendo correctamente

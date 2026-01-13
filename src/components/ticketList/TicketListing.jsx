@@ -107,14 +107,16 @@ const TicketListing = () => {
     if (validQuantity < 0 || validQuantity > 50) return;
     
     // Obtener el porcentaje de comisión del evento (por defecto 0 si no está configurado)
+    // IMPORTANTE: En el backend se guarda como decimal (0.2 = 20%, 0.15 = 15%)
     const commissionPercentage = event?.commissionPercentage || 0;
     
     // Calcular el precio total del ticket
     const totalPrice = ticket.price * validQuantity;
     
     // Calcular el cargo por servicio basado en el porcentaje de comisión
-    // serviceCost = (totalPrice * commissionPercentage) / 100
-    const serviceCost = (totalPrice * commissionPercentage) / 100;
+    // Como commissionPercentage ya viene como decimal (0.2 = 20%), solo multiplicamos
+    // serviceCost = totalPrice * commissionPercentage
+    const serviceCost = totalPrice * commissionPercentage;
     
     const ticketToBuy = {
       [ticket._id]: {

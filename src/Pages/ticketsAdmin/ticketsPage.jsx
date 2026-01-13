@@ -11,12 +11,11 @@ import {
   Heading,
   useDisclosure,
 } from "@chakra-ui/react";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import Sidebar from "../../components/sideBar/sideBar";
 import TicketCard from "./components/TicketCard";
 import CreateTicketModal from "./components/CreateTicketModal";
 import EditTicketModal from "./components/EditTicketModal";
+import ConfirmDialog from "../../components/confirmDialog/ConfirmDialog";
+import useConfirmDialog from "../../hooks/useConfirmDialog";
 
 const TicketsPage = () => {
   console.log("🚀 TicketsPage - Component initialized");
@@ -28,6 +27,7 @@ const TicketsPage = () => {
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const toast = useToast();
+  const confirmDialog = useConfirmDialog();
 
   const {
     isOpen: isCreateOpen,
@@ -218,39 +218,46 @@ const TicketsPage = () => {
 
   const handleDeleteTicket = async (ticketId) => {
     console.log("🗑️ handleDeleteTicket - Starting with id:", ticketId);
-    if (window.confirm("¿Estás seguro de que deseas eliminar este ticket?")) {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/tickets/${ticketId}`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+    confirmDialog.openDialog({
+      title: "Eliminar ticket",
+      message: "¿Estás seguro de que deseas eliminar este ticket? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      confirmColor: "red",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/tickets/${ticketId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
 
-        if (!response.ok) throw new Error("Failed to delete ticket");
+          if (!response.ok) throw new Error("Failed to delete ticket");
 
-        console.log("✅ handleDeleteTicket - Success");
-        setTickets((current) =>
-          current.filter((ticket) => ticket._id !== ticketId)
-        );
-        toast({
-          title: "Ticket eliminado",
-          status: "success",
-          duration: 3000,
-        });
-      } catch (error) {
-        console.error("❌ handleDeleteTicket - Error:", error);
-        toast({
-          title: "Error al eliminar ticket",
-          description: error.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
-    }
+          console.log("✅ handleDeleteTicket - Success");
+          setTickets((current) =>
+            current.filter((ticket) => ticket._id !== ticketId)
+          );
+          toast({
+            title: "Ticket eliminado",
+            status: "success",
+            duration: 3000,
+          });
+        } catch (error) {
+          console.error("❌ handleDeleteTicket - Error:", error);
+          toast({
+            title: "Error al eliminar ticket",
+            description: error.message,
+            status: "error",
+            duration: 3000,
+          });
+        }
+      },
+    });
   };
 
   const handleEventChange = (eventId) => {
@@ -330,12 +337,12 @@ const TicketsPage = () => {
       "tickets"
     );
     return (
-      <Grid
-        templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
-        gap={6}
-        w="100%"
-        my="10"
-      >
+            <Grid
+              templateColumns={{ base: "1fr", sm: "repeat(auto-fill, minmax(300px, 1fr))" }}
+              gap={6}
+              w="100%"
+              my="10"
+            >
         {tickets.map((ticket) => {
           console.log("🎫 Rendering ticket:", ticket);
           return (
@@ -362,22 +369,12 @@ const TicketsPage = () => {
   });
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <Sidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
             <Heading 
               as="h1" 
               fontFamily="secondary" 
@@ -392,15 +389,17 @@ const TicketsPage = () => {
             <Flex 
               mb={8} 
               justify="space-between" 
-              align="center" 
+              align={{ base: "flex-start", sm: "center" }} 
               flexWrap="wrap" 
               gap={4}
+              direction={{ base: "column", sm: "row" }}
             >
               <Select
                 placeholder="Seleccionar evento"
                 value={selectedEvent}
                 onChange={(e) => handleEventChange(e.target.value)}
-                maxW="400px"
+                maxW={{ base: "100%", sm: "400px" }}
+                w={{ base: "100%", sm: "auto" }}
                 isDisabled={isLoadingEvents}
                 size="lg"
                 borderColor="gray.200"
@@ -435,6 +434,7 @@ const TicketsPage = () => {
                 py={6}
                 borderRadius="lg"
                 transition="all 0.2s"
+                w={{ base: "100%", sm: "auto" }}
               >
                 Crear Nuevo Ticket
               </Button>
@@ -458,12 +458,19 @@ const TicketsPage = () => {
               onEdit={handleEditTicket}
               ticket={selectedTicket}
             />
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.closeDialog}
+        onConfirm={confirmDialog.handleConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        confirmColor={confirmDialog.confirmColor}
+      />
+    </>
   );
 };
 

@@ -269,9 +269,9 @@ const PdvDashboard = () => {
   return (
     <div>
       <Header />
-      <Container maxW="7xl" py="8" mt="5rem">
+      <Container maxW="7xl" py={{ base: 4, md: 8 }} px={{ base: 4, md: 8 }} mt="5rem">
         <Stack spacing={6}>
-          <Heading>Panel de Ventas PDV</Heading>
+          <Heading fontSize={{ base: "xl", md: "2xl" }}>Panel de Ventas PDV</Heading>
 
           {loading && (
             <Flex justify="center" align="center" py={8}>
@@ -290,16 +290,21 @@ const PdvDashboard = () => {
             {events.map((event) => (
             <Card key={event._id} mb={4}>
             <CardBody>
-              <Flex justify="space-between" align="top">
-                <Box>
-                  <Heading size="md" mb={2}>{event.title}</Heading>
-                  <Text mb={2}>{event.description}</Text>
+              <Flex 
+                justify="space-between" 
+                align={{ base: "flex-start", sm: "top" }}
+                direction={{ base: "column", sm: "row" }}
+                gap={4}
+              >
+                <Box flex="1">
+                  <Heading size={{ base: "sm", md: "md" }} mb={2}>{event.title}</Heading>
+                  <Text mb={2} fontSize={{ base: "sm", md: "md" }}>{event.description}</Text>
                   {event.addressRef && (
-                    <Text color="gray.700" mb={2}>
+                    <Text color="gray.700" mb={2} fontSize={{ base: "xs", md: "sm" }}>
                       Ubicación: {event.addressRef.province}, {event.addressRef.locality}
                     </Text>
                   )}
-                  <Text color="gray.700">
+                  <Text color="gray.700" fontSize={{ base: "xs", md: "sm" }}>
                     Entradas disponibles: {
                       event.tickets?.reduce((total, ticket) => 
                         total + (ticket.maxEntries - (ticket.selled || 0)), 0
@@ -309,16 +314,18 @@ const PdvDashboard = () => {
                   </Text>
                 </Box>
                 <Button
-        colorScheme="blue"
-        onClick={() => handleOpenTickets(event)}
-        isDisabled={
-          !event.tickets?.some(ticket => 
-            (ticket.maxEntries - (ticket.selled || 0)) > 0
-          )
-        }
-      >
-        Ver tickets
-      </Button>
+                  colorScheme="blue"
+                  onClick={() => handleOpenTickets(event)}
+                  isDisabled={
+                    !event.tickets?.some(ticket => 
+                      (ticket.maxEntries - (ticket.selled || 0)) > 0
+                    )
+                  }
+                  w={{ base: "100%", sm: "auto" }}
+                  size={{ base: "sm", md: "md" }}
+                >
+                  Ver tickets
+                </Button>
               </Flex>
             </CardBody>
           </Card>

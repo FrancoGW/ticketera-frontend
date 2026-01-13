@@ -31,9 +31,6 @@ import {
   Line
 } from "recharts";
 import eventApi from "../../Api/event";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import Sidebar from "../../components/sideBar/sideBar";
 
 const COLORS = ['#000', '#4A5568', '#718096', '#A0AEC0', '#CBD5E0', '#E2E8F0'];
 
@@ -89,41 +86,25 @@ const MetricsPage = () => {
 
   if (isLoading) {
     return (
-      <Flex minH="100vh" bg="gray.50">
-        <Sidebar />
-        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-          <Header />
-          <Center minH="calc(100vh - 80px)" bg="white">
-            <Spinner size="xl" color="primary" />
-          </Center>
-        </Box>
-      </Flex>
+      <Center minH="calc(100vh - 80px)" bg="white">
+        <Spinner size="xl" color="primary" />
+      </Center>
     );
   }
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <Sidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
             <Heading 
               as="h1" 
               fontFamily="secondary" 
               color="tertiary" 
               mb={8}
-              fontSize="2xl"
+              fontSize={{ base: "xl", md: "2xl" }}
               fontWeight="bold"
             >
               Métricas y Estadísticas
@@ -472,12 +453,8 @@ const MetricsPage = () => {
                 </CardBody>
               </Card>
             </Grid>
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+    </>
   );
 };
 

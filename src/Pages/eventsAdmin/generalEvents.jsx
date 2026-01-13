@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
 import {
   Heading,
   Container,
@@ -15,7 +13,6 @@ import {
 import AdminEventCard from "../../components/adminEventCard/AdminEventCard";
 import eventApi from "../../Api/event";
 import MetricsPage from "./MetricsPage";
-import Sidebar from "../../components/sideBar/sideBar";
 import { useNavigate } from "react-router-dom";
 
 const initialQuery = {
@@ -101,28 +98,24 @@ function GeneralEvents() {
   );
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <Sidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
-            <Flex justify="space-between" align="center" mb={8}>
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
+            <Flex 
+              justify="space-between" 
+              align={{ base: "flex-start", sm: "center" }} 
+              mb={8}
+              direction={{ base: "column", sm: "row" }}
+              gap={4}
+            >
               <Heading 
                 as="h1" 
                 fontFamily="secondary" 
                 color="tertiary" 
-                fontSize="2xl"
+                fontSize={{ base: "xl", md: "2xl" }}
                 fontWeight="bold"
               >
                 Administra los eventos
@@ -142,6 +135,7 @@ function GeneralEvents() {
                 px={6}
                 py={6}
                 borderRadius="lg"
+                w={{ base: "100%", sm: "auto" }}
               >
                 Crear Evento
               </Button>
@@ -167,7 +161,7 @@ function GeneralEvents() {
             </Box>
             
             <Grid
-              templateColumns="repeat(auto-fill, minmax(280px, 1fr))"
+              templateColumns={{ base: "1fr", sm: "repeat(auto-fill, minmax(280px, 1fr))" }}
               gap={6}
               w="100%"
             >
@@ -239,12 +233,8 @@ function GeneralEvents() {
                 </Text>
               </Flex>
             )}
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+    </>
   );
 }
 

@@ -14,13 +14,12 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useSearchParams } from "react-router-dom";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
 import TicketCard from "../ticketsAdmin/components/TicketCard";
 import CreateTicketModal from "../ticketsAdmin/components/CreateTicketModal";
 import EditTicketModal from "../ticketsAdmin/components/EditTicketModal";
 import eventApi from "../../Api/event";
+import ConfirmDialog from "../../components/confirmDialog/ConfirmDialog";
+import useConfirmDialog from "../../hooks/useConfirmDialog";
 
 const SellerTicketsPage = () => {
   const [searchParams] = useSearchParams();
@@ -33,6 +32,7 @@ const SellerTicketsPage = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const toast = useToast();
+  const confirmDialog = useConfirmDialog();
 
   const {
     isOpen: isCreateOpen,
@@ -190,38 +190,45 @@ const SellerTicketsPage = () => {
   };
 
   const handleDeleteTicket = async (ticketId) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este ticket?")) {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/tickets/${ticketId}`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+    confirmDialog.openDialog({
+      title: "Eliminar ticket",
+      message: "¿Estás seguro de que deseas eliminar este ticket? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      confirmColor: "red",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/tickets/${ticketId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
 
-        if (!response.ok) throw new Error("Failed to delete ticket");
+          if (!response.ok) throw new Error("Failed to delete ticket");
 
-        setTickets((current) =>
-          current.filter((ticket) => ticket._id !== ticketId)
-        );
-        toast({
-          title: "Ticket eliminado",
-          status: "success",
-          duration: 3000,
-        });
-      } catch (error) {
-        console.error("Error deleting ticket:", error);
-        toast({
-          title: "Error al eliminar ticket",
-          description: error.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
-    }
+          setTickets((current) =>
+            current.filter((ticket) => ticket._id !== ticketId)
+          );
+          toast({
+            title: "Ticket eliminado",
+            status: "success",
+            duration: 3000,
+          });
+        } catch (error) {
+          console.error("Error deleting ticket:", error);
+          toast({
+            title: "Error al eliminar ticket",
+            description: error.message,
+            status: "error",
+            duration: 3000,
+          });
+        }
+      },
+    });
   };
 
   const handleEventChange = (eventId) => {
@@ -315,21 +322,12 @@ const SellerTicketsPage = () => {
   };
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <SellerSidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
             <Heading 
               as="h1" 
               fontFamily="secondary" 
@@ -438,12 +436,19 @@ const SellerTicketsPage = () => {
               onEdit={handleEditTicket}
               ticket={selectedTicket}
             />
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.closeDialog}
+        onConfirm={confirmDialog.handleConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        confirmColor={confirmDialog.confirmColor}
+      />
+    </>
   );
 };
 

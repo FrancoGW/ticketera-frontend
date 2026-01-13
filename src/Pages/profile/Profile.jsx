@@ -1,8 +1,3 @@
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import ClientSidebar from "../../components/clientSideBar/clientSideBar";
-import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
-import Sidebar from "../../components/sideBar/sideBar";
 import { useAuth } from "../../auth/context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -64,24 +59,6 @@ function Profile() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const cancelRef = useRef();
-
-  // Determinar qué sidebar mostrar según el rol
-  const getUserRoles = () => {
-    if (!authUser) return [];
-    return authUser.roles || (authUser.rol ? [authUser.rol] : []);
-  };
-
-  const userRoles = getUserRoles();
-  const isSeller = userRoles.includes("seller");
-  const isAdmin = userRoles.includes("admin");
-  const isBuyer = userRoles.includes("buyer") || (!isSeller && !isAdmin);
-
-  // Determinar qué sidebar renderizar
-  const renderSidebar = () => {
-    if (isAdmin) return <Sidebar />;
-    if (isSeller) return <SellerSidebar />;
-    return <ClientSidebar />;
-  };
 
   // Función para cargar los datos del usuario
   const loadUserData = async () => {
@@ -244,32 +221,21 @@ function Profile() {
   }
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      {renderSidebar()}
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-          pt={8}
-        >
-          <Container maxW="6xl" px={{ base: 4, md: 8 }} py={8}>
-            <VStack align="stretch" spacing={6}>
+    <>
+      <Container maxW="6xl" px={{ base: 4, md: 8 }} py={8}>
+        <VStack align="stretch" spacing={6}>
               {/* Header Section */}
               <Box>
                 <Heading 
                   fontFamily="secondary" 
                   color="tertiary" 
-                  fontSize="3xl"
+                  fontSize={{ base: "2xl", md: "3xl" }}
                   fontWeight="bold"
                   mb={2}
                 >
                   Hola {user?.firstname || ""}! 👋
                 </Heading>
-                <Text color="gray.600" fontSize="md" fontFamily="secondary">
+                <Text color="gray.600" fontSize={{ base: "sm", md: "md" }} fontFamily="secondary">
                   Gestiona tu información personal y configuración de cuenta
                 </Text>
               </Box>
@@ -498,12 +464,8 @@ function Profile() {
                   </VStack>
                 </CardBody>
               </Card>
-            </VStack>
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
+        </VStack>
+      </Container>
 
       {/* Alert Dialog */}
       <AlertDialog
@@ -546,7 +508,7 @@ function Profile() {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
-    </Flex>
+    </>
   );
 }
 

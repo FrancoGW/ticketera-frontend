@@ -26,10 +26,6 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
-import Footer from "../../components/footer/Footer";
-import Header from "../../components/header/Header";
-import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
-import Sidebar from "../../components/sideBar/sideBar";
 import img from "/assets/img/banner.png";
 import eventApi from "../../Api/event";
 import "./Style.css";
@@ -714,35 +710,7 @@ function NewEvent() {
     </Container>
   );
 
-  // Si es admin, renderizar con sidebar del admin
-  if (isAdmin) {
-    return (
-      <Flex minH="100vh" bg="gray.50">
-        <Sidebar />
-        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-          <Header />
-          <Box minH="calc(100vh - 80px)" pb={20} bg="gray.50" pt={8}>
-            {formContent}
-          </Box>
-          <Footer />
-        </Box>
-      </Flex>
-    );
-  }
-
-  // Si es seller, renderizar con sidebar
-  return (
-    <Flex minH="100vh" bg="gray.50">
-      <SellerSidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        <Box minH="calc(100vh - 80px)" pb={20} bg="gray.50">
-          {formContent}
-        </Box>
-        <Footer />
-      </Box>
-    </Flex>
-  );
+  return formContent;
 }
 
 export default NewEvent;

@@ -28,9 +28,8 @@ import {
 } from '@chakra-ui/react';
 import { FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
 import userService from '../../Api/user';
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import Sidebar from "../../components/sideBar/sideBar";
+import ConfirmDialog from '../confirmDialog/ConfirmDialog';
+import useConfirmDialog from '../../hooks/useConfirmDialog';
 
 const validRoles = ['admin', 'pdv', 'validator', 'user'];
 
@@ -49,6 +48,7 @@ const UsersManagement = () => {
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const confirmDialog = useConfirmDialog();
 
   useEffect(() => {
     loadUsers();
@@ -154,50 +154,53 @@ const UsersManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      try {
-        await userService.deleteUser(id);
-        toast({
-          title: 'Éxito',
-          description: 'Usuario eliminado correctamente',
-          status: 'success',
-          duration: 3000,
-        });
-        loadUsers();
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'No se pudo eliminar el usuario',
-          status: 'error',
-          duration: 3000,
-        });
-      }
-    }
+    confirmDialog.openDialog({
+      title: "Eliminar usuario",
+      message: "¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      confirmColor: "red",
+      onConfirm: async () => {
+        try {
+          await userService.deleteUser(id);
+          toast({
+            title: 'Éxito',
+            description: 'Usuario eliminado correctamente',
+            status: 'success',
+            duration: 3000,
+          });
+          loadUsers();
+        } catch (error) {
+          toast({
+            title: 'Error',
+            description: 'No se pudo eliminar el usuario',
+            status: 'error',
+            duration: 3000,
+          });
+        }
+      },
+    });
   };
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <Sidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
-            <Flex justify="space-between" align="center" mb={8}>
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
+            <Flex 
+              justify="space-between" 
+              align={{ base: "flex-start", sm: "center" }} 
+              mb={8}
+              direction={{ base: "column", sm: "row" }}
+              gap={4}
+            >
               <Heading 
                 as="h1" 
                 fontFamily="secondary" 
                 color="tertiary" 
-                fontSize="2xl"
+                fontSize={{ base: "xl", md: "2xl" }}
                 fontWeight="bold"
               >
                 Gestión de Usuarios
@@ -218,6 +221,7 @@ const UsersManagement = () => {
                 py={6}
                 borderRadius="lg"
                 transition="all 0.2s"
+                w={{ base: "100%", sm: "auto" }}
               >
                 Nuevo Usuario
               </Button>
@@ -231,7 +235,8 @@ const UsersManagement = () => {
               borderColor="gray.100"
               overflow="hidden"
             >
-              <Table variant="simple">
+              <TableContainer overflowX="auto">
+                <Table variant="simple" size={{ base: "sm", md: "md" }}>
                 <Thead bg="gray.50">
                   <Tr>
                     <Th fontFamily="secondary" fontWeight="600">Nombre</Th>
@@ -276,6 +281,7 @@ const UsersManagement = () => {
                   ))}
                 </Tbody>
               </Table>
+              </TableContainer>
             </Box>
 
             <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -397,12 +403,19 @@ const UsersManagement = () => {
                 </ModalFooter>
               </ModalContent>
             </Modal>
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.closeDialog}
+        onConfirm={confirmDialog.handleConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        confirmColor={confirmDialog.confirmColor}
+      />
+    </>
   );
 };
 

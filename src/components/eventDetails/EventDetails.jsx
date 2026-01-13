@@ -510,11 +510,12 @@ const EventDetails = () => {
                             >
                               <Flex
                                 justify="space-between"
-                                align="center"
+                                align={{ base: "flex-start", sm: "center" }}
                                 flexWrap="wrap"
                                 gap={4}
+                                direction={{ base: "column", sm: "row" }}
                               >
-                                <Box flex="1" minW="200px">
+                                <Box flex="1" minW={{ base: "100%", sm: "200px" }}>
                                   <Heading
                                     as="h3"
                                     fontSize="lg"
@@ -555,7 +556,7 @@ const EventDetails = () => {
                                       Agotado
                                     </Badge>
                                   ) : (
-                                    <HStack>
+                                    <HStack spacing={2} w={{ base: "100%", sm: "auto" }} justify={{ base: "center", sm: "flex-start" }}>
                                       <Button
                                         size="sm"
                                         onClick={() =>
@@ -566,6 +567,7 @@ const EventDetails = () => {
                                         }
                                         isDisabled={quantity === 0}
                                         borderRadius="full"
+                                        minW="40px"
                                       >
                                         -
                                       </Button>
@@ -596,6 +598,7 @@ const EventDetails = () => {
                                             (ticket?.maxEntries - ticket?.selled || 50)
                                         }
                                         borderRadius="full"
+                                        minW="40px"
                                       >
                                         +
                                       </Button>
@@ -639,7 +642,7 @@ const EventDetails = () => {
                       >
                         ¿Tienes un código de descuento?
                       </Text>
-                      <HStack>
+                      <Flex direction={{ base: "column", sm: "row" }} gap={2}>
                         <Input
                           placeholder="Ingresa tu código"
                           value={discountCode}
@@ -647,6 +650,7 @@ const EventDetails = () => {
                           borderColor="gray.300"
                           _focus={{ borderColor: "primary" }}
                           fontFamily="secondary"
+                          flex="1"
                         />
                         <Button
                           onClick={validateDiscountCode}
@@ -656,10 +660,11 @@ const EventDetails = () => {
                           color="white"
                           _hover={{ bg: "buttonHover" }}
                           fontFamily="secondary"
+                          w={{ base: "100%", sm: "auto" }}
                         >
                           Aplicar
                         </Button>
-                      </HStack>
+                      </Flex>
                       {discount > 0 && (
                         <Text
                           color="green.600"

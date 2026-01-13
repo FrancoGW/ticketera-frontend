@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import SellerSidebar from "../../components/sellerSideBar/sellerSideBar";
 import {
   Alert,
   AlertIcon,
@@ -117,47 +114,37 @@ function MyEvents() {
   // Renderizar un loading state mientras se carga el usuario
   if (userLoading) {
     return (
-      <Flex minH="100vh" bg="gray.50">
-        <SellerSidebar />
-        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-          <Header />
-          <Center minH="calc(100vh - 80px)" bg="white">
-            <Spinner
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.200"
-              color="primary"
-              size="xl"
-            />
-          </Center>
-        </Box>
-      </Flex>
+      <Center minH="calc(100vh - 80px)" bg="white">
+        <Spinner
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="primary"
+          size="xl"
+        />
+      </Center>
     );
   }
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <SellerSidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
-            <Flex justify="space-between" align="center" mb={8}>
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
+            <Flex 
+              justify="space-between" 
+              align={{ base: "flex-start", sm: "center" }} 
+              mb={8}
+              direction={{ base: "column", sm: "row" }}
+              gap={4}
+            >
               <Heading 
                 as="h1" 
                 fontFamily="secondary" 
                 color="tertiary" 
-                fontSize="2xl"
+                fontSize={{ base: "xl", md: "2xl" }}
                 fontWeight="bold"
               >
                 Mis Eventos
@@ -177,6 +164,7 @@ function MyEvents() {
                 px={6}
                 py={6}
                 borderRadius="lg"
+                w={{ base: "100%", sm: "auto" }}
               >
                 Crear Evento
               </Button>
@@ -288,11 +276,7 @@ function MyEvents() {
               </Box>
             </Flex>
           </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+    </>
   );
 }
 

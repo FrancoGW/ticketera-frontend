@@ -14,11 +14,10 @@ import {
   Flex,
   useToast,
   Text,
-  Spinner
+  Spinner,
+  Center,
+  TableContainer,
 } from "@chakra-ui/react";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import Sidebar from "../../components/sideBar/sideBar";
 import eventApi from "../../Api/event";
 
 const CommissionPage = () => {
@@ -136,35 +135,19 @@ const CommissionPage = () => {
 
   if (isLoading) {
     return (
-      <Flex minH="100vh" bg="gray.50">
-        <Sidebar />
-        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-          <Header />
-          <Flex justify="center" align="center" minH="calc(100vh - 80px)">
-            <Spinner size="xl" />
-          </Flex>
-        </Box>
-      </Flex>
+      <Center minH="calc(100vh - 80px)">
+        <Spinner size="xl" />
+      </Center>
     );
   }
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <Sidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
             <Heading 
               as="h1" 
               fontFamily="secondary" 
@@ -184,7 +167,8 @@ const CommissionPage = () => {
               borderColor="gray.100"
               overflow="hidden"
             >
-              <Table variant="simple">
+              <TableContainer overflowX="auto">
+                <Table variant="simple" size={{ base: "sm", md: "md" }}>
                 <Thead bg="gray.50">
                   <Tr>
                     <Th fontFamily="secondary" fontWeight="600">Evento</Th>
@@ -205,6 +189,7 @@ const CommissionPage = () => {
                   ))}
                 </Tbody>
               </Table>
+              </TableContainer>
             </Box>
 
             {events.length === 0 && (
@@ -225,12 +210,8 @@ const CommissionPage = () => {
                 </Text>
               </Flex>
             )}
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+    </>
   );
 };
 

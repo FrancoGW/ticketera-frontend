@@ -1,4 +1,4 @@
-import { React, useEffect, useState } from "react";
+import { React, useEffect, useState, useRef, memo } from "react";
 import {
   Link,
   Button,
@@ -15,9 +15,21 @@ import {
   Text,
   Spinner,
   Heading,
+  VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { IoMdContact } from "react-icons/io";
-import { motion } from "framer-motion";
+import { 
+  FiHome, 
+  FiUser, 
+  FiSettings, 
+  FiLogOut, 
+  FiPlus,
+  FiShoppingBag,
+  FiBarChart2
+} from "react-icons/fi";
+import { RiTicket2Line } from "react-icons/ri";
+import { motion, AnimatePresence } from "framer-motion";
 import logo from "/assets/img/logo.png";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useAuth } from "../../auth/context/AuthContext";
@@ -28,6 +40,7 @@ function Header() {
   const [hidden, setHidden] = useState(!isOpen);
   const { user, logout, isLoading: authLoading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,6 +88,22 @@ function Header() {
     return user && Array.isArray(userRoles) && userRoles.includes(roleToCheck);
   };
 
+  // Marcar que el header ya se animó después del primer render
+  useEffect(() => {
+    if (!hasAnimated.current) {
+      hasAnimated.current = true;
+    }
+  }, []);
+
+  // Verificar si el header ya se animó usando sessionStorage
+  const shouldAnimate = !sessionStorage.getItem('headerAnimated');
+  
+  useEffect(() => {
+    if (shouldAnimate) {
+      sessionStorage.setItem('headerAnimated', 'true');
+    }
+  }, [shouldAnimate]);
+
   return (
     <>
       <Flex
@@ -91,9 +120,9 @@ function Header() {
         left="0"
         right="0"
         zIndex={100}
-        initial={{ y: -100 }}
+        initial={shouldAnimate ? { y: -100 } : false}
         animate={{ y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={shouldAnimate ? { duration: 0.5, ease: "easeOut" } : { duration: 0 }}
         boxShadow={scrolled ? "0 2px 10px rgba(0,0,0,0.1)" : "none"}
       >
         <Link
@@ -310,220 +339,355 @@ function Header() {
         <Button
           {...getButtonProps()}
           px="3"
-          bg="none"
-          _hover={{ bg: "none" }}
-          _active={{ border: "none" }}
+          bg="rgba(255, 255, 255, 0.1)"
+          backdropFilter="blur(10px)"
+          _hover={{ bg: "rgba(255, 255, 255, 0.2)" }}
+          _active={{ bg: "rgba(255, 255, 255, 0.15)" }}
           aria-label="open menu"
-          display={{ base: "block", md: "none" }}
+          display={{ base: "flex", md: "none" }}
           position={isOpen ? "fixed" : "absolute"}
-          right="2"
-          top="5"
+          right="4"
+          top="4"
           zIndex="300"
           color="white"
+          borderRadius="full"
+          w="48px"
+          h="48px"
+          alignItems="center"
+          justifyContent="center"
           as={motion.button}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.5 } }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.2 }}
         >
-          {!isOpen ? (
-            <HamburgerIcon w="40px" h="40px" />
-          ) : (
-            <CloseIcon w="30px" h="30px" />
-          )}
-        </Button>
-        <Flex
-          as={motion.div}
-          {...getDisclosureProps()}
-          hidden={hidden}
-          initial={false}
-          onAnimationStart={() => setHidden(false)}
-          onAnimationComplete={() => setHidden(false)}
-          animate={{
-            width: isOpen ? "100vw" : "0",
-            opacity: isOpen ? 1 : 0,
-          }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          display={{ md: "none" }}
-          flexDirection="column"
-          bg="#b78dea"
-          overflow="hidden"
-          position={isOpen ? "fixed" : "absolute"}
-          right="0"
-          top="0"
-          height="100vh"
-          zIndex="200"
-        >
-          <Flex
-            flexDir="column"
-            w="100%"
-            h="100%"
-            align="center"
-            justify="center"
-            gap="4"
-            position="relative"
-            display={isOpen ? "flex" : "none"}
+          <motion.div
+            initial={false}
+            animate={isOpen ? { rotate: 180 } : { rotate: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <Link
-              fontFamily="secondary"
-              href="/about-us"
-              _hover={{ color: "primary", bg: "none" }}
-              color="#fff"
-              translate="no"
-              as={motion.a}
-              initial={{ x: 50, opacity: 0 }}
-              animate={isOpen ? { x: 0, opacity: 1 } : { x: 50, opacity: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-            >
-              Sobre PaseTicket
-            </Link>
-
-            <Link
-              fontFamily="secondary"
-              href="/Contact"
-              _hover={{ color: "primary", bg: "none" }}
-              color="#fff"
-              as={motion.a}
-              initial={{ x: 50, opacity: 0 }}
-              animate={isOpen ? { x: 0, opacity: 1 } : { x: 50, opacity: 0 }}
-              transition={{ duration: 0.3, delay: 0.15 }}
-            >
-              Contacto
-            </Link>
-            {user && (
-              <>
-                <Link
-                  fontFamily="secondary"
-                  href="/profile"
-                  _hover={{ color: "secondary", bg: "none" }}
-                  color="#fff"
-                >
-                  Perfil
-                </Link>
-
-                {hasRole("admin") && (
-                  <Link
-                    fontFamily="secondary"
-                    href="/admin/events"
-                    _hover={{ color: "secondary", bg: "none" }}
-                    color="#fff"
-                  >
-                    Administrar
-                  </Link>
-                )}
-
-                {hasRole("pdv") && (
-                  <>
-                    <Link
-                      fontFamily="secondary"
-                      href="/pdv/dashboard"
-                      _hover={{ color: "secondary", bg: "none" }}
-                      color="#fff"
-                    >
-                      Panel PDV
-                    </Link>
-                    <Link
-                      fontFamily="secondary"
-                      href="/pdv/tickets"
-                      _hover={{ color: "secondary", bg: "none" }}
-                      color="#fff"
-                    >
-                      Mis Ventas
-                    </Link>
-                    <Link
-                      fontFamily="secondary"
-                      href="/pdv/special-tickets"
-                      _hover={{ color: "secondary", bg: "none" }}
-                      color="#fff"
-                    >
-                      Tickets Especiales
-                    </Link>
-                  </>
-                )}
-
-                {(hasRole("seller") || hasRole("admin")) && (
-                  <Link
-                    fontFamily="secondary"
-                    href="/profile/my-events"
-                    _hover={{ color: "secondary", bg: "none" }}
-                    color="#fff"
-                  >
-                    Mis Eventos
-                  </Link>
-                )}
-
-                <Link
-                  fontFamily="secondary"
-                  href="/profile/my-tickets"
-                  _hover={{ color: "secondary", bg: "none" }}
-                  color="#fff"
-                >
-                  Mis E-Tickets
-                </Link>
-
-                <Link
-                  fontFamily="secondary"
-                  href="#"
-                  onClick={handleLogout}
-                  _hover={{ color: "secondary", bg: "none" }}
-                  color="#fff"
-                >
-                  Cerrar Sesión
-                </Link>
-
-                <Link href="/new-event" mt="3" _hover="none" _active="none">
-                  <Button
-                    bg="primary"
-                    size="sm"
-                    color="white"
-                    _hover="none"
-                    _active="none"
-                    transition="ease 0.2s"
-                    ml="2"
-                    fontFamily="secondary"
-                    textTransform="uppercase"
-                  >
-                    CREAR EVENTO
-                  </Button>
-                </Link>
-              </>
+            {!isOpen ? (
+              <HamburgerIcon w="24px" h="24px" />
+            ) : (
+              <CloseIcon w="24px" h="24px" />
             )}
-            {!user && (
-              <>
-                <Link
-                  href="/login"
-                  _hover={{ color: "primary", bg: "none" }}
-                  fontFamily="secondary"
-                  color="#fff"
-                >
-                  Iniciar Sesión
-                </Link>
+          </motion.div>
+        </Button>
 
-                <Link
-                  href="/register"
-                  _hover={{ color: "primary", bg: "none" }}
-                  fontFamily="secondary"
-                  color="#fff"
-                >
-                  Regístrate
-                </Link>
-              </>
-            )}
-            <Link
-              position="absolute"
-              mx="auto"
-              left="0"
-              right="0"
-              bottom="4"
-              href="/"
-              w="80px"
-              h="80px"
+        {/* Backdrop */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                backdropFilter: "blur(8px)",
+                zIndex: 199,
+                display: "block",
+              }}
+              onClick={getButtonProps().onClick}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ 
+                type: "spring", 
+                damping: 30, 
+                stiffness: 300,
+                duration: 0.4
+              }}
+              style={{
+                position: "fixed",
+                top: 0,
+                right: 0,
+                width: "85%",
+                maxWidth: "400px",
+                height: "100vh",
+                backgroundColor: "#1a1a1a",
+                zIndex: 200,
+                boxShadow: "-10px 0 30px rgba(0, 0, 0, 0.3)",
+                display: "flex",
+                flexDirection: "column",
+              }}
             >
-              <img src={logo} alt="" />
-            </Link>
-          </Flex>
-        </Flex>
+              <Flex
+                flexDir="column"
+                w="100%"
+                h="100%"
+                px={6}
+                py={8}
+                overflowY="auto"
+              >
+                {/* Header with Logo */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  mb={8}
+                >
+                  <Link href="/" display="block" mb={6}>
+                    <img 
+                      src={logo} 
+                      alt="Logo" 
+                      style={{ 
+                        width: "120px", 
+                        height: "auto",
+                        filter: "brightness(0) invert(1)"
+                      }} 
+                    />
+                  </Link>
+                  <Divider borderColor="rgba(255, 255, 255, 0.1)" />
+                </motion.div>
+
+                {/* Menu Items */}
+                <VStack 
+                  align="stretch" 
+                  spacing={2}
+                  flex="1"
+                >
+                  {/* Public Links */}
+                  <MobileMenuItem
+                    href="/about-us"
+                    icon={FiHome}
+                    label="Sobre PaseTicket"
+                    delay={0.15}
+                    onClick={getButtonProps().onClick}
+                  />
+                  <MobileMenuItem
+                    href="/Contact"
+                    icon={IoMdContact}
+                    label="Contacto"
+                    delay={0.2}
+                    onClick={getButtonProps().onClick}
+                  />
+
+                  {user && (
+                    <>
+                      <Box h={4} />
+                      <MobileMenuItem
+                        href="/profile"
+                        icon={FiUser}
+                        label="Mi Perfil"
+                        delay={0.25}
+                        onClick={getButtonProps().onClick}
+                      />
+
+                      {hasRole("admin") && (
+                        <MobileMenuItem
+                          href="/admin/events"
+                          icon={FiSettings}
+                          label="Administrar"
+                          delay={0.3}
+                          onClick={getButtonProps().onClick}
+                        />
+                      )}
+
+                      {hasRole("pdv") && (
+                        <>
+                          <MobileMenuItem
+                            href="/pdv/dashboard"
+                            icon={FiBarChart2}
+                            label="Panel PDV"
+                            delay={0.3}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/pdv/tickets"
+                            icon={FiShoppingBag}
+                            label="Mis Ventas"
+                            delay={0.35}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/pdv/special-tickets"
+                            icon={RiTicket2Line}
+                            label="Tickets Especiales"
+                            delay={0.4}
+                            onClick={getButtonProps().onClick}
+                          />
+                        </>
+                      )}
+
+                      {(hasRole("seller") || hasRole("admin")) && (
+                        <MobileMenuItem
+                          href="/profile/my-events"
+                          icon={FiHome}
+                          label="Mis Eventos"
+                          delay={0.35}
+                          onClick={getButtonProps().onClick}
+                        />
+                      )}
+
+                      <MobileMenuItem
+                        href="/profile/my-tickets"
+                        icon={RiTicket2Line}
+                        label="Mis E-Tickets"
+                        delay={0.4}
+                        onClick={getButtonProps().onClick}
+                      />
+
+                      <Box h={4} />
+                      <Divider borderColor="rgba(255, 255, 255, 0.1)" />
+                      <Box h={2} />
+
+                      <MobileMenuItem
+                        href="#"
+                        icon={FiLogOut}
+                        label="Cerrar Sesión"
+                        delay={0.45}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleLogout();
+                          getButtonProps().onClick();
+                        }}
+                        isDestructive
+                      />
+
+                      <Box h={4} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        <Link href="/new-event" onClick={getButtonProps().onClick}>
+                          <Button
+                            bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
+                            color="white"
+                            size="lg"
+                            w="100%"
+                            fontFamily="secondary"
+                            fontWeight="600"
+                            fontSize="md"
+                            py={6}
+                            borderRadius="xl"
+                            leftIcon={<FiPlus />}
+                            _hover={{
+                              bg: "linear-gradient(135deg, #9d6dd8 0%, #b78dea 100%)",
+                              transform: "translateY(-2px)",
+                              boxShadow: "0 10px 25px rgba(183, 141, 234, 0.3)",
+                            }}
+                            transition="all 0.3s"
+                            as={motion.button}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            Crear Evento
+                          </Button>
+                        </Link>
+                      </motion.div>
+                    </>
+                  )}
+
+                  {!user && (
+                    <>
+                      <Box h={4} />
+                      <MobileMenuItem
+                        href="/login"
+                        icon={FiUser}
+                        label="Iniciar Sesión"
+                        delay={0.25}
+                        onClick={getButtonProps().onClick}
+                      />
+                      <MobileMenuItem
+                        href="/register"
+                        icon={FiPlus}
+                        label="Regístrate"
+                        delay={0.3}
+                        onClick={getButtonProps().onClick}
+                        isPrimary
+                      />
+                    </>
+                  )}
+                </VStack>
+              </Flex>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Flex>
     </>
   );
 }
 
-export default Header;
+// Mobile Menu Item Component
+const MobileMenuItem = ({ href, icon, label, delay = 0, onClick, isDestructive = false, isPrimary = false }) => {
+  const IconComponent = icon;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 50 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ 
+        delay,
+        type: "spring",
+        damping: 25,
+        stiffness: 200
+      }}
+    >
+      <Link
+        href={href}
+        onClick={onClick}
+        display="block"
+        textDecoration="none"
+        _hover={{ textDecoration: "none" }}
+      >
+        <Flex
+          align="center"
+          px={4}
+          py={4}
+          borderRadius="xl"
+          bg={isPrimary ? "rgba(183, 141, 234, 0.1)" : "rgba(255, 255, 255, 0.05)"}
+          border="1px solid"
+          borderColor={isPrimary ? "rgba(183, 141, 234, 0.3)" : "rgba(255, 255, 255, 0.1)"}
+          _hover={{
+            bg: isPrimary ? "rgba(183, 141, 234, 0.2)" : "rgba(255, 255, 255, 0.1)",
+            borderColor: isPrimary ? "rgba(183, 141, 234, 0.5)" : "rgba(255, 255, 255, 0.2)",
+            transform: "translateX(8px)",
+          }}
+          transition="all 0.2s"
+          cursor="pointer"
+          as={motion.div}
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Box
+            p={2}
+            borderRadius="lg"
+            bg={isPrimary ? "rgba(183, 141, 234, 0.2)" : "rgba(255, 255, 255, 0.1)"}
+            mr={4}
+          >
+            <Icon
+              as={IconComponent}
+              boxSize={5}
+              color={isDestructive ? "#ff6b6b" : isPrimary ? "#b78dea" : "white"}
+            />
+          </Box>
+          <Text
+            fontFamily="secondary"
+            fontSize="md"
+            fontWeight="500"
+            color={isDestructive ? "#ff6b6b" : "white"}
+            flex="1"
+          >
+            {label}
+          </Text>
+        </Flex>
+      </Link>
+    </motion.div>
+  );
+};
+
+export default memo(Header);

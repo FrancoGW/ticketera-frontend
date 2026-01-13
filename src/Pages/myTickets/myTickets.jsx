@@ -1,7 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import ClientSidebar from "../../components/clientSideBar/clientSideBar";
 import {
   Container,
   Heading,
@@ -74,20 +71,9 @@ function MyTickets() {
   }, [toast]);
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <ClientSidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-          pt={8}
-        >
-          <Container maxW="6xl" px={{ base: 4, md: 8 }} py={8}>
-            <VStack align="stretch" spacing={6}>
+    <>
+      <Container maxW="6xl" px={{ base: 4, md: 8 }} py={8}>
+        <VStack align="stretch" spacing={6}>
               <Heading 
                 fontFamily="secondary" 
                 color="tertiary" 
@@ -174,13 +160,9 @@ function MyTickets() {
                   </CardBody>
                 </Card>
               )}
-            </VStack>
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+        </VStack>
+      </Container>
+    </>
   );
 }
 

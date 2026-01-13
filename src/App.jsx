@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./auth/context/AuthContext";
 import { ProtectedRoute } from "./auth/components/ProtectedRoute";
+import LayoutWithSidebar from "./components/layoutWithSidebar/LayoutWithSidebar";
 import Contact from "./Pages/contact/Contact";
 import Nosotros from "./Pages/nosotros/Nosotros";
 import Login from "./Pages/login/Login";
@@ -255,16 +256,11 @@ function AnimatedRoutes() {
             <Route
               path="/profile"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["buyer", "seller", "admin", "validator", "pdv"]}>
+                <ProtectedRoute roles={["buyer", "seller", "admin", "validator", "pdv"]}>
+                  <LayoutWithSidebar>
                     <Profile />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -285,16 +281,11 @@ function AnimatedRoutes() {
             <Route
               path="/profile/my-tickets"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["buyer", "seller", "admin"]}>
+                <ProtectedRoute roles={["buyer", "seller", "admin"]}>
+                  <LayoutWithSidebar>
                     <MyTickets />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             {/* <Route
@@ -310,106 +301,71 @@ function AnimatedRoutes() {
             <Route
               path="/admin/new-event"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <NewEvent />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/events"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <GeneralEvents />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/tickets"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <TicketsPage />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/events/:id"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <AdminEventDetails />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/profile/my-events"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["seller", "admin"]}>
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
                     <MyEvents />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/seller/new-event"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["seller", "admin"]}>
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
                     <NewEvent />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/seller/tickets"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["seller", "admin"]}>
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
                     <SellerTicketsPage />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -430,46 +386,31 @@ function AnimatedRoutes() {
             <Route
               path="/admin/metrics"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <MetricsPage />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/commission"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <CommissionPage />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/users"
               element={
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                >
-                  <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
                     <UserCrud />
-                  </ProtectedRoute>
-                </motion.div>
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
               }
             />
 

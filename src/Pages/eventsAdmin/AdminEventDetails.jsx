@@ -32,9 +32,6 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, ArrowBackIcon, DeleteIcon } from "@chakra-ui/icons";
 import { RiCalendar2Line, RiUserLine, RiPercentLine } from "react-icons/ri";
-import Header from "../../components/header/Header";
-import Footer from "../../components/footer/Footer";
-import Sidebar from "../../components/sideBar/sideBar";
 import eventApi from "../../Api/event";
 import { getObjDate, bufferToBase64, getBase64FromFile, validateSelectedImg } from "../../common/utils";
 import AddDates from "../../components/AddDates";
@@ -248,61 +245,44 @@ const AdminEventDetails = () => {
 
   if (isLoading) {
     return (
-      <Flex minH="100vh" bg="gray.50">
-        <Sidebar />
-        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-          <Header />
-          <Center minH="calc(100vh - 80px)" bg="white">
-            <Spinner
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.200"
-              color="primary"
-              size="xl"
-            />
-          </Center>
-        </Box>
-      </Flex>
+      <Center minH="calc(100vh - 80px)" bg="white">
+        <Spinner
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="primary"
+          size="xl"
+        />
+      </Center>
     );
   }
 
   if (!event) {
     return (
-      <Flex minH="100vh" bg="gray.50">
-        <Sidebar />
-        <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-          <Header />
-          <Center minH="calc(100vh - 80px)" bg="white">
-            <Text fontSize="lg" color="gray.500" fontFamily="secondary">
-              Evento no encontrado
-            </Text>
-          </Center>
-        </Box>
-      </Flex>
+      <Center minH="calc(100vh - 80px)" bg="white">
+        <Text fontSize="lg" color="gray.500" fontFamily="secondary">
+          Evento no encontrado
+        </Text>
+      </Center>
     );
   }
 
   const commissionPercentage = event.commissionPercentage ?? 10;
 
   return (
-    <Flex minH="100vh" bg="gray.50">
-      <Sidebar />
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
-        <Header />
-        
-        <Box
-          as="main"
-          minH="calc(100vh - 80px)"
-          pb={20}
-          bg="white"
-          pt="100px"
-        >
-          <Container 
-            maxW="full" 
-            px={{ base: 4, md: 8 }} 
-            py={8}
-          >
-            <Flex justify="space-between" align="center" mb={8}>
+    <>
+      <Container 
+        maxW="full" 
+        px={{ base: 4, md: 8 }} 
+        py={8}
+      >
+            <Flex 
+              justify="space-between" 
+              align={{ base: "flex-start", sm: "center" }} 
+              mb={8}
+              direction={{ base: "column", sm: "row" }}
+              gap={4}
+            >
               <HStack spacing={4}>
                 <Button
                   onClick={() => navigate(-1)}
@@ -320,7 +300,7 @@ const AdminEventDetails = () => {
                   as="h1" 
                   fontFamily="secondary" 
                   color="tertiary" 
-                  fontSize="2xl"
+                  fontSize={{ base: "xl", md: "2xl" }}
                   fontWeight="bold"
                 >
                   Detalles del Evento
@@ -343,11 +323,12 @@ const AdminEventDetails = () => {
                   py={6}
                   borderRadius="lg"
                   leftIcon={<EditIcon />}
+                  w={{ base: "100%", sm: "auto" }}
                 >
                   Editar evento
                 </Button>
               ) : (
-                <HStack spacing={3}>
+                <HStack spacing={3} w={{ base: "100%", sm: "auto" }}>
                   <Button
                     onClick={() => {
                       resetOriginalValues();
@@ -359,6 +340,7 @@ const AdminEventDetails = () => {
                     px={6}
                     py={6}
                     borderRadius="lg"
+                    w={{ base: "100%", sm: "auto" }}
                   >
                     Cancelar
                   </Button>
@@ -518,8 +500,8 @@ const AdminEventDetails = () => {
                   </Heading>
                   
                   {event.tickets && event.tickets.length > 0 ? (
-                    <TableContainer>
-                      <Table variant="simple">
+                    <TableContainer overflowX="auto">
+                      <Table variant="simple" size={{ base: "sm", md: "md" }}>
                         <Thead>
                           <Tr>
                             <Th fontFamily="secondary">Tipo de Ticket</Th>
@@ -592,10 +574,10 @@ const AdminEventDetails = () => {
                     </Heading>
                     <Flex
                       justifyContent="space-between"
-                      flexDir={{ base: "column", md: "row" }}
+                      flexDir={{ base: "column", lg: "row" }}
                       gap={6}
                     >
-                      <Box flex="1">
+                      <Box flex="1" order={{ base: 2, lg: 1 }}>
                         <form onSubmit={handleSubmit}>
                           <VStack align="stretch" spacing={4}>
                             <FormControl id="title" isRequired>
@@ -820,7 +802,7 @@ const AdminEventDetails = () => {
                         </form>
                       </Box>
 
-                      <Box w={{ base: "100%", md: "300px" }} flexShrink={0}>
+                      <Box w={{ base: "100%", lg: "300px" }} flexShrink={0} order={{ base: 1, lg: 2 }}>
                         <Card bg="gray.50" borderRadius="lg">
                           <CardBody p={4}>
                             <Text
@@ -860,12 +842,8 @@ const AdminEventDetails = () => {
                 </Card>
               )}
             </VStack>
-          </Container>
-        </Box>
-        
-        <Footer />
-      </Box>
-    </Flex>
+      </Container>
+    </>
   );
 };
 

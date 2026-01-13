@@ -1,5 +1,6 @@
 import React from 'react'
 import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
 
 const wpp = () => {
@@ -38,29 +39,39 @@ const wpp = () => {
 
   return (
     <div className="App">
-      {showButton && (
-        <button
-          onClick={handleWhatsAppClick}
-          className="whatsappButton"
-          style={{
-            opacity: showButton ? 1 : 0,
-            transition: 'opacity 1s ease-in-out'
-          }}
-        >
-          <i className="fab fa-whatsapp"></i>
-        </button>
-      )}
-      {showMessage && (
-        <div
-          className="message"
-          style={{
-            opacity: showMessage ? 1 : 0,
-            transition: 'opacity 1s ease-in-out'
-          }}
-        >
-          <p>¿En qué puedo ayudarte?</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {showButton && (
+          <motion.button
+            onClick={handleWhatsAppClick}
+            className="whatsappButton"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+            }}
+          >
+            <i className="fab fa-whatsapp"></i>
+          </motion.button>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showMessage && (
+          <motion.div
+            className="message"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <p>¿En qué puedo ayudarte?</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

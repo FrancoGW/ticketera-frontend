@@ -11,7 +11,26 @@ import {
 } from "@chakra-ui/react";
 import { FaCalendarAlt, FaMapMarkerAlt, FaTicketAlt } from "react-icons/fa";
 import { useNavigate } from "react-router";
+import { motion } from "framer-motion";
 import { getObjDate } from "../../common/utils";
+
+const cardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 50,
+    scale: 0.9,
+  },
+  visible: (index) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+      delay: index * 0.1,
+    },
+  }),
+};
 
 export default function EventCard({
   id,
@@ -20,11 +39,28 @@ export default function EventCard({
   dates,
   addressRef,
   cheapestTicket,
+  index = 0,
 }) {
   const navigate = useNavigate();
 
   return (
     <Flex
+      as={motion.div}
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      custom={index}
+      whileHover={{
+        scale: 1.05,
+        y: -10,
+        transition: {
+          duration: 0.3,
+          ease: "easeInOut",
+        },
+      }}
+      whileTap={{
+        scale: 0.98,
+      }}
       flexDir={{base:'row' ,md:'column'}}
       w={{base:'100%',md:'300px'}}
       h={{base:"150px",md:"auto"}}
@@ -32,10 +68,16 @@ export default function EventCard({
       boxShadow="rgba(0, 0, 0, 0.35) 0px 5px 15px"
       cursor="pointer"
       onClick={() => navigate(`/event/${id}`)}
-      // display={{ base: "flex", md: "none" }}
-      
+      borderRadius="md"
+      overflow="hidden"
+      bg="white"
+      _hover={{
+        boxShadow: "rgba(0, 0, 0, 0.5) 0px 10px 25px",
+      }}
+      transition="box-shadow 0.3s ease"
     >
       <Image
+        as={motion.img}
         minHeight={{base:"150px",md:"300px"}}
         src={
           pictures
@@ -45,6 +87,9 @@ export default function EventCard({
         alt=""
         h={{base:'150px',md:'300px'}}
         minW={{base:"150px",md:"100%"}}
+        whileHover={{ scale: 1.1 }}
+        transition={{ duration: 0.3 }}
+        objectFit="cover"
       />
       <Flex
         flexDir="column"
@@ -104,6 +149,7 @@ export default function EventCard({
         </Flex>
 
         <Button
+          as={motion.button}
           display={{base:"none",md:"block"}}
           bg="primary"
           w="100%"
@@ -115,9 +161,12 @@ export default function EventCard({
           }}
           _active=""
           borderRadius="0"
-            h={{base:'40px',md:'40px'}}
+          h={{base:'40px',md:'40px'}}
           fontFamily="secondary"
           fontWeight="400"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.2 }}
         >
           Comprar ahora
         </Button>

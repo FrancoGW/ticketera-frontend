@@ -78,6 +78,7 @@ function Header() {
   return (
     <>
       <Flex
+        as={motion.div}
         className={`header ${scrolled ? "scrolled" : ""}`}
         bg="#000"
         w="100%"
@@ -90,7 +91,9 @@ function Header() {
         left="0"
         right="0"
         zIndex={100}
-        transition="all 0.3s ease"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         boxShadow={scrolled ? "0 2px 10px rgba(0,0,0,0.1)" : "none"}
       >
         <Link
@@ -99,6 +102,10 @@ function Header() {
           w="150px"
           textDecoration="none"
           _hover={{ textDecoration: "none", opacity: 1 }}
+          as={motion.a}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.2 }}
         >
           <Heading
             color="#fff"
@@ -131,6 +138,9 @@ function Header() {
               _hover={{ color: "secondary", bg: "none" }}
               fontFamily="secondary"
               translate="no"
+              as={motion.a}
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.2 }}
             >
               Sobre PaseTicket
             </Link>
@@ -139,6 +149,9 @@ function Header() {
               fontSize="smaller"
               fontFamily="secondary"
               _hover={{ color: "secondary", bg: "none" }}
+              as={motion.a}
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.2 }}
             >
               Contacto
             </Link>
@@ -149,6 +162,9 @@ function Header() {
                   fontSize="smaller"
                   _hover={{ color: "secondary", bg: "none" }}
                   fontFamily="secondary"
+                  as={motion.a}
+                  whileHover={{ y: -2 }}
+                  transition={{ duration: 0.2 }}
                 >
                   Iniciar Sesion
                 </Link>
@@ -157,6 +173,9 @@ function Header() {
                   fontSize="smaller"
                   fontFamily="secondary"
                   _hover={{ color: "secondary", bg: "none" }}
+                  as={motion.a}
+                  whileHover={{ y: -2 }}
+                  transition={{ duration: 0.2 }}
                 >
                   Registrate
                 </Link>
@@ -318,7 +337,11 @@ function Header() {
           initial={false}
           onAnimationStart={() => setHidden(false)}
           onAnimationComplete={() => setHidden(false)}
-          animate={{ width: isOpen ? "100vw" : "0" }}
+          animate={{
+            width: isOpen ? "100vw" : "0",
+            opacity: isOpen ? 1 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
           display={{ md: "none" }}
           flexDirection="column"
           bg="#b78dea"
@@ -345,6 +368,10 @@ function Header() {
               _hover={{ color: "primary", bg: "none" }}
               color="#fff"
               translate="no"
+              as={motion.a}
+              initial={{ x: 50, opacity: 0 }}
+              animate={isOpen ? { x: 0, opacity: 1 } : { x: 50, opacity: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
             >
               Sobre PaseTicket
             </Link>
@@ -354,6 +381,10 @@ function Header() {
               href="/Contact"
               _hover={{ color: "primary", bg: "none" }}
               color="#fff"
+              as={motion.a}
+              initial={{ x: 50, opacity: 0 }}
+              animate={isOpen ? { x: 0, opacity: 1 } : { x: 50, opacity: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
             >
               Contacto
             </Link>

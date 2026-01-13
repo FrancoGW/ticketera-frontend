@@ -1,5 +1,6 @@
 import { Box, ChakraProvider } from "@chakra-ui/react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./auth/context/AuthContext";
 import { ProtectedRoute } from "./auth/components/ProtectedRoute";
 import Contact from "./Pages/contact/Contact";
@@ -37,52 +38,263 @@ import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import theme from "../theme";
 import "./main.css";
 
-function App() {
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    y: 20,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    transition: {
+      duration: 0.3,
+      ease: "easeIn",
+    },
+  },
+};
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <Box h="100%">
-      <ChakraProvider theme={theme}>
-        <AuthProvider>
-          <Wpp />
-          <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
             {/* Public Routes */}
-            <Route path="/" element={<Main />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about-us" element={<Nosotros />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/recover-password" element={<RecoverPassword />} />
-            <Route path="/politics" element={<Politics />} />
-            <Route path="/event/:id" element={<EventDetails />} />
-            <Route path="/producers" element={<Productores />} />
-            <Route path="/faq" element={<Preguntas />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/payment-finished" element={<PaymentFinished />} />
-            <Route path="/scanner" element={<Scanner />} />
+            <Route
+              path="/"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Main />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/contact"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Contact />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/about-us"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Nosotros />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Login />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/change-password"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ChangePassword />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Register />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/recover-password"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <RecoverPassword />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/politics"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Politics />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/event/:id"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <EventDetails />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/producers"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Productores />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Preguntas />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/verify-email"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <VerifyEmail />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/payment-finished"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <PaymentFinished />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/scanner"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <Scanner />
+                </motion.div>
+              }
+            />
 
             {/* Protected Routes for Users */}
             <Route
               path="/profile"
               element={
-                <ProtectedRoute roles={["buyer", "seller", "admin", "validator", "pdv"]}>
-                  <Profile />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["buyer", "seller", "admin", "validator", "pdv"]}>
+                    <Profile />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/validador"
               element={
-                <ProtectedRoute roles={["validator"]}>
-                  <Scanner />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["validator"]}>
+                    <Scanner />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/profile/my-tickets"
               element={
-                <ProtectedRoute roles={["buyer", "seller", "admin"]}>
-                  <MyTickets />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["buyer", "seller", "admin"]}>
+                    <MyTickets />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             {/* <Route
@@ -98,89 +310,166 @@ function App() {
             <Route
               path="/admin/new-event"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <NewEvent />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <NewEvent />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/admin/events"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <GeneralEvents />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <GeneralEvents />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/admin/tickets"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <TicketsPage />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <TicketsPage />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/admin/events/:id"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <AdminEventDetails />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <AdminEventDetails />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/profile/my-events"
               element={
-                <ProtectedRoute roles={["seller", "admin"]}>
-                  <MyEvents />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["seller", "admin"]}>
+                    <MyEvents />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/seller/new-event"
               element={
-                <ProtectedRoute roles={["seller", "admin"]}>
-                  <NewEvent />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["seller", "admin"]}>
+                    <NewEvent />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/seller/tickets"
               element={
-                <ProtectedRoute roles={["seller", "admin"]}>
-                  <SellerTicketsPage />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["seller", "admin"]}>
+                    <SellerTicketsPage />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/profile/my-events/:id/edit"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <EditEvent />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <EditEvent />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/admin/metrics"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <MetricsPage />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <MetricsPage />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/admin/commission"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <CommissionPage />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <CommissionPage />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute roles={["admin"]}>
-                  <UserCrud />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["admin"]}>
+                    <UserCrud />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
 
@@ -188,47 +477,93 @@ function App() {
             <Route
               path="/pdv/dashboard"
               element={
-                <ProtectedRoute roles={["pdv"]}>
-                  <PdvDashboard />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["pdv"]}>
+                    <PdvDashboard />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/pdv/tickets"
               element={
-                <ProtectedRoute roles={["pdv"]}>
-                  <PdvTickets />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["pdv"]}>
+                    <PdvTickets />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/pdv/sales"
               element={
-                <ProtectedRoute roles={["pdv"]}>
-                  <PdvSales />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["pdv"]}>
+                    <PdvSales />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/pdv/special-tickets"
               element={
-                <ProtectedRoute roles={["pdv"]}>
-                  <PdvSpecialTickets />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["pdv"]}>
+                    <PdvSpecialTickets />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
             <Route
               path="/validator/qr-scanner"
               element={
-                <ProtectedRoute roles={["validator"]}>
-                  <Scanner />
-                </ProtectedRoute>
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ProtectedRoute roles={["validator"]}>
+                    <Scanner />
+                  </ProtectedRoute>
+                </motion.div>
               }
             />
 
             {/* Catch-all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  return (
+    <Box h="100%">
+      <ChakraProvider theme={theme}>
+        <AuthProvider>
+          <Wpp />
+          <AnimatedRoutes />
         </AuthProvider>
       </ChakraProvider>
     </Box>

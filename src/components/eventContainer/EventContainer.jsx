@@ -1,5 +1,6 @@
 import { Grid, Image, Flex, Button, Text, Divider } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import EventCard from "../eventCard/EventCard.jsx";
 import eventApi from "../../Api/event";
 
@@ -58,17 +59,20 @@ function EventContainer() {
   };
 
   return (
-    <div id="hola">
-      <Flex  flexDir={{ base: "column" }} minH="40vh">
-
+    <motion.div
+      id="hola"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Flex flexDir={{ base: "column" }} minH="40vh">
         <Grid
           templateColumns={"repeat(auto-fill, minmax(270px, 1fr))"}
-          gap={6}
+          gap={8}
           w="100%"
-          my="10"
           justifyItems="center"
         >
-          {events?.map((event) => {
+          {events?.map((event, index) => {
             // El backend ya filtra los eventos por Mercado Pago configurado
             // Solo mostramos eventos aprobados
             if (event.status === "approved") {
@@ -81,6 +85,7 @@ function EventContainer() {
                   dates={event.dates}
                   addressRef={event.addressRef}
                   cheapestTicket={event.cheapestTicket}
+                  index={index}
                 />
               );
             }
@@ -93,8 +98,13 @@ function EventContainer() {
           </Flex>
         )}
         {events.length === 0 && !isLoading && (
-          <Flex w="100%" align="center" justify="center">
-            <Text fontSize="2xl" fontWeight="500" fontFamily="secondary">
+          <Flex w="100%" align="center" justify="center" py={16}>
+            <Text
+              fontSize="xl"
+              fontWeight="400"
+              fontFamily="secondary"
+              color="gray.600"
+            >
               No hay eventos disponibles en este momento
             </Text>
           </Flex>
@@ -102,6 +112,7 @@ function EventContainer() {
         {events.length > 0 && !isLoading && !noMoreEvents && (
           <Flex w="100%" align="center" justify="center" mb="4">
             <Button
+              as={motion.button}
               bg="primary"
               color="white"
               _hover={{
@@ -114,20 +125,30 @@ function EventContainer() {
               fontFamily="secondary"
               fontWeight="400"
               onClick={getMoreEvents}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
             >
               Ver más eventos
             </Button>
           </Flex>
         )}
         {noMoreEvents && !isLoading && isMoreEventsClicked && (
-          <Flex w="100%" align="center" justify="center" my="10">
-            <Text fontSize="2xl" fontWeight="500" fontFamily="secondary">
+          <Flex w="100%" align="center" justify="center" py={8}>
+            <Text
+              fontSize="lg"
+              fontWeight="400"
+              fontFamily="secondary"
+              color="gray.600"
+            >
               No hay más eventos para mostrar.
             </Text>
           </Flex>
         )}
       </Flex>
-    </div>
+    </motion.div>
   );
 }
 

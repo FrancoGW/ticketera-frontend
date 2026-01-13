@@ -193,17 +193,26 @@ const EventDetails = () => {
     if (quantity < 0) return;
     if (quantity > 50) return;
 
-    // const comission_percentage 
+    // Obtener el porcentaje de comisión del evento (por defecto 0 si no está configurado)
+    const commissionPercentage = event?.commissionPercentage || 0;
+    
+    // Calcular el precio total del ticket
+    const totalPrice = ticket.price * quantity;
+    
+    // Calcular el cargo por servicio basado en el porcentaje de comisión
+    // serviceCost = (totalPrice * commissionPercentage) / 100
+    const serviceCost = (totalPrice * commissionPercentage) / 100;
 
     const ticketToBuy = {
       [ticket._id]: {
         quantity,
-        serviceCost: 420,
-        totalPrice: ticket.price * quantity,
+        serviceCost: serviceCost,
+        totalPrice: totalPrice,
       },
     };
     const tickets = { ...ticketsToBuy, ...ticketToBuy };
     console.log('Updated tickets to buy:', tickets);
+    console.log('Commission percentage:', commissionPercentage, '%');
     setTicketsToBuy(tickets);
     const newServiceCost = calculateServiceCost(tickets);
     console.log('New service cost:', newServiceCost);

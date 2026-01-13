@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -35,8 +35,54 @@ const CommissionPage = () => {
     try {
       setIsLoading(true);
       const response = await eventApi.getEventsbyAdmin({ page: 1, limit: 100 });
-      setEvents(response.data.events);
+      console.log('Full API response:', response);
+      console.log('Response data:', response.data);
+      console.log('Events array:', response.data.events);
+      
+      // Verificar que commissionPercentage esté presente
+      const eventsWithCommission = await Promise.all(
+        response.data.events.map(async (event) => {
+          console.log(`Event ${event.title} - Raw event object:`, event);
+          console.log(`Event ${event.title} - commissionPercentage:`, event.commissionPercentage);
+          console.log(`Event ${event.title} - All keys:`, Object.keys(event));
+          
+          // Si el commissionPercentage no viene en la respuesta, intentar obtenerlo del evento completo
+          if (event.commissionPercentage === undefined || event.commissionPercentage === null) {
+            try {
+              console.log(`Fetching full event data for ${event.title} (${event._id})`);
+              const fullEventResponse = await eventApi.getEventById(event._id);
+              const fullEvent = fullEventResponse.data?.event;
+              console.log(`Full event data for ${event.title}:`, fullEvent);
+              console.log(`Full event commissionPercentage:`, fullEvent?.commissionPercentage);
+              
+              return {
+                ...event,
+                commissionPercentage: fullEvent?.commissionPercentage !== undefined && fullEvent?.commissionPercentage !== null
+                  ? Number(fullEvent.commissionPercentage)
+                  : 0
+              };
+            } catch (error) {
+              console.error(`Error fetching full event for ${event.title}:`, error);
+              return {
+                ...event,
+                commissionPercentage: 0
+              };
+            }
+          }
+          
+          return {
+            ...event,
+            commissionPercentage: event.commissionPercentage !== undefined && event.commissionPercentage !== null
+              ? Number(event.commissionPercentage)
+              : 0
+          };
+        })
+      );
+      
+      console.log('Events with commission:', eventsWithCommission);
+      setEvents(eventsWithCommission);
     } catch (error) {
+      console.error('Error loading events:', error);
       toast({
         title: "Error al cargar eventos",
         description: "No se pudieron cargar los eventos. Por favor, intente nuevamente.",
@@ -64,12 +110,8 @@ const CommissionPage = () => {
       setUpdatingEventId(eventId);
       await eventApi.updateCommissionPercentage(eventId, newCommission);
       
-      // Actualizar el estado local
-      setEvents(events.map(event => 
-        event._id === eventId 
-          ? { ...event, commissionPercentage: newCommission }
-          : event
-      ));
+      // Recargar los eventos desde el servidor para asegurar que tenemos los datos actualizados
+      await loadEvents();
 
       toast({
         title: "Comisión actualizada",
@@ -78,6 +120,7 @@ const CommissionPage = () => {
         duration: 3000,
       });
     } catch (error) {
+      console.error('Error updating commission:', error);
       toast({
         title: "Error al actualizar la comisión",
         description: error.response?.data?.message || "Ha ocurrido un error al actualizar la comisión",
@@ -190,7 +233,22 @@ const CommissionPage = () => {
 };
 
 const EventRow = ({ event, onCommissionChange, isLoading }) => {
+  // Inicializar con el valor actual del commissionPercentage
+  // Asegurarse de manejar null, undefined, y valores numéricos
+  const currentCommission = event.commissionPercentage !== undefined && event.commissionPercentage !== null 
+    ? Number(event.commissionPercentage) 
+    : 0;
   const [newCommission, setNewCommission] = useState('');
+
+  // Log para debugging - verificar que el valor se está recibiendo correctamente
+  React.useEffect(() => {
+    console.log(`EventRow - Event: ${event.title}`, {
+      commissionPercentage: event.commissionPercentage,
+      type: typeof event.commissionPercentage,
+      currentCommission: currentCommission,
+      fullEvent: event
+    });
+  }, [event.commissionPercentage, currentCommission, event.title, event]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -203,13 +261,13 @@ const EventRow = ({ event, onCommissionChange, isLoading }) => {
     <Tr _hover={{ bg: "gray.50" }}>
       <Td fontFamily="secondary">{event.title}</Td>
       <Td fontFamily="secondary">{event.userEmail}</Td>
-      <Td fontFamily="secondary" fontWeight="500">{event.commissionPercentage || 0}%</Td>
+      <Td fontFamily="secondary" fontWeight="500">{currentCommission}%</Td>
       <Td>
         <Input
           type="number"
           value={newCommission}
           onChange={handleInputChange}
-          placeholder="Nueva %"
+          placeholder={`Actual: ${currentCommission}%`}
           w="120px"
           min="0"
           max="100"

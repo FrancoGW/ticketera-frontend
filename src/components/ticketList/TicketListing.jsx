@@ -22,6 +22,7 @@ import {
 } from '@chakra-ui/react';
 import ticketApi from '../../Api/ticket';
 import { paymentApi } from '../../Api/payment';
+import eventApi from '../../Api/event';
 
 const LoadingState = () => (
   <Center h="50vh">
@@ -34,6 +35,7 @@ const LoadingState = () => (
 
 const TicketListing = () => {
   const [tickets, setTickets] = useState([]);
+  const [event, setEvent] = useState(null);
   const [ticketsToBuy, setTicketsToBuy] = useState({});
   const [serviceCost, setServiceCost] = useState(0);
   const [total, setTotal] = useState(0);
@@ -63,7 +65,18 @@ const TicketListing = () => {
   const checkAuthStatus = async () => {
     const token = localStorage.getItem('token');
     setIsAuthenticated(!!token);
-    await fetchTickets();
+    await Promise.all([fetchEvent(), fetchTickets()]);
+  };
+
+  const fetchEvent = async () => {
+    try {
+      const response = await eventApi.getEventById(EVENT_ID);
+      if (response.data?.event) {
+        setEvent(response.data.event);
+      }
+    } catch (error) {
+      console.error('Error fetching event:', error);
+    }
   };
 
   const fetchTickets = async () => {
@@ -93,12 +106,21 @@ const TicketListing = () => {
     
     if (validQuantity < 0 || validQuantity > 50) return;
     
+    // Obtener el porcentaje de comisión del evento (por defecto 0 si no está configurado)
+    const commissionPercentage = event?.commissionPercentage || 0;
+    
+    // Calcular el precio total del ticket
+    const totalPrice = ticket.price * validQuantity;
+    
+    // Calcular el cargo por servicio basado en el porcentaje de comisión
+    // serviceCost = (totalPrice * commissionPercentage) / 100
+    const serviceCost = (totalPrice * commissionPercentage) / 100;
+    
     const ticketToBuy = {
       [ticket._id]: {
         quantity: validQuantity,
-        // serviceCost: ticket.price * envConfig.COMMISSION_PERCENTAGE * validQuantity,
-        serviceCost: 420,
-        totalPrice: ticket.price * validQuantity,
+        serviceCost: serviceCost,
+        totalPrice: totalPrice,
       },
     };
     

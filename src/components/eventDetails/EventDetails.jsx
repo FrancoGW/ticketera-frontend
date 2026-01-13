@@ -46,6 +46,8 @@ const EventDetails = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [ticketsToBuy, setTicketsToBuy] = useState({});
   const [subtotal, setSubtotal] = useState(0); // Solo subtotal de tickets, sin cargo por servicio
+  const [checkoutPreview, setCheckoutPreview] = useState(null); // Preview del checkout con total y cargo por servicio
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [selectedDate, setSelectedDate] = useState(0);
   const [dateTickets, setDateTickets] = useState([]);
   const [discountCode, setDiscountCode] = useState("");
@@ -98,6 +100,7 @@ const EventDetails = () => {
     console.log('Resetting tickets to buy');
     setTicketsToBuy({});
     setSubtotal(0);
+    setCheckoutPreview(null);
     setDiscount(0);
     setDiscountCode("");
   };
@@ -114,6 +117,8 @@ const EventDetails = () => {
           status: "success",
           duration: 3000,
         });
+        // Actualizar preview después de aplicar descuento
+        await fetchCheckoutPreview(ticketsToBuy);
       } else {
         setDiscount(0);
         toast({
@@ -122,6 +127,8 @@ const EventDetails = () => {
           status: "error",
           duration: 3000,
         });
+        // Actualizar preview sin descuento
+        await fetchCheckoutPreview(ticketsToBuy);
       }
     } catch (error) {
       toast({
@@ -186,7 +193,7 @@ const EventDetails = () => {
     return tickets;
   };
 
-  const addTicketToBuy = (ticket, quantity) => {
+  const addTicketToBuy = async (ticket, quantity) => {
     console.log('Adding ticket to buy:', { ticket, quantity });
     if (quantity < 0) return;
     if (quantity > 50) return;
@@ -208,6 +215,46 @@ const EventDetails = () => {
       return sum + (ticketData.price * ticketData.quantity);
     }, 0);
     setSubtotal(newSubtotal);
+
+    // Obtener preview del checkout del backend si hay tickets seleccionados
+    await fetchCheckoutPreview(tickets);
+  };
+
+  const fetchCheckoutPreview = async (tickets) => {
+    // Verificar si hay tickets seleccionados
+    const hasTickets = Object.values(tickets).some(t => t.quantity > 0);
+    if (!hasTickets) {
+      setCheckoutPreview(null);
+      return;
+    }
+
+    try {
+      setIsLoadingPreview(true);
+      const ticketsArray = Object.entries(tickets)
+        .map(([ticketId, details]) => ({
+          ticketId,
+          quantity: details.quantity,
+        }))
+        .filter((ticket) => ticket.quantity > 0);
+
+      const previewData = {
+        ticketsToBuy: ticketsArray,
+        description: event.title,
+        selectedDate: event.dates && event.dates.length > 0 ? event.dates[selectedDate] : null,
+        discountCode: discountCode || undefined,
+        discountAmount: discount || undefined,
+      };
+
+      const { data } = await paymentApi.previewCheckout(previewData);
+      console.log('Checkout preview:', data);
+      setCheckoutPreview(data);
+    } catch (error) {
+      console.error('Error fetching checkout preview:', error);
+      // Si falla el preview, no mostrar nada (el usuario aún puede comprar)
+      setCheckoutPreview(null);
+    } finally {
+      setIsLoadingPreview(false);
+    }
   };
 
   const buyTicket = async () => {
@@ -649,17 +696,59 @@ const EventDetails = () => {
                         <Text color="gray.600">Subtotal:</Text>
                         <Text fontWeight="500">${subtotal.toLocaleString()}</Text>
                       </Flex>
-                      {discount > 0 && (
+                      
+                      {/* Mostrar cargo por servicio y total del backend si está disponible */}
+                      {checkoutPreview && (
+                        <>
+                          {checkoutPreview.serviceCharge > 0 && (
+                            <Flex justify="space-between" fontFamily="secondary">
+                              <Text color="gray.600">Cargo por servicio:</Text>
+                              <Text fontWeight="500">${checkoutPreview.serviceCharge.toLocaleString()}</Text>
+                            </Flex>
+                          )}
+                          {discount > 0 && (
+                            <Flex justify="space-between" fontFamily="secondary">
+                              <Text color="green.600">Descuento:</Text>
+                              <Text color="green.600" fontWeight="600">
+                                -${discount.toLocaleString()}
+                              </Text>
+                            </Flex>
+                          )}
+                          <Divider />
+                          <Flex justify="space-between" fontFamily="secondary">
+                            <Text fontSize="xl" fontWeight="700" color="tertiary">
+                              Total:
+                            </Text>
+                            <Text fontSize="xl" fontWeight="700" color="primary">
+                              ${checkoutPreview.totalAmount.toLocaleString()}
+                            </Text>
+                          </Flex>
+                        </>
+                      )}
+                      
+                      {/* Si no hay preview pero hay descuento, mostrarlo */}
+                      {!checkoutPreview && discount > 0 && (
                         <Flex justify="space-between" fontFamily="secondary">
                           <Text color="green.600">Descuento:</Text>
                           <Text color="green.600" fontWeight="600">
-                            -${discount}
+                            -${discount.toLocaleString()}
                           </Text>
                         </Flex>
                       )}
-                      <Text fontSize="xs" color="gray.500" fontFamily="secondary" fontStyle="italic">
-                        El cargo por servicio y el total final se calcularán al procesar el pago
-                      </Text>
+                      
+                      {/* Mensaje mientras carga el preview */}
+                      {isLoadingPreview && (
+                        <Text fontSize="xs" color="gray.500" fontFamily="secondary" fontStyle="italic">
+                          Calculando total...
+                        </Text>
+                      )}
+                      
+                      {/* Mensaje si no hay preview disponible */}
+                      {!checkoutPreview && !isLoadingPreview && subtotal > 0 && (
+                        <Text fontSize="xs" color="gray.500" fontFamily="secondary" fontStyle="italic">
+                          El cargo por servicio y el total final se calcularán al procesar el pago
+                        </Text>
+                      )}
                     </VStack>
 
                     {/* Botón de Compra */}
@@ -672,7 +761,7 @@ const EventDetails = () => {
                         _active={{ bg: "buttonHover" }}
                         borderRadius="lg"
                         leftIcon={<RiTicket2Line />}
-                        isDisabled={!subtotal || subtotal === 0}
+                        isDisabled={!subtotal || subtotal === 0 || isLoadingPreview}
                         onClick={buyTicket}
                         isLoading={isLoading}
                         fontFamily="secondary"

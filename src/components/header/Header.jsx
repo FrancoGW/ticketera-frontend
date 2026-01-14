@@ -30,6 +30,7 @@ import {
 } from "react-icons/fi";
 import { RiTicket2Line } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import logo from "/assets/img/logo.png";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useAuth } from "../../auth/context/AuthContext";
@@ -41,6 +42,7 @@ function Header() {
   const { user, logout, isLoading: authLoading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const hasAnimated = useRef(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,6 +88,18 @@ function Header() {
   const hasRole = (roleToCheck) => {
     const userRoles = user?.roles || (user?.rol ? [user.rol] : []);
     return user && Array.isArray(userRoles) && userRoles.includes(roleToCheck);
+  };
+
+  const handleCreateEvent = () => {
+    if (user) {
+      if (user.roles?.includes("seller") || user.roles?.includes("admin")) {
+        navigate("/seller/new-event");
+      } else {
+        navigate("/register");
+      }
+    } else {
+      navigate("/register");
+    }
   };
 
   // Marcar que el header ya se animó después del primer render
@@ -143,7 +157,7 @@ function Header() {
             fontWeight="300"
             fontFamily="Monument Extended"
           >
-            YVY PASS
+            GetPass
           </Heading>
         </Link>
         <Flex
@@ -155,58 +169,36 @@ function Header() {
         >
           <UnorderedList
             display="flex"
-            gap="2rem"
+            gap="1.5rem"
             alignItems="center"
             justifyContent="center"
             color="#fff"
             className="contentLinks"
+            listStyleType="none"
           >
-            <Link
-              href="/about-us"
-              fontSize="smaller"
-              _hover={{ color: "secondary", bg: "none" }}
-              fontFamily="secondary"
-              translate="no"
-              as={motion.a}
-              whileHover={{ y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              Sobre PaseTicket
-            </Link>
-            <Link
-              href="/contact"
-              fontSize="smaller"
-              fontFamily="secondary"
-              _hover={{ color: "secondary", bg: "none" }}
-              as={motion.a}
-              whileHover={{ y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              Contacto
-            </Link>
             {!user && (
               <>
                 <Link
                   href="/login"
                   fontSize="smaller"
-                  _hover={{ color: "secondary", bg: "none" }}
+                  _hover={{ color: "#fff", bg: "none" }}
                   fontFamily="secondary"
                   as={motion.a}
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2 }}
                 >
-                  Iniciar Sesion
+                  Iniciar Sesión
                 </Link>
                 <Link
                   href="/register"
                   fontSize="smaller"
                   fontFamily="secondary"
-                  _hover={{ color: "secondary", bg: "none" }}
+                  _hover={{ color: "#fff", bg: "none" }}
                   as={motion.a}
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2 }}
                 >
-                  Registrate
+                  Registrarme
                 </Link>
               </>
             )}
@@ -219,7 +211,7 @@ function Header() {
                       _active="none"
                       fontFamily="secondary"
                       fontSize="smaller"
-                      _hover={{ color: "secondary", bg: "none" }}
+                      _hover={{ color: "#fff", bg: "none" }}
                       cursor="pointer"
                       display="flex"
                       alignItems="center"
@@ -238,7 +230,7 @@ function Header() {
                         as={IoMdContact}
                         fontSize="xl"
                         fill="white"
-                        _hover={{ fill: "secondary" }}
+                        _hover={{ fill: "#fff" }}
                         transition="ease 0.2s"
                       />
                     </Box>
@@ -247,7 +239,7 @@ function Header() {
                     <PopoverBody display="flex" flexDir="column" gap="2" p="3">
                       <Link
                         href="/profile"
-                        _hover={{ color: "secondary", bg: "none" }}
+                        _hover={{ color: "#fff", bg: "none" }}
                         fontFamily="secondary"
                         textTransform='capitalize'
                       >
@@ -258,7 +250,7 @@ function Header() {
                           <Divider />
                           <Link
                             href="/admin/events"
-                            _hover={{ color: "secondary", bg: "none" }}
+                            _hover={{ color: "#fff", bg: "none" }}
                             fontFamily="secondary"
                             textTransform='capitalize'
                           >
@@ -271,7 +263,7 @@ function Header() {
                           <Divider />
                           <Link
                             href="/pdv/dashboard"
-                            _hover={{ color: "secondary", bg: "none" }}
+                            _hover={{ color: "#fff", bg: "none" }}
                             fontFamily="secondary"
                             textTransform='capitalize'
                           >
@@ -279,7 +271,7 @@ function Header() {
                           </Link>
                           <Link
                             href="/pdv/tickets"
-                            _hover={{ color: "secondary", bg: "none" }}
+                            _hover={{ color: "#fff", bg: "none" }}
                             fontFamily="secondary"
                             textTransform='capitalize'
                           >
@@ -287,7 +279,7 @@ function Header() {
                           </Link>
                           <Link
                             href="/pdv/special-tickets"
-                            _hover={{ color: "secondary", bg: "none" }}
+                            _hover={{ color: "#fff", bg: "none" }}
                             fontFamily="secondary"
                             textTransform='capitalize'
                           >
@@ -300,7 +292,7 @@ function Header() {
                           <Divider />
                           <Link
                             href="/profile/my-events"
-                            _hover={{ color: "secondary", bg: "none" }}
+                            _hover={{ color: "#fff", bg: "none" }}
                             fontFamily="secondary"
                             textTransform='capitalize'
                           >
@@ -311,7 +303,7 @@ function Header() {
                       <Divider />
                       <Link
                         href="/profile/my-tickets"
-                        _hover={{ color: "secondary", bg: "none" }}
+                        _hover={{ color: "#fff", bg: "none" }}
                         fontFamily="secondary"
                         textTransform='capitalize'
                       >
@@ -321,7 +313,7 @@ function Header() {
                       <Link
                         href="#"
                         onClick={handleLogout}
-                        _hover={{ color: "secondary", bg: "none" }}
+                        _hover={{ color: "#fff", bg: "none" }}
                         fontFamily="secondary"
                         textTransform='capitalize'
                       >
@@ -333,6 +325,33 @@ function Header() {
               </Box>
             )}
           </UnorderedList>
+          <Button
+            onClick={handleCreateEvent}
+            bg="white"
+            color="black"
+            fontSize={{ base: "sm", md: "md" }}
+            fontWeight="600"
+            fontFamily="secondary"
+            px={{ base: 4, md: 6 }}
+            py={{ base: 5, md: 6 }}
+            borderRadius="md"
+            leftIcon={<FiPlus />}
+            _hover={{
+              bg: "gray.100",
+              transform: "translateY(-2px)",
+              boxShadow: "xl",
+            }}
+            _active={{
+              transform: "translateY(0)",
+            }}
+            transition="all 0.2s"
+            as={motion.button}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            ml="4"
+          >
+            Crear Evento
+          </Button>
         </Flex>
 
         {/* NAVBAR MOBILE */}
@@ -563,8 +582,68 @@ function Header() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
                       >
-                        <Link href="/new-event" onClick={getButtonProps().onClick}>
+                        <Button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleCreateEvent();
+                            getButtonProps().onClick();
+                          }}
+                          bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
+                          color="white"
+                          size="lg"
+                          w="100%"
+                          fontFamily="secondary"
+                          fontWeight="600"
+                          fontSize="md"
+                          py={6}
+                          borderRadius="xl"
+                          leftIcon={<FiPlus />}
+                          _hover={{
+                            bg: "linear-gradient(135deg, #9d6dd8 0%, #b78dea 100%)",
+                            transform: "translateY(-2px)",
+                            boxShadow: "0 10px 25px rgba(183, 141, 234, 0.3)",
+                          }}
+                          transition="all 0.3s"
+                          as={motion.button}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          Crear Evento
+                        </Button>
+                      </motion.div>
+                    </>
+                  )}
+
+                  {!user && (
+                    <>
+                      <Box h={4} />
+                      <MobileMenuItem
+                        href="/login"
+                        icon={FiUser}
+                        label="Iniciar Sesión"
+                        delay={0.25}
+                        onClick={getButtonProps().onClick}
+                      />
+                      <MobileMenuItem
+                        href="/register"
+                        icon={FiUser}
+                        label="Registrarme"
+                        delay={0.3}
+                        onClick={getButtonProps().onClick}
+                      />
+                      <Box h={4} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.35 }}
+                      >
+                        <Link href="/register" onClick={getButtonProps().onClick}>
                           <Button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleCreateEvent();
+                              getButtonProps().onClick();
+                            }}
                             bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
                             color="white"
                             size="lg"
@@ -589,27 +668,6 @@ function Header() {
                           </Button>
                         </Link>
                       </motion.div>
-                    </>
-                  )}
-
-                  {!user && (
-                    <>
-                      <Box h={4} />
-                      <MobileMenuItem
-                        href="/login"
-                        icon={FiUser}
-                        label="Iniciar Sesión"
-                        delay={0.25}
-                        onClick={getButtonProps().onClick}
-                      />
-                      <MobileMenuItem
-                        href="/register"
-                        icon={FiPlus}
-                        label="Regístrate"
-                        delay={0.3}
-                        onClick={getButtonProps().onClick}
-                        isPrimary
-                      />
                     </>
                   )}
                 </VStack>

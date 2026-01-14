@@ -22,7 +22,7 @@ function PayApproved() {
   </AlertTitle>
   <AlertDescription maxWidth='sm'>
     <Flex direction='column'>
-    Gracias por elegir YVY PASS! 
+    Gracias por elegir GetPass! 
     <Link href='/profile/my-tickets' ><Button m='0 20px' colorScheme="purple">Ver e-tickets</Button></Link>
     </Flex>
     

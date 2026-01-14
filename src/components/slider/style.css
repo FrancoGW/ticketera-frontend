@@ -65,6 +65,15 @@ gap: 10px;
   object-fit: cover;
 }
 
+.blur-slide {
+  filter: blur(2px);
+  transition: filter 0.3s ease;
+}
+
+.swiper-slide-active .blur-slide {
+  filter: blur(0px);
+}
+
 .swiper {
   margin-left: auto;
   margin-right: auto;

@@ -8,6 +8,8 @@ import i3 from "/assets/img/slide/slide-reggae.png";
 import r1 from "/assets/img/slide/Flowtime.jpg";
 import r2 from "/assets/img/slide/JungleParty.jpg";
 import r3 from "/assets/img/slide/Reggae.jpg";
+// Nueva imagen del evento
+import eventImage from "/assets/img/slide/sliderrr.webp";
 import { Flex } from "@chakra-ui/react";
 import {CheckCircleIcon} from '@chakra-ui/icons'
 import {Text} from '@chakra-ui/react'
@@ -47,6 +49,9 @@ export default function App() {
           <SwiperSlide>
             <img src={i3} alt="" />
           </SwiperSlide>
+          <SwiperSlide>
+            <img src={eventImage} alt="Evento" className="blur-slide" />
+          </SwiperSlide>
         </Swiper>
       </Flex>
       <Flex display={{ base: "block", md: "none" }}>
@@ -73,6 +78,9 @@ export default function App() {
             </SwiperSlide>
             <SwiperSlide className="resSlide">
               <img src={r3} alt="" />
+            </SwiperSlide>
+            <SwiperSlide className="resSlide">
+              <img src={eventImage} alt="Evento" className="blur-slide" />
             </SwiperSlide>
           </Swiper>
          

@@ -15,3 +15,20 @@
 .slick-arrow,.slick-VITE{
     display: none !important;
 }
+
+/* Features Slider Styles */
+.features-swiper {
+    width: 100%;
+    overflow: hidden;
+}
+
+.features-swiper .swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.features-swiper .swiper-wrapper {
+    transition-timing-function: linear;
+}

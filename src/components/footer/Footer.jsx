@@ -1,6 +1,14 @@
 import React from 'react'
-import "./Style.css"
-import {Flex, Heading, Link} from '@chakra-ui/react'
+import { 
+  Box, 
+  Flex, 
+  Heading, 
+  Link, 
+  Text,
+  Container,
+  HStack,
+  Divider
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router'
 import logo from "/assets/img/logo.png"
@@ -21,147 +29,181 @@ const footerVariants = {
 };
 
 function Footer() {
-    const navigate = useNavigate()
+  const navigate = useNavigate()
   
-    return (
-    <motion.div
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <Box
       className='footer'
-      variants={footerVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-100px" }}
+      bg="#000"
+      w="100%"
+      position="relative"
+      zIndex={10}
+      py={{ base: 8, md: 12 }}
     >
-        <div className='contentInformation'>
-            <div className='categories'>
-                <Heading as="h3" fontFamily="secondary" fontWeight="500" fontSize="26px" mb="3">CATEGORÍAS</Heading>
-                <Link
-                  className='item'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  Presencial
-                </Link>
-                
-            </div>
-            <div className='event'>
-                <Heading as="h3" fontFamily="secondary" fontWeight="500" fontSize="26px" mb="3">TU EVENTO</Heading>
-                <Link
-                  className='item'
-                  href='/producers'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  ¿Eres Productor? Conocé más aquí
-                </Link>
-                <Link
-                  className='item'
-                  href='/new-event'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  Crear Evento
-                </Link>
-                <Link
-                  className='item'
-                  href='/politics'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  Términos y Condiciones
-                </Link>
-            </div>
-            <div className='information'>
-                <Heading as="h3" fontFamily="secondary" fontWeight="500" fontSize="26px" mb="3" translate="no">YVY PASS</Heading>
-                <Link
-                  className='item'
-                  href='/about-us'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  ¿Qué es YVY PASS?
-                </Link>
-                <Link
-                  className='item'
-                  href='/faq'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  Preguntas Frecuentes
-                </Link>
-                <Link
-                  className='item'
-                  href='/register'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  Regístrate
-                </Link>
-                <Link
-                  className='item'
-                  href='/contact'
-                  fontFamily="secondary"
-                  fontWeight="300"
-                  as={motion.a}
-                  whileHover={{ x: 5, color: "#4dd0e1" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  Contacto
-                </Link>
-
-            </div>
-
-
-        </div>
+      <Container maxW="6xl" px={{ base: 4, md: 8 }}>
+        {/* Top Section: Logo and Name */}
         <Flex
-          className='contentLogo'
-          onClick={() => navigate("/")}
-          mt={{base: "6", sm: "0"}}
-          as={motion.div}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ duration: 0.2 }}
-          cursor="pointer"
+          justify={{ base: "center", md: "flex-start" }}
+          align="center"
+          py={8}
+          gap={4}
         >
-           <Link className='logo'><img src={logo} alt="" /></Link> 
-           <div className='contentNumbers'>
-               <Heading
-                 as="h3"
-                 color="#fff"
-                 fontFamily="secondary"
-                 fontWeight="500"
-                 _hover={{color: "#4dd0e1"}}
-                 transition="ease-in-out 0.1s"
-                 cursor="pointer"
-                 translate="no"
-               >
-                 YVY PASS
-               </Heading>
-           </div>
+          <Flex
+            align="center"
+            gap={3}
+            cursor="pointer"
+            onClick={() => navigate("/")}
+            as={motion.div}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Box
+              as="img"
+              src={logo}
+              alt="GetPass Logo"
+              height="40px"
+              width="auto"
+            />
+            <Heading
+              as="h3"
+              color="#fff"
+              fontFamily="secondary"
+              fontWeight="600"
+              fontSize={{ base: "xl", md: "2xl" }}
+              letterSpacing="-0.01em"
+              translate="no"
+            >
+              GetPass
+            </Heading>
+          </Flex>
         </Flex>
 
+        <Divider borderColor="rgba(255, 255, 255, 0.1)" mb={8} />
 
-    </motion.div>
+        {/* Links Section */}
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justify="center"
+          align="center"
+          gap={{ base: 4, md: 8 }}
+          wrap="wrap"
+          mb={8}
+        >
+          <Link
+            href="/about-us"
+            fontFamily="secondary"
+            fontSize={{ base: "sm", md: "md" }}
+            fontWeight="400"
+            color="rgba(255, 255, 255, 0.8)"
+            _hover={{
+              color: "#fff",
+              textDecoration: "none",
+            }}
+            transition="color 0.2s"
+            as={motion.a}
+            whileHover={{ y: -2 }}
+          >
+            ¿Qué es GetPass?
+          </Link>
+
+          <Text
+            display={{ base: "none", md: "block" }}
+            color="rgba(255, 255, 255, 0.3)"
+            fontSize="md"
+          >
+            •
+          </Text>
+
+          <Link
+            href="/producers"
+            fontFamily="secondary"
+            fontSize={{ base: "sm", md: "md" }}
+            fontWeight="400"
+            color="rgba(255, 255, 255, 0.8)"
+            _hover={{
+              color: "#fff",
+              textDecoration: "none",
+            }}
+            transition="color 0.2s"
+            as={motion.a}
+            whileHover={{ y: -2 }}
+          >
+            Registrarme como Organizador
+          </Link>
+
+          <Text
+            display={{ base: "none", md: "block" }}
+            color="rgba(255, 255, 255, 0.3)"
+            fontSize="md"
+          >
+            •
+          </Text>
+
+          <Link
+            href="/politics"
+            fontFamily="secondary"
+            fontSize={{ base: "sm", md: "md" }}
+            fontWeight="400"
+            color="rgba(255, 255, 255, 0.8)"
+            _hover={{
+              color: "#fff",
+              textDecoration: "none",
+            }}
+            transition="color 0.2s"
+            as={motion.a}
+            whileHover={{ y: -2 }}
+          >
+            Términos y Condiciones
+          </Link>
+
+          <Text
+            display={{ base: "none", md: "block" }}
+            color="rgba(255, 255, 255, 0.3)"
+            fontSize="md"
+          >
+            •
+          </Text>
+
+          <Link
+            href="/contact"
+            fontFamily="secondary"
+            fontSize={{ base: "sm", md: "md" }}
+            fontWeight="400"
+            color="rgba(255, 255, 255, 0.8)"
+            _hover={{
+              color: "#fff",
+              textDecoration: "none",
+            }}
+            transition="color 0.2s"
+            as={motion.a}
+            whileHover={{ y: -2 }}
+          >
+            Soporte
+          </Link>
+        </Flex>
+
+        <Divider borderColor="rgba(255, 255, 255, 0.1)" mb={6} />
+
+        {/* Copyright Section */}
+        <Flex
+          justify="center"
+          align="center"
+          py={4}
+        >
+          <Text
+            fontFamily="secondary"
+            fontSize="sm"
+            color="rgba(255, 255, 255, 0.6)"
+            textAlign="center"
+          >
+            © {currentYear} GetPass. Todos los derechos reservados.
+          </Text>
+        </Flex>
+      </Container>
+    </Box>
   )
 }
 

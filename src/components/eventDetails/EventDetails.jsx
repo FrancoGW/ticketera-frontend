@@ -497,10 +497,10 @@ const EventDetails = () => {
                           return (
                             <Box
                               key={ticket._id}
-                              p={4}
+                              p={{ base: 4, md: 5 }}
                               border="2px solid"
                               borderColor={isSoldOut ? "red.200" : "gray.200"}
-                              borderRadius="lg"
+                              borderRadius="xl"
                               bg={isSoldOut ? "red.50" : "white"}
                               _hover={{
                                 borderColor: isSoldOut ? "red.300" : "primary",
@@ -510,23 +510,23 @@ const EventDetails = () => {
                             >
                               <Flex
                                 justify="space-between"
-                                align={{ base: "flex-start", sm: "center" }}
-                                flexWrap="wrap"
+                                align="center"
                                 gap={4}
-                                direction={{ base: "column", sm: "row" }}
+                                direction="row"
                               >
-                                <Box flex="1" minW={{ base: "100%", sm: "200px" }}>
+                                <Box flex="1" minW={0}>
                                   <Heading
                                     as="h3"
-                                    fontSize="lg"
+                                    fontSize={{ base: "sm", md: "lg" }}
                                     fontFamily="secondary"
                                     fontWeight="600"
                                     mb={1}
+                                    noOfLines={1}
                                   >
                                     {ticket.title}
                                   </Heading>
                                   <Text
-                                    fontSize="2xl"
+                                    fontSize={{ base: "lg", md: "2xl" }}
                                     fontWeight="700"
                                     color="primary"
                                     fontFamily="secondary"
@@ -536,27 +536,29 @@ const EventDetails = () => {
                                   {ticket.ticketType && ticket.ticketType !== "GENERAL" && (
                                     <Badge
                                       colorScheme="blue"
-                                      mt={2}
                                       fontSize="xs"
+                                      mt={1}
                                     >
                                       {ticket.ticketType}
                                     </Badge>
                                   )}
                                 </Box>
 
-                                <Box>
+                                <Box flexShrink={0}>
                                   {isSoldOut ? (
                                     <Badge
                                       colorScheme="red"
-                                      fontSize="md"
-                                      px={4}
+                                      fontSize={{ base: "sm", md: "md" }}
+                                      px={3}
                                       py={2}
                                       borderRadius="md"
                                     >
                                       Agotado
                                     </Badge>
                                   ) : (
-                                    <HStack spacing={2} w={{ base: "100%", sm: "auto" }} justify={{ base: "center", sm: "flex-start" }}>
+                                    <HStack 
+                                      spacing={2}
+                                    >
                                       <Button
                                         size="sm"
                                         onClick={() =>
@@ -567,7 +569,12 @@ const EventDetails = () => {
                                         }
                                         isDisabled={quantity === 0}
                                         borderRadius="full"
-                                        minW="40px"
+                                        minW="36px"
+                                        h="36px"
+                                        fontSize="md"
+                                        bg="gray.100"
+                                        _hover={{ bg: "gray.200" }}
+                                        p={0}
                                       >
                                         -
                                       </Button>
@@ -580,12 +587,16 @@ const EventDetails = () => {
                                             parseInt(e.target.value) || 0
                                           )
                                         }
-                                        w="60px"
+                                        w="50px"
+                                        h="36px"
                                         textAlign="center"
                                         borderColor="gray.300"
-                                        _focus={{ borderColor: "primary" }}
+                                        _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
                                         min={0}
                                         max={50}
+                                        fontSize="sm"
+                                        fontWeight="600"
+                                        p={0}
                                       />
                                       <Button
                                         size="sm"
@@ -598,7 +609,13 @@ const EventDetails = () => {
                                             (ticket?.maxEntries - ticket?.selled || 50)
                                         }
                                         borderRadius="full"
-                                        minW="40px"
+                                        minW="36px"
+                                        h="36px"
+                                        fontSize="md"
+                                        bg="black"
+                                        color="white"
+                                        _hover={{ bg: "#1a1a1a" }}
+                                        p={0}
                                       >
                                         +
                                       </Button>
@@ -634,33 +651,38 @@ const EventDetails = () => {
                     {/* Código de Descuento */}
                     <Box>
                       <Text
-                        fontSize="sm"
+                        fontSize={{ base: "md", md: "sm" }}
                         fontWeight="600"
-                        mb={2}
+                        mb={3}
                         fontFamily="secondary"
                         color="gray.700"
                       >
                         ¿Tienes un código de descuento?
                       </Text>
-                      <Flex direction={{ base: "column", sm: "row" }} gap={2}>
+                      <Flex direction="column" gap={3}>
                         <Input
                           placeholder="Ingresa tu código"
                           value={discountCode}
                           onChange={(e) => setDiscountCode(e.target.value)}
                           borderColor="gray.300"
-                          _focus={{ borderColor: "primary" }}
+                          borderWidth="2px"
+                          _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
                           fontFamily="secondary"
-                          flex="1"
+                          size={{ base: "md", md: "sm" }}
+                          borderRadius="lg"
                         />
                         <Button
                           onClick={validateDiscountCode}
                           isLoading={isValidatingCode}
                           isDisabled={!discountCode}
-                          bg="primary"
+                          bg="black"
                           color="white"
-                          _hover={{ bg: "buttonHover" }}
+                          _hover={{ bg: "#1a1a1a" }}
                           fontFamily="secondary"
-                          w={{ base: "100%", sm: "auto" }}
+                          w="100%"
+                          size={{ base: "md", md: "sm" }}
+                          borderRadius="lg"
+                          fontWeight="600"
                         >
                           Aplicar
                         </Button>
@@ -669,11 +691,11 @@ const EventDetails = () => {
                         <Text
                           color="green.600"
                           fontSize="sm"
-                          mt={2}
+                          mt={3}
                           fontWeight="600"
                           fontFamily="secondary"
                         >
-                          ✓ Descuento aplicado: -${discount}
+                          ✓ Descuento aplicado: -${discount.toLocaleString()}
                         </Text>
                       )}
                     </Box>
@@ -681,48 +703,56 @@ const EventDetails = () => {
                     <Divider />
 
                     {/* Resumen de Compra */}
-                    <VStack align="stretch" spacing={2}>
-                      <Flex justify="space-between" fontFamily="secondary">
-                        <Text color="gray.600">Subtotal:</Text>
-                        <Text fontWeight="500">${subtotal.toLocaleString()}</Text>
-                      </Flex>
-                      
-                      {serviceCharge > 0 && (
-                        <Flex justify="space-between" fontFamily="secondary">
-                          <Text color="gray.600">Cargo por servicio:</Text>
-                          <Text fontWeight="500">${serviceCharge.toLocaleString()}</Text>
+                    <Box
+                      p={4}
+                      bg="gray.50"
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="gray.200"
+                    >
+                      <VStack align="stretch" spacing={3}>
+                        <Flex justify="space-between" fontFamily="secondary" align="center">
+                          <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>Subtotal:</Text>
+                          <Text fontWeight="600" fontSize={{ base: "md", md: "lg" }}>${subtotal.toLocaleString()}</Text>
                         </Flex>
-                      )}
-                      
-                      {discount > 0 && (
-                        <Flex justify="space-between" fontFamily="secondary">
-                          <Text color="green.600">Descuento:</Text>
-                          <Text color="green.600" fontWeight="600">
-                            -${discount.toLocaleString()}
+                        
+                        {serviceCharge > 0 && (
+                          <Flex justify="space-between" fontFamily="secondary" align="center">
+                            <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>Cargo por servicio:</Text>
+                            <Text fontWeight="600" fontSize={{ base: "md", md: "lg" }}>${serviceCharge.toLocaleString()}</Text>
+                          </Flex>
+                        )}
+                        
+                        {discount > 0 && (
+                          <Flex justify="space-between" fontFamily="secondary" align="center">
+                            <Text color="green.600" fontSize={{ base: "sm", md: "md" }}>Descuento:</Text>
+                            <Text color="green.600" fontWeight="700" fontSize={{ base: "md", md: "lg" }}>
+                              -${discount.toLocaleString()}
+                            </Text>
+                          </Flex>
+                        )}
+                        
+                        <Divider borderColor="gray.300" />
+                        
+                        <Flex justify="space-between" fontFamily="secondary" align="center" pt={1}>
+                          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="black">
+                            Total:
+                          </Text>
+                          <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="700" color="black">
+                            ${total.toLocaleString()}
                           </Text>
                         </Flex>
-                      )}
-                      
-                      <Divider />
-                      
-                      <Flex justify="space-between" fontFamily="secondary">
-                        <Text fontSize="xl" fontWeight="700" color="tertiary">
-                          Total:
-                        </Text>
-                        <Text fontSize="xl" fontWeight="700" color="primary">
-                          ${total.toLocaleString()}
-                        </Text>
-                      </Flex>
-                    </VStack>
+                      </VStack>
+                    </Box>
 
                     {/* Botón de Compra */}
                     {localStorage.getItem("token") ? (
                       <Button
-                        bg="primary"
+                        bg="black"
                         color="white"
-                        size="lg"
-                        _hover={{ bg: "buttonHover", transform: "translateY(-2px)", boxShadow: "lg" }}
-                        _active={{ bg: "buttonHover" }}
+                        size={{ base: "lg", md: "lg" }}
+                        _hover={{ bg: "#1a1a1a", transform: "translateY(-2px)", boxShadow: "xl" }}
+                        _active={{ bg: "#1a1a1a", transform: "translateY(0)" }}
                         borderRadius="lg"
                         leftIcon={<RiTicket2Line />}
                         isDisabled={!total || total === 0}
@@ -730,22 +760,24 @@ const EventDetails = () => {
                         isLoading={isLoading}
                         fontFamily="secondary"
                         fontWeight="600"
-                        py={6}
+                        py={{ base: 6, md: 6 }}
+                        w="100%"
                         transition="all 0.2s"
                       >
                         Comprar entradas
                       </Button>
                     ) : (
                       <Button
-                        bg="primary"
+                        bg="black"
                         color="white"
-                        size="lg"
-                        _hover={{ bg: "buttonHover" }}
+                        size={{ base: "lg", md: "lg" }}
+                        _hover={{ bg: "#1a1a1a" }}
                         borderRadius="lg"
                         onClick={() => navigate("/login")}
                         fontFamily="secondary"
                         fontWeight="600"
-                        py={6}
+                        py={{ base: 6, md: 6 }}
+                        w="100%"
                       >
                         Inicia sesión para comprar
                       </Button>
@@ -755,10 +787,11 @@ const EventDetails = () => {
               </Card>
             </Flex>
 
-            {/* Sidebar con Imagen */}
+            {/* Sidebar con Imagen - Solo Desktop */}
             <Box
-              w={{ base: "100%", lg: "400px" }}
+              w={{ base: "0", lg: "400px" }}
               flexShrink={0}
+              display={{ base: "none", lg: "block" }}
             >
               <Card
                 boxShadow="xl"

@@ -9,6 +9,7 @@ import {
   Input,
   Button,
   Heading,
+  Text,
   InputGroup,
   InputRightElement,
   Icon,
@@ -16,9 +17,34 @@ import {
   useToast,
   FormControl,
   FormErrorMessage,
+  Box,
+  VStack,
+  SimpleGrid,
 } from "@chakra-ui/react";
+import { motion } from "framer-motion";
 import userApi from "../../Api/user";
 import { useNavigate } from "react-router";
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+};
 
 const initialUserData = {
   firstname: "",
@@ -28,7 +54,7 @@ const initialUserData = {
   repeatPassword: "",
   phoneNumber: "",
   dni: "",
-  roles: ["user"], // Default role
+  roles: ["user"],
 };
 
 const validateEmail = (email) => {
@@ -42,7 +68,7 @@ const validatePassword = (password) => {
 };
 
 const validateDNI = (dni) => {
-  return dni.length >= 7 && dni.length <= 10;
+  return dni.length >= 7 && dni.length <= 10 && /^\d+$/.test(dni);
 };
 
 const validatePhoneNumber = (phone) => {
@@ -53,10 +79,9 @@ function Register() {
   const [userData, setUserData] = useState(initialUserData);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const navigate = useNavigate();
   const [show, setShow] = useState(false);
-  const handleClick = () => setShow(!show);
+  const [showRepeat, setShowRepeat] = useState(false);
+  const navigate = useNavigate();
   const toast = useToast();
 
   useEffect(() => {
@@ -69,44 +94,55 @@ function Register() {
   const validateField = (name, value) => {
     switch (name) {
       case "email":
-        return validateEmail(value) ? "" : "Email inválido";
+        if (!value) return "El correo es requerido";
+        if (!validateEmail(value)) return "Email inválido";
+        return "";
       case "password":
-        return validatePassword(value) ? "" : "La contraseña debe tener al menos 6 caracteres";
+        if (!value) return "La contraseña es requerida";
+        if (!validatePassword(value))
+          return "La contraseña debe tener al menos 6 caracteres";
+        return "";
       case "repeatPassword":
-        return value === userData.password ? "" : "Las contraseñas no coinciden";
+        if (!value) return "Confirma tu contraseña";
+        if (value !== userData.password) return "Las contraseñas no coinciden";
+        return "";
       case "dni":
-        return validateDNI(value) ? "" : "DNI inválido";
+        if (!value) return "El DNI es requerido";
+        if (!validateDNI(value)) return "DNI inválido (7-10 dígitos)";
+        return "";
       case "phoneNumber":
-        return validatePhoneNumber(value) ? "" : "Número de teléfono inválido";
+        if (!value) return "El teléfono es requerido";
+        if (!validatePhoneNumber(value))
+          return "Número de teléfono inválido";
+        return "";
+      case "firstname":
+        if (!value.trim()) return "El nombre es requerido";
+        return "";
+      case "lastname":
+        if (!value.trim()) return "El apellido es requerido";
+        return "";
       default:
-        return value.trim() ? "" : "Este campo es requerido";
+        return "";
     }
   };
 
-  const handleInputChange = async (event) => {
+  const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setUserData(prev => ({
+    setUserData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
-    // Validate field
     const error = validateField(name, value);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [name]: error
+      [name]: error,
     }));
-
-    // Check email availability
-    if (name === "email" && validateEmail(value)) {
-      setIsCheckingEmail(false);
-  
-    }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    Object.keys(userData).forEach(key => {
+    Object.keys(userData).forEach((key) => {
       if (key !== "roles") {
         const error = validateField(key, userData[key]);
         if (error) newErrors[key] = error;
@@ -118,7 +154,7 @@ function Register() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!validateForm()) {
       toast({
         title: "Por favor corrija los errores en el formulario",
@@ -130,17 +166,16 @@ function Register() {
     }
 
     setIsLoading(true);
-    
+
     try {
-      // Remove repeatPassword and prepare data for API
       const { repeatPassword, ...userDataToSend } = userData;
-      
+
       const response = await userApi.createUser(userDataToSend);
-      
+
       if (response?.status === 201 || response?.data) {
         toast({
-          title: "Registro exitoso",
-          description: "Por favor, inicia sesión con tus credenciales",
+          title: "¡Registro exitoso!",
+          description: "Tu cuenta ha sido creada. Por favor inicia sesión.",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -152,7 +187,8 @@ function Register() {
       console.error("Error during registration:", error);
       toast({
         title: "Error en el registro",
-        description: error.response?.data?.message || "Por favor, intenta nuevamente",
+        description:
+          error.response?.data?.message || "Por favor, intenta nuevamente",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -165,184 +201,360 @@ function Register() {
   return (
     <>
       <Header />
-      <Container maxW="100vw" minH="70vh" className="p-4 background-radial-gradient overflow-hidden">
-        <Flex align="center" justify="center" gap="20" position="relative">
-          <Heading
-            as="h1"
-            size="4xl"
-            color="white"
-            fontWeight="bold"
-            textAlign="center"
-            mb="10"
-            display={{ base: "none", md: "flex" }}
-            flexDirection="column"
-            gap="4"
-            zIndex="10"
-            fontFamily="primary"
-          >
-            Los mejores aliados <br />
-            <span style={{ color: "hsl(218, 81%, 75%)" }}>para tus eventos</span>
-          </Heading>
-          
+      <Box
+        minH="calc(100vh - 80px)"
+        bgGradient="linear(to-br, #000, #1a1a1a)"
+        position="relative"
+        overflow="hidden"
+        py={{ base: 12, md: 20 }}
+      >
+        {/* Background Pattern */}
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          opacity="0.05"
+          backgroundImage="radial-gradient(circle at 2px 2px, white 1px, transparent 0)"
+          backgroundSize="40px 40px"
+        />
+
+        <Container maxW="container.md" px={4} position="relative" zIndex={1}>
           <Flex
-            flexDir="column"
-            direction="column"
-            justifyContent="center"
-            alignItems="center"
-            w="100%"
-            maxW="400px"
-            bg="#f1f2f3"
-            py="5"
-            px="8"
-            borderRadius="10px"
-            zIndex="10"
+            direction={{ base: "column", lg: "row" }}
+            align="center"
+            justify="center"
+            gap={{ base: 8, lg: 16 }}
+            minH="60vh"
           >
-            <Heading as="h2" mb="6" fontFamily="secondary">
-              Regístrate
-            </Heading>
-            <form onSubmit={handleSubmit} style={{ width: "100%", display: "flex", gap: "1rem", flexDirection: "column" }}>
-              <Flex gap="2">
-                <FormControl isInvalid={errors.firstname}>
-                  <Input
-                    placeholder="Nombre"
-                    name="firstname"
-                    value={userData.firstname}
-                    onChange={handleInputChange}
-                    fontFamily="secondary"
-                  />
-                  <FormErrorMessage>{errors.firstname}</FormErrorMessage>
-                </FormControl>
-                <FormControl isInvalid={errors.lastname}>
-                  <Input
-                    placeholder="Apellido"
-                    name="lastname"
-                    value={userData.lastname}
-                    onChange={handleInputChange}
-                    fontFamily="secondary"
-                  />
-                  <FormErrorMessage>{errors.lastname}</FormErrorMessage>
-                </FormControl>
-              </Flex>
-
-              <FormControl isInvalid={errors.email}>
-                <Input
-                  placeholder="Email"
-                  name="email"
-                  type="email"
-                  value={userData.email}
-                  onChange={handleInputChange}
-                  fontFamily="secondary"
-                  isDisabled={isCheckingEmail}
-                />
-                <FormErrorMessage>{errors.email}</FormErrorMessage>
-              </FormControl>
-
-              <FormControl isInvalid={errors.dni}>
-                <Input
-                  placeholder="DNI"
-                  name="dni"
-                  value={userData.dni}
-                  onChange={handleInputChange}
-                  fontFamily="secondary"
-                  type="text"
-                  maxLength={10}
-                />
-                <FormErrorMessage>{errors.dni}</FormErrorMessage>
-              </FormControl>
-
-              <FormControl isInvalid={errors.phoneNumber}>
-                <Input
-                  placeholder="Número de Teléfono"
-                  name="phoneNumber"
-                  value={userData.phoneNumber}
-                  onChange={handleInputChange}
-                  fontFamily="secondary"
-                  type="tel"
-                />
-                <FormErrorMessage>{errors.phoneNumber}</FormErrorMessage>
-              </FormControl>
-
-              <FormControl isInvalid={errors.password}>
-                <InputGroup>
-                  <Input
-                    placeholder="Contraseña"
-                    name="password"
-                    type={show ? "text" : "password"}
-                    value={userData.password}
-                    onChange={handleInputChange}
-                    fontFamily="secondary"
-                  />
-                  <InputRightElement mr="1">
-                    <Button
-                      bg="none"
-                      _hover={{}}
-                      _active={{}}
-                      h="1.75rem"
-                      size="sm"
-                      onClick={handleClick}
-                    >
-                      <Icon as={show ? FaRegEyeSlash : FaRegEye} />
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-                <FormErrorMessage>{errors.password}</FormErrorMessage>
-              </FormControl>
-
-              <FormControl isInvalid={errors.repeatPassword}>
-                <InputGroup>
-                  <Input
-                    placeholder="Repetir Contraseña"
-                    name="repeatPassword"
-                    type={show ? "text" : "password"}
-                    value={userData.repeatPassword}
-                    onChange={handleInputChange}
-                    fontFamily="secondary"
-                  />
-                  <InputRightElement mr="1">
-                    <Button
-                      bg="none"
-                      _hover={{}}
-                      _active={{}}
-                      h="1.75rem"
-                      size="sm"
-                      onClick={handleClick}
-                    >
-                      <Icon as={show ? FaRegEyeSlash : FaRegEye} />
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-                <FormErrorMessage>{errors.repeatPassword}</FormErrorMessage>
-              </FormControl>
-
-              <Button
-                type="submit"
-                w="100%"
-                bg="primary"
-                borderRadius="5px"
-                color="#fff"
-                _hover={{ bg: "buttonHover" }}
-                _active={{ bg: "buttonHover" }}
-                fontFamily="secondary"
-                fontWeight="normal"
-                isLoading={isLoading}
-                isDisabled={isCheckingEmail}
-              >
-                Registrarse
-              </Button>
-            </form>
-            
-            <Link
-              fontFamily="secondary"
-              href="/login"
-              color="primary"
-              mt="5"
-              _hover={{ color: "primary" }}
+            {/* Left Side - Welcome Text */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              style={{ flex: 1, maxWidth: "500px" }}
             >
-              Ya tengo cuenta
-            </Link>
+              <VStack
+                spacing={6}
+                align={{ base: "center", lg: "flex-start" }}
+                textAlign={{ base: "center", lg: "left" }}
+              >
+                <motion.div variants={itemVariants}>
+                  <Heading
+                    as="h1"
+                    fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }}
+                    color="white"
+                    fontWeight="800"
+                    letterSpacing="-0.02em"
+                    lineHeight="1.1"
+                    mb={4}
+                  >
+                    Únete a GetPass
+                  </Heading>
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <Text
+                    fontSize={{ base: "lg", md: "xl" }}
+                    color="rgba(255, 255, 255, 0.7)"
+                    lineHeight="1.6"
+                    maxW="400px"
+                  >
+                    Crea tu cuenta y comienza a gestionar tus eventos de forma
+                    profesional
+                  </Text>
+                </motion.div>
+              </VStack>
+            </motion.div>
+
+            {/* Right Side - Register Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              style={{ flex: 1, maxWidth: "500px", width: "100%" }}
+            >
+              <Box
+                bg="white"
+                borderRadius="2xl"
+                p={{ base: 6, md: 8 }}
+                boxShadow="0 20px 60px rgba(0, 0, 0, 0.3)"
+                w="100%"
+              >
+                <VStack spacing={6} align="stretch">
+                  <VStack spacing={2} align="flex-start">
+                    <Heading
+                      as="h2"
+                      fontSize="2xl"
+                      fontWeight="700"
+                      color="black"
+                      letterSpacing="-0.01em"
+                    >
+                      Crear Cuenta
+                    </Heading>
+                    <Text color="gray.600" fontSize="sm">
+                      Completa el formulario para registrarte
+                    </Text>
+                  </VStack>
+
+                  <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+                    <VStack spacing={5}>
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="100%">
+                        <FormControl isInvalid={errors.firstname}>
+                          <Input
+                            placeholder="Nombre"
+                            name="firstname"
+                            value={userData.firstname}
+                            onChange={handleInputChange}
+                            size="lg"
+                            fontSize="md"
+                            borderRadius="lg"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{
+                              borderColor: "black",
+                              boxShadow: "0 0 0 1px black",
+                            }}
+                            _hover={{
+                              borderColor: "gray.300",
+                            }}
+                            fontFamily="secondary"
+                          />
+                          <FormErrorMessage>{errors.firstname}</FormErrorMessage>
+                        </FormControl>
+
+                        <FormControl isInvalid={errors.lastname}>
+                          <Input
+                            placeholder="Apellido"
+                            name="lastname"
+                            value={userData.lastname}
+                            onChange={handleInputChange}
+                            size="lg"
+                            fontSize="md"
+                            borderRadius="lg"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{
+                              borderColor: "black",
+                              boxShadow: "0 0 0 1px black",
+                            }}
+                            _hover={{
+                              borderColor: "gray.300",
+                            }}
+                            fontFamily="secondary"
+                          />
+                          <FormErrorMessage>{errors.lastname}</FormErrorMessage>
+                        </FormControl>
+                      </SimpleGrid>
+
+                      <FormControl isInvalid={errors.email}>
+                        <Input
+                          placeholder="Correo electrónico"
+                          name="email"
+                          type="email"
+                          value={userData.email}
+                          onChange={handleInputChange}
+                          size="lg"
+                          fontSize="md"
+                          borderRadius="lg"
+                          border="2px solid"
+                          borderColor="gray.200"
+                          _focus={{
+                            borderColor: "black",
+                            boxShadow: "0 0 0 1px black",
+                          }}
+                          _hover={{
+                            borderColor: "gray.300",
+                          }}
+                          fontFamily="secondary"
+                        />
+                        <FormErrorMessage>{errors.email}</FormErrorMessage>
+                      </FormControl>
+
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="100%">
+                        <FormControl isInvalid={errors.dni}>
+                          <Input
+                            placeholder="DNI"
+                            name="dni"
+                            value={userData.dni}
+                            onChange={handleInputChange}
+                            type="text"
+                            maxLength={10}
+                            size="lg"
+                            fontSize="md"
+                            borderRadius="lg"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{
+                              borderColor: "black",
+                              boxShadow: "0 0 0 1px black",
+                            }}
+                            _hover={{
+                              borderColor: "gray.300",
+                            }}
+                            fontFamily="secondary"
+                          />
+                          <FormErrorMessage>{errors.dni}</FormErrorMessage>
+                        </FormControl>
+
+                        <FormControl isInvalid={errors.phoneNumber}>
+                          <Input
+                            placeholder="Teléfono"
+                            name="phoneNumber"
+                            value={userData.phoneNumber}
+                            onChange={handleInputChange}
+                            type="tel"
+                            size="lg"
+                            fontSize="md"
+                            borderRadius="lg"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{
+                              borderColor: "black",
+                              boxShadow: "0 0 0 1px black",
+                            }}
+                            _hover={{
+                              borderColor: "gray.300",
+                            }}
+                            fontFamily="secondary"
+                          />
+                          <FormErrorMessage>{errors.phoneNumber}</FormErrorMessage>
+                        </FormControl>
+                      </SimpleGrid>
+
+                      <FormControl isInvalid={errors.password}>
+                        <InputGroup size="lg">
+                          <Input
+                            placeholder="Contraseña"
+                            name="password"
+                            type={show ? "text" : "password"}
+                            value={userData.password}
+                            onChange={handleInputChange}
+                            fontSize="md"
+                            borderRadius="lg"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{
+                              borderColor: "black",
+                              boxShadow: "0 0 0 1px black",
+                            }}
+                            _hover={{
+                              borderColor: "gray.300",
+                            }}
+                            fontFamily="secondary"
+                          />
+                          <InputRightElement width="3rem">
+                            <Button
+                              h="1.75rem"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShow(!show)}
+                              _hover={{ bg: "transparent" }}
+                              _active={{ bg: "transparent" }}
+                            >
+                              <Icon
+                                as={show ? FaRegEyeSlash : FaRegEye}
+                                color="gray.500"
+                                boxSize={5}
+                              />
+                            </Button>
+                          </InputRightElement>
+                        </InputGroup>
+                        <FormErrorMessage>{errors.password}</FormErrorMessage>
+                      </FormControl>
+
+                      <FormControl isInvalid={errors.repeatPassword}>
+                        <InputGroup size="lg">
+                          <Input
+                            placeholder="Confirmar contraseña"
+                            name="repeatPassword"
+                            type={showRepeat ? "text" : "password"}
+                            value={userData.repeatPassword}
+                            onChange={handleInputChange}
+                            fontSize="md"
+                            borderRadius="lg"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{
+                              borderColor: "black",
+                              boxShadow: "0 0 0 1px black",
+                            }}
+                            _hover={{
+                              borderColor: "gray.300",
+                            }}
+                            fontFamily="secondary"
+                          />
+                          <InputRightElement width="3rem">
+                            <Button
+                              h="1.75rem"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShowRepeat(!showRepeat)}
+                              _hover={{ bg: "transparent" }}
+                              _active={{ bg: "transparent" }}
+                            >
+                              <Icon
+                                as={showRepeat ? FaRegEyeSlash : FaRegEye}
+                                color="gray.500"
+                                boxSize={5}
+                              />
+                            </Button>
+                          </InputRightElement>
+                        </InputGroup>
+                        <FormErrorMessage>{errors.repeatPassword}</FormErrorMessage>
+                      </FormControl>
+
+                      <Button
+                        type="submit"
+                        w="100%"
+                        size="lg"
+                        bg="black"
+                        color="white"
+                        fontSize="md"
+                        fontWeight="600"
+                        borderRadius="lg"
+                        _hover={{
+                          bg: "#1a1a1a",
+                          transform: "translateY(-2px)",
+                          boxShadow: "lg",
+                        }}
+                        _active={{
+                          transform: "translateY(0)",
+                        }}
+                        fontFamily="secondary"
+                        isLoading={isLoading}
+                        loadingText="Creando cuenta..."
+                        transition="all 0.2s"
+                      >
+                        Registrarse
+                      </Button>
+                    </VStack>
+                  </form>
+
+                  <Flex
+                    justify="center"
+                    align="center"
+                    gap={2}
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    <Text fontFamily="secondary">¿Ya tienes cuenta?</Text>
+                    <Link
+                      href="/login"
+                      color="black"
+                      fontWeight="600"
+                      _hover={{ color: "#1a1a1a", textDecoration: "underline" }}
+                      fontFamily="secondary"
+                    >
+                      Inicia sesión
+                    </Link>
+                  </Flex>
+                </VStack>
+              </Box>
+            </motion.div>
           </Flex>
-        </Flex>
-      </Container>
+        </Container>
+      </Box>
       <Footer />
     </>
   );

@@ -3,11 +3,33 @@ import Header from "../../components/header/Header.jsx";
 import Footer from "../../components/footer/Footer.jsx";
 import { Container, Box, Flex, Text, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { FaTicketAlt, FaDollarSign } from "react-icons/fa";
+import { FaTicketAlt, FaDollarSign, FaChair, FaLock } from "react-icons/fa";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper";
+import "swiper/css";
 import Flyer from "../../components/flyer/Flyer";
 import "./Style.css";
 
 const Main = () => {
+  const features = [
+    {
+      icon: FaTicketAlt,
+      text: "Gestión de entradas",
+    },
+    {
+      icon: FaDollarSign,
+      text: "Cobros instantáneos",
+    },
+    {
+      icon: FaChair,
+      text: "Sistema de Butacas",
+    },
+    {
+      icon: FaLock,
+      text: "Holding de ingresos",
+    },
+  ];
+
   return (
     <Box w="100%" position="relative">
       <Header />
@@ -15,64 +37,58 @@ const Main = () => {
         <Flyer />
       </Box>
       
-      {/* Banner de Features */}
-      <Box bg="white" py={4} borderBottom="1px solid" borderColor="gray.200">
+      {/* Banner de Features - Slider */}
+      <Box bg="white" py={6} borderBottom="1px solid" borderColor="gray.200">
         <Container maxW="7xl">
-          <Flex
-            align="center"
-            justify="center"
-            gap={8}
-            flexDirection={{ base: "column", sm: "row" }}
+          <Swiper
+            slidesPerView={1}
+            spaceBetween={30}
+            loop={true}
+            autoplay={{
+              delay: 3000,
+              disableOnInteraction: false,
+            }}
+            modules={[Autoplay]}
+            className="features-swiper"
+            style={{
+              padding: "0 20px",
+            }}
           >
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Flex align="center" gap={3}>
-                <Box
-                  bg="black"
-                  color="white"
-                  p={2}
-                  borderRadius="md"
-                >
-                  <FaTicketAlt size={16} />
-                </Box>
-                <Text
-                  fontFamily="secondary"
-                  fontSize={{ base: "xs", md: "sm" }}
-                  color="gray.700"
-                  fontWeight="500"
-                >
-                  Gestión de entradas
-                </Text>
-              </Flex>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Flex align="center" gap={3}>
-                <Box
-                  bg="black"
-                  color="white"
-                  p={2}
-                  borderRadius="md"
-                >
-                  <FaDollarSign size={16} />
-                </Box>
-                <Text
-                  fontFamily="secondary"
-                  fontSize={{ base: "xs", md: "sm" }}
-                  color="gray.700"
-                  fontWeight="500"
-                >
-                  Cobros instantáneos
-                </Text>
-              </Flex>
-            </motion.div>
-          </Flex>
+            {features.map((feature, index) => {
+              const IconComponent = feature.icon;
+              return (
+                <SwiperSlide key={index}>
+                  <Flex
+                    align="center"
+                    justify="center"
+                    gap={3}
+                    py={2}
+                  >
+                    <Box
+                      bg="black"
+                      color="white"
+                      p={3}
+                      borderRadius="md"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <IconComponent size={18} />
+                    </Box>
+                    <Text
+                      fontFamily="secondary"
+                      fontSize={{ base: "sm", md: "md" }}
+                      color="gray.700"
+                      fontWeight="600"
+                      textAlign="center"
+                    >
+                      {feature.text}
+                    </Text>
+                  </Flex>
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
         </Container>
       </Box>
 

@@ -22,7 +22,7 @@ function verifyemail() {
   </AlertTitle>
   <AlertDescription maxWidth='sm'>
     <Flex direction='column'>
-    Gracias por registrarte en YVY PASS! 
+    Gracias por registrarte en GetPass! 
     <Button m='5'><Link href='/' >INICIO</Link></Button>    
     </Flex>
     

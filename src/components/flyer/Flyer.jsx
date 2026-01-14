@@ -10,8 +10,8 @@ import {
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/context/AuthContext";
-import { FaCalendarAlt } from "react-icons/fa";
-import background from "../../../public/assets/img/flyer/back.jpg";
+import { FiPlus } from "react-icons/fi";
+import background from "/assets/img/slide/sliderrr.webp";
 
 const textVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -75,6 +75,8 @@ const Flyer = () => {
         backgroundPosition="center"
         backgroundRepeat="no-repeat"
         backgroundSize="cover"
+        filter="blur(3px)"
+        transform="scale(1.1)"
         _after={{
           content: '""',
           position: "absolute",
@@ -172,7 +174,7 @@ const Flyer = () => {
               onClick={handleCreateEvent}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              leftIcon={<FaCalendarAlt />}
+              leftIcon={<FiPlus />}
             >
               Crear mi evento
             </Button>

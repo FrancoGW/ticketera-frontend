@@ -2,14 +2,19 @@ import { React } from "react";
 import {
   Flex,
   Image,
-  Link,
+  Box,
   Text,
   Heading,
   Button,
-  Divider,
   Icon,
+  Badge,
 } from "@chakra-ui/react";
-import { FaCalendarAlt, FaMapMarkerAlt, FaTicketAlt } from "react-icons/fa";
+import { 
+  FiCalendar, 
+  FiMapPin, 
+  FiDollarSign,
+  FiArrowRight 
+} from "react-icons/fi";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { getObjDate } from "../../common/utils";
@@ -17,13 +22,11 @@ import { getObjDate } from "../../common/utils";
 const cardVariants = {
   hidden: {
     opacity: 0,
-    y: 50,
-    scale: 0.9,
+    y: 30,
   },
   visible: (index) => ({
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
       duration: 0.5,
       ease: "easeOut",
@@ -44,133 +47,184 @@ export default function EventCard({
   const navigate = useNavigate();
 
   return (
-    <Flex
+    <Box
       as={motion.div}
       variants={cardVariants}
       initial="hidden"
       animate="visible"
       custom={index}
-      whileHover={{
-        scale: 1.05,
-        y: -10,
-        transition: {
-          duration: 0.3,
-          ease: "easeInOut",
-        },
-      }}
-      whileTap={{
-        scale: 0.98,
-      }}
-      flexDir={{base:'row' ,md:'column'}}
-      w={{base:'100%',md:'300px'}}
-      h={{base:"150px",md:"auto"}}
-      mb="6"
-      boxShadow="rgba(0, 0, 0, 0.35) 0px 5px 15px"
+      w={{ base: "100%", md: "100%" }}
+      maxW={{ base: "100%", md: "350px" }}
+      bg="white"
+      borderRadius="xl"
+      overflow="hidden"
+      boxShadow="0 4px 6px rgba(0, 0, 0, 0.07)"
       cursor="pointer"
       onClick={() => navigate(`/event/${id}`)}
-      borderRadius="md"
-      overflow="hidden"
-      bg="white"
+      position="relative"
       _hover={{
-        boxShadow: "rgba(0, 0, 0, 0.5) 0px 10px 25px",
+        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+        transform: "translateY(-8px)",
       }}
-      transition="box-shadow 0.3s ease"
+      transition="all 0.3s ease"
     >
-      <Image
-        as={motion.img}
-        minHeight={{base:"150px",md:"300px"}}
-        src={
-          pictures
-            ? (pictures.startsWith('http') ? pictures : "data:image/png;base64," + pictures)
-            : "./imagenes/img1.jpeg"
-        }
-        alt=""
-        h={{base:'150px',md:'300px'}}
-        minW={{base:"150px",md:"100%"}}
-        whileHover={{ scale: 1.1 }}
-        transition={{ duration: 0.3 }}
-        objectFit="cover"
-      />
+      {/* Image Container */}
+      <Box
+        position="relative"
+        w="100%"
+        h={{ base: "200px", md: "240px" }}
+        overflow="hidden"
+        bg="gray.100"
+      >
+        <Image
+          src={
+            pictures
+              ? pictures.startsWith('http') 
+                ? pictures 
+                : "data:image/png;base64," + pictures
+              : "./imagenes/img1.jpeg"
+          }
+          alt={title}
+          w="100%"
+          h="100%"
+          objectFit="cover"
+          transition="transform 0.5s ease"
+          _groupHover={{
+            transform: "scale(1.1)",
+          }}
+        />
+        {/* Gradient Overlay */}
+        <Box
+          position="absolute"
+          bottom="0"
+          left="0"
+          right="0"
+          h="60px"
+          bgGradient="linear(to-t, rgba(0,0,0,0.7), transparent)"
+        />
+      </Box>
+
+      {/* Content */}
       <Flex
         flexDir="column"
-        align={{base:'start',md:'start'}}
-        justify="space-between"
-        h={{base:"100%",md:'60%'}}
-        minH={{base:'auto',md:'200px'}}
-        width={{base:"100%",md:'auto'}}
-        fontSize="smaller"
-        textTransform={'capitalize'}
-        gap="0.5"
+        p={{ base: 4, md: 5 }}
+        gap={4}
       >
-        <Heading 
-        as="h2" 
-        fontSize={{base:'15px',md:'20px'}}
-        fontFamily="secondary" 
-        fontWeight="500" 
-        color={{base:"#000",md:"#000"}}
-        my={{base:'0',md:"2"}}
-        ml={{base:'0',md:"3"}}
-        pb={{base:'0rem',md:"0"}}
-        pt={{base:'.5rem',md:'0'}}
-        bg={{base:'transparent',md:' transparent'}}
-        w='100%'
-        textAlign={{base:'center',md:'start'}}
-        textTransform={"uppercase"}
-        display={{base:'flex', md:'block'}}
-        justifyContent={{base:'center'}}
-        alignItems={{base:'center'}}
+        {/* Title */}
+        <Heading
+          as="h3"
+          fontSize={{ base: "lg", md: "xl" }}
+          fontFamily="secondary"
+          fontWeight="700"
+          color="black"
+          lineHeight="1.3"
+          noOfLines={2}
+          letterSpacing="-0.01em"
         >
           {title}
         </Heading>
-        <Divider borderColor="#000" opacity="0.1" display={{base:'block',md:'none'}}/>
 
-        <Flex
-         align="center"
-         ml={{base:"0",md:"3"}} 
-         gap="2"
-         justifyContent={{base:'start'}}
-         marginLeft={{base:'2rem'}}
-        >
-          <Icon as={FaCalendarAlt} />
-          <Text mt="2px" fontFamily="secondary" fontWeight="500" ml="px" textTransform='initial' fontSize={{base:'.7rem',md:'.8rem'}}>
-            {dates?.length > 1 && "Prox: "}
-            {getObjDate(dates[0])?.date} a las {getObjDate(dates[0])?.timeStart}
-          </Text>
-        </Flex>
-        <Divider borderColor="#000" opacity="0.1" />
-        <Flex align="center" ml={{base:'2rem', md:'3'}} gap="2">
-        <Icon as={FaMapMarkerAlt} />
-          <Text mt="2px" fontFamily="secondary"  fontWeight="300" fontSize={{base:'.7rem',md:'.8rem'}}>{addressRef?.place}</Text>
-        </Flex>
-        <Divider borderColor="#000" opacity="0.1" />
-        <Flex align="center" ml={{base:'2rem', md:'3'}} mb={{base:'2'}} gap="2">
-        <Icon as={FaTicketAlt} mt="1.5px" />
-          <Text mt="2px" fontFamily="secondary" fontWeight="300" fontSize={{base:'.7rem',md:'.8rem'}}>A partir de ${cheapestTicket?.price}</Text>
+        {/* Info Section */}
+        <Flex flexDir="column" gap={3}>
+          {/* Date */}
+          <Flex align="center" gap={3}>
+            <Icon
+              as={FiCalendar}
+              boxSize={5}
+              color="gray.500"
+              flexShrink={0}
+            />
+            <Text
+              fontFamily="secondary"
+              fontSize="sm"
+              color="gray.700"
+              fontWeight="500"
+            >
+              {dates?.length > 1 && "Próximo: "}
+              {getObjDate(dates[0])?.date} a las {getObjDate(dates[0])?.timeStart}
+            </Text>
+          </Flex>
+
+          {/* Location */}
+          {addressRef?.place && (
+            <Flex align="center" gap={3}>
+              <Icon
+                as={FiMapPin}
+                boxSize={5}
+                color="gray.500"
+                flexShrink={0}
+              />
+              <Text
+                fontFamily="secondary"
+                fontSize="sm"
+                color="gray.600"
+                fontWeight="400"
+                noOfLines={1}
+              >
+                {addressRef.place}
+              </Text>
+            </Flex>
+          )}
+
+          {/* Price */}
+          {cheapestTicket?.price && (
+            <Flex align="center" justify="space-between" pt={1}>
+              <Flex align="center" gap={3}>
+                <Icon
+                  as={FiDollarSign}
+                  boxSize={5}
+                  color="gray.500"
+                  flexShrink={0}
+                />
+                <Text
+                  fontFamily="secondary"
+                  fontSize="sm"
+                  color="gray.600"
+                  fontWeight="400"
+                >
+                  Desde
+                </Text>
+              </Flex>
+              <Badge
+                bg="black"
+                color="white"
+                px={3}
+                py={1}
+                borderRadius="md"
+                fontSize="sm"
+                fontWeight="600"
+                fontFamily="secondary"
+              >
+                ${cheapestTicket.price}
+              </Badge>
+            </Flex>
+          )}
         </Flex>
 
+        {/* Button */}
         <Button
-          as={motion.button}
-          display={{base:"none",md:"block"}}
-          bg="primary"
           w="100%"
+          bg="black"
           color="white"
-          _hover={{
-            borderTop: "1px solid #000",
-            color: "white",
-            bg: "buttonHover",
-          }}
-          _active=""
-          borderRadius="0"
-          h={{base:'40px',md:'40px'}}
+          size="md"
+          borderRadius="lg"
           fontFamily="secondary"
-          fontWeight="400"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.2 }}
+          fontWeight="600"
+          fontSize="sm"
+          mt={2}
+          rightIcon={<FiArrowRight />}
+          _hover={{
+            bg: "#1a1a1a",
+            transform: "translateX(4px)",
+          }}
+          _active={{
+            transform: "translateX(0)",
+          }}
+          transition="all 0.2s"
         >
-          Comprar ahora
+          Ver detalles
         </Button>
       </Flex>
-    </Flex>
+    </Box>
   );
 }

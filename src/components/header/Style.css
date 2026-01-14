@@ -49,7 +49,7 @@ body{
 }
 .contentLinks>*:focus,
 a:active {
-    color: #E9D8FD;
+    color: #fff;
 }
 
 .contentLinks>*::before {
@@ -57,9 +57,9 @@ a:active {
     display: block;
     position: absolute;
     top: 100%;
-    height: 3px;
+    height: 2px;
     width: 100%;
-    background-color: #B794F4;
+    background-color: rgba(255, 255, 255, 0.8);
     -webkit-transform-origin: center top;
     transform-origin: center top;
     -webkit-transform: scale(0, 1);
@@ -70,7 +70,7 @@ a:active {
 }
 
 .contentLinks>*:active::before {
-    background-color: #B794F4;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .contentLinks>*:hover::before,
@@ -80,12 +80,16 @@ a:active {
     -webkit-transform: scale(1, 1);
     transform: scale(1, 1);
 }
+
+.contentLinks>*:hover {
+    color: #fff !important;
+}
 .btn{
-    border-color: #E9D8FD !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
     color: #fff !important;
 }
 .css-1fifbr8:hover, .css-1fifbr8[data-hover] {
-    background: #D6BCFA !important;
+    background: rgba(255, 255, 255, 0.1) !important;
 }
 .gZcVVY.active{
     top: 90px !important;

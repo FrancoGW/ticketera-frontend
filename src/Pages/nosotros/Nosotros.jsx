@@ -1,217 +1,442 @@
 import React from "react";
-import { Container, Flex, Heading, Image, Text } from "@chakra-ui/react";
+import { 
+  Container, 
+  Flex, 
+  Heading, 
+  Text, 
+  Box,
+  VStack,
+  HStack,
+  SimpleGrid,
+  Avatar,
+  Icon,
+  Divider,
+  useColorModeValue
+} from "@chakra-ui/react";
+import { motion } from "framer-motion";
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
-import img from "/assets/img/events.svg";
-import img2 from "/assets/img/how.svg";
-import img3 from "/assets/img/mision.svg";
-import img4 from "/assets/img/vision.svg";
-import img5 from "/assets/img/values.svg";
-import "./Style.css";
+import { 
+  FiUsers, 
+  FiTarget, 
+  FiHeart, 
+  FiTrendingUp,
+  FiAward,
+  FiZap,
+  FiGlobe
+} from "react-icons/fi";
 
-function nosotros() {
+const MotionBox = motion(Box);
+const MotionFlex = motion(Flex);
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" }
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
+  }
+};
+
+function Nosotros() {
+  const bgGradient = useColorModeValue(
+    "linear(to-br, gray.50, white)",
+    "linear(to-br, gray.900, gray.800)"
+  );
+
   return (
-    <div className="bodyUs">
+    <Box minH="100vh" bg="white">
       <Header />
-      <Container
-        width={{
-          base: "100%",
-          xl: "7xl",
-        }}
-        maxW="7xl"
-        minH="70vh"
-        my="10"
-        display="flex"
-        flexDir="column"
-        gap="16"
+      
+      {/* Hero Section */}
+      <MotionBox
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        bgGradient="linear(to-br, #000, #1a1a1a)"
+        color="white"
+        py={{ base: 20, md: 32 }}
+        px={4}
       >
-        <Flex
-          flexDir={{ base: "column", md: "row" }}
-          justify="center"
-          align="center"
-          padding={{ base: "5", xl: "20" }}
-          gap="16"
-          textAlign="center"
-        >
-          <Flex flexDir="column" gap="4" align="center">
+        <Container maxW="6xl">
+          <VStack spacing={8} textAlign="center">
             <Heading
-              color="tertiary"
-              fontFamily="primary"
-              fontWeight="bold"
-              fontSize={{ base: "30px", lg: "40px" }}
-              as="h3"
+              as="h1"
+              fontSize={{ base: "4xl", md: "5xl", lg: "6xl" }}
+              fontWeight="800"
+              letterSpacing="-0.02em"
+              lineHeight="1.1"
             >
-              Sobre YVY PASS
+              Somos GetPass
             </Heading>
             <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
+              fontSize={{ base: "lg", md: "xl" }}
+              maxW="2xl"
+              opacity={0.9}
+              fontWeight="300"
+              lineHeight="1.6"
             >
-              ¡Es muy fácil! debes ingresar a nuestra página de INICIO e ir
-              arriba a la derecha donde dice CREAR EVENTO. Allí podrás crear tu
-              evento y automáticamente generar una ticketera online ofreciendo
-              todos los medios de pago (tarjetas).
+              La plataforma de eventos que está transformando la forma en que 
+              las personas crean, gestionan y disfrutan de experiencias inolvidables.
             </Text>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              Accede a un panel de control, que te permitirá administrar todo lo
-              que necesitas para gestionar la venta y control de acceso para tus
-              eventos.
-            </Text>
-          </Flex>
-          <Image className="usImg" src={img} alt="events" />
-        </Flex>
+          </VStack>
+        </Container>
+      </MotionBox>
 
-        <Flex
-          flexDir={{ base: "column-reverse", md: "row" }}
-          justify="center"
-          align="center"
-          padding={{ base: "5", xl: "20" }}
-          gap="16"
+      {/* Sobre GetPass Section */}
+      <Container maxW="6xl" py={{ base: 16, md: 24 }} px={4}>
+        <MotionBox
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={fadeInUp}
         >
-          <Image className="usImg" src={img2} alt="events" />
-          <Flex flexDir="column" gap="4" align="center">
-            <Heading
-              color="tertiary"
-              fontFamily="primary"
-              fontWeight="bold"
-              fontSize={{ base: "30px", lg: "40px" }}
-              textAlign={{ base: "center" }}
-              as="h3"
-            >
-              ¿Cómo funciona YVY PASS?
-            </Heading>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              YVY PASS es una plataforma de eventos  que te permite
-              crear, buscar, compartir y asistir a tus eventos favoritos.
-            </Text>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              Desde festivales de música, fiestas, conferencias, workshops,
-              eventos ondemand, maratones, competencias de videojuegos,
-              discotecas y mucho más.
-            </Text>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              Nuestra misión es darle a todos nuestros usuarios la herramienta
-              para que puedan administrar y comercializar sus eventos gratis,
-              además del espacio para que puedan encontrar y saber todo lo que
-              hay para hacer.
-            </Text>
-          </Flex>
-        </Flex>
+          <VStack spacing={12}>
+            <VStack spacing={4} textAlign="center" maxW="3xl">
+              <Heading
+                as="h2"
+                fontSize={{ base: "3xl", md: "4xl" }}
+                fontWeight="700"
+                letterSpacing="-0.01em"
+              >
+                ¿Qué es GetPass?
+              </Heading>
+              <Text
+                fontSize={{ base: "md", md: "lg" }}
+                color="gray.600"
+                lineHeight="1.8"
+              >
+                GetPass es una plataforma integral de gestión de eventos que permite 
+                crear, buscar, compartir y asistir a todo tipo de experiencias. Desde 
+                festivales de música hasta conferencias, workshops, eventos deportivos 
+                y mucho más.
+              </Text>
+            </VStack>
 
-        <Flex
-          flexDir={{ base: "column", md: "row" }}
-          justify="center"
-          align="center"
-          padding={{ base: "5", xl: "20" }}
-          gap="16"
-        >
-          <Flex flexDir="column" gap="4" align="center">
-            <Heading
-              color="tertiary"
-              fontFamily="primary"
-              fontWeight="bold"
-              fontSize={{ base: "30px", lg: "40px" }}
-              as="h3"
-            >
-              Misión
-            </Heading>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              Brindar un servicio eficiente y de excelente calidad, otorgando
-              comodidad y seguridad a nuestros clientes en todo momento acorde a
-              las necesidades de cada uno.
-            </Text>
-          </Flex>
-          <Image className="usImg" src={img3} alt="events" />
-        </Flex>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} w="100%">
+              <MotionBox
+                variants={fadeInUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                p={8}
+                borderRadius="2xl"
+                bg="gray.50"
+                _hover={{ 
+                  transform: "translateY(-4px)",
+                  boxShadow: "xl",
+                  transition: "all 0.3s"
+                }}
+              >
+                <Icon as={FiZap} boxSize={10} color="black" mb={4} />
+                <Heading fontSize="xl" fontWeight="600" mb={3}>
+                  Fácil de Usar
+                </Heading>
+                <Text color="gray.600" lineHeight="1.7">
+                  Crea tu evento en minutos con nuestra interfaz intuitiva. 
+                  Gestiona entradas, butacas y consumiciones desde un solo lugar.
+                </Text>
+              </MotionBox>
 
-        <Flex
-          flexDir={{ base: "column-reverse", md: "row" }}
-          justify="center"
-          align="center"
-          padding={{ base: "5", xl: "20" }}
-          gap="16"
-        >
-          <Image className="usImg" src={img4} alt="events" />
-          <Flex flexDir="column" gap="4" align="center">
-            <Heading
-              color="tertiary"
-              fontFamily="primary"
-              fontWeight="bold"
-              fontSize={{ base: "30px", lg: "40px" }}
-              as="h3"
-            >
-              Visión
-            </Heading>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              Convertirnos en una empresa fuerte y consolidada en el mercado por
-              medio de un excepcional servicio brindado a nuestros clientes.
-            </Text>
-          </Flex>
-        </Flex>
+              <MotionBox
+                variants={fadeInUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                p={8}
+                borderRadius="2xl"
+                bg="gray.50"
+                _hover={{ 
+                  transform: "translateY(-4px)",
+                  boxShadow: "xl",
+                  transition: "all 0.3s"
+                }}
+              >
+                <Icon as={FiTrendingUp} boxSize={10} color="black" mb={4} />
+                <Heading fontSize="xl" fontWeight="600" mb={3}>
+                  Pago Inmediato
+                </Heading>
+                <Text color="gray.600" lineHeight="1.7">
+                  Recibe el 100% de tus ventas al instante. Sin comisiones ocultas, 
+                  sin esperas. Tu dinero en tu cuenta inmediatamente.
+                </Text>
+              </MotionBox>
 
-        <Flex
-          flexDir={{ base: "column", md: "row" }}
-          justify="center"
-          align="center"
-          padding={{ base: "5", xl: "20" }}
-          gap="16"
-        >
-          <Flex flexDir="column" gap="4" align="center">
-            <Heading
-              color="tertiary"
-              fontFamily="primary"
-              fontWeight="bold"
-              fontSize={{ base: "30px", lg: "40px" }}
-              textAlign={{ base: "center" }}
-              as="h3"
-            >
-              Valores
-            </Heading>
-            <Text
-              fontFamily="secondary"
-              fontSize={{ base: "15px", lg: "20px" }}
-              textAlign="center"
-            >
-              La calidad de nuestro servicio se basa en los siguientes valores:
-              Seguridad, honestidad, confianza, respeto, comodidad y
-              puntualidad. Además, estamos comprometidos con el medio ambiente
-              cuidando el verde de nuestro planeta. Al utilizar entradas de
-              formato digital evitamos la tala indiscriminada de arboles y su
-              posterior utilización en tickets impresos de papel.
-            </Text>
-          </Flex>
-          <Image className="usImg" src={img5} alt="events" />
-        </Flex>
+              <MotionBox
+                variants={fadeInUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                p={8}
+                borderRadius="2xl"
+                bg="gray.50"
+                _hover={{ 
+                  transform: "translateY(-4px)",
+                  boxShadow: "xl",
+                  transition: "all 0.3s"
+                }}
+              >
+                <Icon as={FiGlobe} boxSize={10} color="black" mb={4} />
+                <Heading fontSize="xl" fontWeight="600" mb={3}>
+                  Alcance Global
+                </Heading>
+                <Text color="gray.600" lineHeight="1.7">
+                  Llega a audiencias de todo el mundo. Comparte tus eventos y 
+                  conecta con asistentes de cualquier lugar.
+                </Text>
+              </MotionBox>
+            </SimpleGrid>
+          </VStack>
+        </MotionBox>
       </Container>
 
+      {/* Trayectoria Section */}
+      <Box bg="gray.50" py={{ base: 16, md: 24 }}>
+        <Container maxW="6xl" px={4}>
+          <MotionBox
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+          >
+            <VStack spacing={12}>
+              <VStack spacing={4} textAlign="center" maxW="3xl">
+                <Heading
+                  as="h2"
+                  fontSize={{ base: "3xl", md: "4xl" }}
+                  fontWeight="700"
+                  letterSpacing="-0.01em"
+                >
+                  Nuestra Trayectoria
+                </Heading>
+                <Text
+                  fontSize={{ base: "md", md: "lg" }}
+                  color="gray.600"
+                  lineHeight="1.8"
+                >
+                  Desde nuestros inicios, hemos trabajado incansablemente para 
+                  democratizar el acceso a la gestión de eventos.
+                </Text>
+              </VStack>
+
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} w="100%">
+                {[
+                  { year: "2020", title: "Nacimiento", desc: "Fundación de GetPass con la visión de revolucionar la industria de eventos." },
+                  { year: "2021", title: "Primeros Eventos", desc: "Lanzamiento de la plataforma y gestión de los primeros eventos exitosos." },
+                  { year: "2022", title: "Expansión", desc: "Crecimiento a nivel nacional y miles de eventos gestionados." },
+                  { year: "2024", title: "Liderazgo", desc: "Posicionamiento como plataforma líder en gestión de eventos digitales." }
+                ].map((milestone, index) => (
+                  <MotionBox
+                    key={index}
+                    variants={fadeInUp}
+                    p={6}
+                    borderRadius="xl"
+                    bg="white"
+                    border="1px solid"
+                    borderColor="gray.200"
+                    textAlign="center"
+                    _hover={{ 
+                      borderColor: "black",
+                      transform: "translateY(-4px)",
+                      transition: "all 0.3s"
+                    }}
+                  >
+                    <Text fontSize="2xl" fontWeight="700" color="black" mb={2}>
+                      {milestone.year}
+                    </Text>
+                    <Heading fontSize="lg" fontWeight="600" mb={2}>
+                      {milestone.title}
+                    </Heading>
+                    <Text fontSize="sm" color="gray.600" lineHeight="1.6">
+                      {milestone.desc}
+                    </Text>
+                  </MotionBox>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </MotionBox>
+        </Container>
+      </Box>
+
+      {/* Valores Section */}
+      <Container maxW="6xl" py={{ base: 16, md: 24 }} px={4}>
+        <MotionBox
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+        >
+          <VStack spacing={12}>
+            <VStack spacing={4} textAlign="center" maxW="3xl">
+              <Heading
+                as="h2"
+                fontSize={{ base: "3xl", md: "4xl" }}
+                fontWeight="700"
+                letterSpacing="-0.01em"
+              >
+                Nuestros Valores
+              </Heading>
+              <Text
+                fontSize={{ base: "md", md: "lg" }}
+                color="gray.600"
+                lineHeight="1.8"
+              >
+                Los principios que guían cada decisión y acción en GetPass
+              </Text>
+            </VStack>
+
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} w="100%">
+              {[
+                { icon: FiTarget, title: "Excelencia", desc: "Buscamos la perfección en cada detalle de nuestra plataforma." },
+                { icon: FiHeart, title: "Pasión", desc: "Amamos lo que hacemos y eso se refleja en nuestro trabajo." },
+                { icon: FiUsers, title: "Comunidad", desc: "Construimos una comunidad fuerte y unida alrededor de los eventos." },
+                { icon: FiAward, title: "Innovación", desc: "Estamos siempre a la vanguardia de la tecnología y las tendencias." }
+              ].map((value, index) => (
+                <MotionBox
+                  key={index}
+                  variants={fadeInUp}
+                  p={8}
+                  borderRadius="2xl"
+                  bg="gray.50"
+                  textAlign="center"
+                  _hover={{ 
+                    bg: "black",
+                    color: "white",
+                    transform: "translateY(-4px)",
+                    transition: "all 0.3s",
+                    "& svg": { color: "white" }
+                  }}
+                >
+                  <Icon 
+                    as={value.icon} 
+                    boxSize={12} 
+                    color="black" 
+                    mb={4}
+                    mx="auto"
+                  />
+                  <Heading fontSize="xl" fontWeight="600" mb={3}>
+                    {value.title}
+                  </Heading>
+                  <Text fontSize="sm" lineHeight="1.7" opacity={0.8}>
+                    {value.desc}
+                  </Text>
+                </MotionBox>
+              ))}
+            </SimpleGrid>
+          </VStack>
+        </MotionBox>
+      </Container>
+
+      {/* Equipo Section */}
+      <Box bg="black" color="white" py={{ base: 16, md: 24 }}>
+        <Container maxW="6xl" px={4}>
+          <MotionBox
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+          >
+            <VStack spacing={12}>
+              <VStack spacing={4} textAlign="center" maxW="3xl">
+                <Heading
+                  as="h2"
+                  fontSize={{ base: "3xl", md: "4xl" }}
+                  fontWeight="700"
+                  letterSpacing="-0.01em"
+                >
+                  Conoce a Nuestro Equipo
+                </Heading>
+                <Text
+                  fontSize={{ base: "md", md: "lg" }}
+                  opacity={0.8}
+                  lineHeight="1.8"
+                >
+                  Un equipo apasionado trabajando juntos para hacer de GetPass 
+                  la mejor plataforma de eventos.
+                </Text>
+              </VStack>
+
+              <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={8} w="100%">
+                {[
+                  { name: "Equipo GetPass", role: "Fundadores", image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=400&fit=crop" },
+                  { name: "Equipo GetPass", role: "Desarrollo", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop" },
+                  { name: "Equipo GetPass", role: "Diseño", image: "https://images.unsplash.com/photo-1556155092-8707de31f9c4?w=400&h=400&fit=crop" },
+                  { name: "Equipo GetPass", role: "Soporte", image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=400&fit=crop" }
+                ].map((member, index) => (
+                  <MotionBox
+                    key={index}
+                    variants={fadeInUp}
+                    textAlign="center"
+                    _hover={{ 
+                      transform: "translateY(-8px)",
+                      transition: "all 0.3s"
+                    }}
+                  >
+                    <Avatar
+                      size="xl"
+                      src={member.image}
+                      name={member.name}
+                      mb={4}
+                      border="4px solid"
+                      borderColor="white"
+                    />
+                    <Heading fontSize="lg" fontWeight="600" mb={1}>
+                      {member.name}
+                    </Heading>
+                    <Text fontSize="sm" opacity={0.7}>
+                      {member.role}
+                    </Text>
+                  </MotionBox>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </MotionBox>
+        </Container>
+      </Box>
+
+      {/* CTA Section */}
+      <Box bgGradient="linear(to-r, #000, #1a1a1a)" py={16} px={4}>
+        <Container maxW="4xl">
+          <MotionBox
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+          >
+            <VStack spacing={8} textAlign="center" color="white">
+              <Heading
+                as="h2"
+                fontSize={{ base: "3xl", md: "4xl" }}
+                fontWeight="700"
+              >
+                ¿Listo para crear tu próximo evento?
+              </Heading>
+              <Text
+                fontSize={{ base: "md", md: "lg" }}
+                opacity={0.9}
+                maxW="2xl"
+              >
+                Únete a miles de organizadores que ya confían en GetPass para 
+                hacer realidad sus eventos.
+              </Text>
+            </VStack>
+          </MotionBox>
+        </Container>
+      </Box>
+
       <Footer />
-    </div>
+    </Box>
   );
 }
 
-export default nosotros;
+export default Nosotros;

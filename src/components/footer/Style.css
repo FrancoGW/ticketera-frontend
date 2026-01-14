@@ -1,66 +1,7 @@
-@font-face {
-    font-family: 'Monument Extended';
-    src: url('/fonts/MonumentExtended-Regular.otf') format('opentype');
-  }
-.logo {
-   width: 100px;
-}
-.logo:hover{
-    color: #4dd0e1 !important;
-}
-.footer{
-    background-color:#000 ;
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: space-around;
-    padding: 2rem;
-   
-}
-.contentInformation{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3rem;
-}
-.categories , .event , .information > * {
-    color: #fff !important;
-}
-.categories > h1{
-    margin-bottom: 2rem !important;
-    font-weight: 700;
-    font-size: 1.5rem;
-} 
-.event > h1 {
-    margin-bottom: 2rem !important;
-    font-weight: 700;
-    font-size: 1.5rem;
-}
-.information > h1{
-    margin-bottom: 2rem !important;
-    font-weight: 700;
-    font-size: 1.5rem;
-}
-.item{
-    transition: color 0.1s, background-color 0.1s;
-
-}
-.item:hover{
-    color: #4dd0e1 !important;
-
-}
-.categories , .event , .information{
-    display: flex;
-    flex-direction: column;
-    gap: .3rem;
-}
-.contentLogo{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-}
-.contentNumbers > h1{
-    font-size: 1.8rem;
-    color: #fff;
-    font-weight: 500;
+.footer {
+  background-color: #000 !important;
+  width: 100% !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 10 !important;
 }

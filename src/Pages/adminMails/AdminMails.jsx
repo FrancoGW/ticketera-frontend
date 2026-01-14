@@ -329,7 +329,7 @@ export default function AdminMails() {
 
   if (loading) {
     return (
-      <Container maxW="container.xl" py={8} marginTop={40}>
+      <Container maxW="container.xl" py={4} mt={4}>
         <Center h="50vh">
           <VStack spacing={4}>
             <Spinner size="xl" color="purple.500" />
@@ -341,7 +341,7 @@ export default function AdminMails() {
   }
 
   return (
-    <Container maxW="container.xl" py={8} mt={{ base: 20, md: 40 }}>
+    <Container maxW="container.xl" py={4} mt={4}>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

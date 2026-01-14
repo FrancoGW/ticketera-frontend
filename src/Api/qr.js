@@ -13,7 +13,13 @@ const getQrInfo = (qrId) => {
 };
 
 const validateValidator = (token) => {
-  return api.get(`/qr/validate-token?token=${token}`);
+  // Este endpoint es público (NO requiere autenticación)
+  // Necesitamos hacer la petición sin el header de Authorization
+  return api.get(`/qr/validate-token?token=${token}`, {
+    headers: {
+      deleteAuthorization: true // Flag para que el interceptor elimine el Authorization header
+    }
+  });
 };
 
 const generateValidatorUrl = () => {

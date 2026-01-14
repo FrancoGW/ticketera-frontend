@@ -59,62 +59,63 @@ const SellerScanner = () => {
         return false;
       };
       
-      // Función para construir URL completa
-      const buildScannerUrl = () => {
-        const scannerPath = '/validator/qr-scanner';
-        const token = localStorage.getItem('token');
+      // PRIORIDAD 1: Generar token de validador (requiere autenticación)
+      // El endpoint /qr/generate-validator requiere Authorization: Bearer ${userToken}
+      // y devuelve { token: "...", expiresIn: 7200 }
+      try {
+        const validatorResponse = await qrApi.generateValidatorUrl();
+        console.log('Respuesta de generateValidatorUrl:', validatorResponse);
         
-        return token 
-          ? `${FRONTEND_BASE_URL}${scannerPath}?token=${encodeURIComponent(token)}` 
-          : `${FRONTEND_BASE_URL}${scannerPath}`;
-      };
+        // El backend devuelve { token: "...", expiresIn: 7200 }
+        if (validatorResponse?.data?.token) {
+          const validatorToken = validatorResponse.data.token;
+          const expiresIn = validatorResponse.data.expiresIn || 7200; // 2 horas por defecto
+          const scannerPath = '/validator/qr-scanner';
+          const finalUrl = `${FRONTEND_BASE_URL}${scannerPath}?token=${encodeURIComponent(validatorToken)}`;
+          setScannerUrl(finalUrl);
+          
+          // Guardar información del token para referencia
+          console.log(`✅ Token de validador generado. Expira en ${expiresIn} segundos (${expiresIn / 3600} horas)`);
+          return;
+        }
+      } catch (validatorError) {
+        console.error('Error generando token de validador:', validatorError);
+        toast({
+          title: 'Error',
+          description: validatorError?.response?.data?.message || 'No se pudo generar el token de validador. Verifica tu conexión o contacta al administrador.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
       
-      // Intentar obtener la URL desde la API, pero validarla antes de usarla
+      // FALLBACK: Intentar obtener la URL desde otro endpoint (si existe)
       try {
         const { data } = await qrApi.getScannerUrl();
-        if (data?.validatorUrl) {
-          if (isValidUrl(data.validatorUrl)) {
-            // Si la URL es válida y completa, usarla directamente
-            if (data.validatorUrl.startsWith('http://') || data.validatorUrl.startsWith('https://')) {
-              setScannerUrl(data.validatorUrl);
-              return;
-            }
-            // Si es un path válido, construirla completa
-            if (data.validatorUrl.startsWith('/')) {
-              setScannerUrl(`${FRONTEND_BASE_URL}${data.validatorUrl}`);
-              return;
-            }
-          } else {
-            // La API devolvió una URL inválida (probablemente contiene "undefined")
-            console.warn('⚠️ API devolvió URL inválida o mal formada:', data.validatorUrl);
-            console.warn('Construyendo URL manualmente desde el frontend');
+        if (data?.validatorUrl && isValidUrl(data.validatorUrl)) {
+          if (data.validatorUrl.startsWith('http://') || data.validatorUrl.startsWith('https://')) {
+            setScannerUrl(data.validatorUrl);
+            return;
+          }
+          if (data.validatorUrl.startsWith('/')) {
+            setScannerUrl(`${FRONTEND_BASE_URL}${data.validatorUrl}`);
+            return;
           }
         }
       } catch (apiError) {
-        console.log('API no devolvió URL válida, construyendo manualmente');
+        console.log('Endpoint alternativo no disponible');
       }
       
-      // Intentar generar token de validador
-      try {
-        const validatorResponse = await qrApi.generateValidatorUrl();
-        const urlFromApi = validatorResponse?.data?.validatorUrl || validatorResponse?.data?.url;
-        if (urlFromApi && isValidUrl(urlFromApi)) {
-          if (urlFromApi.startsWith('http://') || urlFromApi.startsWith('https://')) {
-            setScannerUrl(urlFromApi);
-            return;
-          }
-          if (urlFromApi.startsWith('/')) {
-            setScannerUrl(`${FRONTEND_BASE_URL}${urlFromApi}`);
-            return;
-          }
-        }
-      } catch (validatorError) {
-        console.log('No se pudo generar token de validador');
+      // Si no se pudo generar el token, mostrar error
+      if (!scannerUrl) {
+        toast({
+          title: 'Error',
+          description: 'No se pudo obtener el token de validador. Por favor, intenta nuevamente o contacta al administrador.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       }
-      
-      // Construir URL manualmente (siempre funciona)
-      const finalUrl = buildScannerUrl();
-      setScannerUrl(finalUrl);
       
     } catch (error) {
       console.error('Error cargando URL del scanner:', error);

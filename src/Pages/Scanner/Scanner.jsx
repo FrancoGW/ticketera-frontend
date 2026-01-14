@@ -89,18 +89,24 @@ export default function Scanner() {
   }, [searchParams]);
 
   const checkValidatorPermissions = async (tokenFromUrl = null) => {
-    // Si hay token en la URL, validarlo con el backend
+    // Si hay token en la URL, validarlo con el backend (endpoint público)
+    // El endpoint /qr/validate-token?token=... NO requiere autenticación
     if (tokenFromUrl) {
       try {
-        await qrApi.validateValidator(tokenFromUrl);
-        // Token válido, continuar
-        console.log('Token de validador válido');
-        return; // Permitir acceso
+        const response = await qrApi.validateValidator(tokenFromUrl);
+        // El backend devuelve { ok: true } si el token es válido
+        if (response?.data?.ok === true) {
+          console.log('✅ Token de validador válido');
+          return; // Permitir acceso
+        } else {
+          throw new Error('Token no válido');
+        }
       } catch (error) {
         console.error('Token de validador inválido:', error);
+        const errorMessage = error?.response?.data?.message || 'El token de validador no es válido o ha expirado';
         toast({
           title: "Token inválido",
-          description: "El token de validador no es válido o ha expirado",
+          description: errorMessage,
           status: "error",
           duration: 5000,
           isClosable: true,

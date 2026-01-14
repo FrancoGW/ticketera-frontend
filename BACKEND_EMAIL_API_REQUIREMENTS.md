@@ -2,6 +2,15 @@
 
 Este documento describe los endpoints que el backend debe implementar para que el panel de administración de emails funcione correctamente.
 
+## ⚠️ IMPORTANTE: Actualización de Branding
+
+**Todos los templates deben actualizarse con el nuevo branding de GetPass:**
+
+- ❌ **NO usar**: "Pase Ticket", "PaseTicket", "@PaseTicket"
+- ✅ **USAR**: "GetPass", "@GetPass"
+
+**Ver documento completo**: `GETPASS_EMAIL_BRANDING_GUIDE.md` para colores, estilos y estructura detallada.
+
 ## Endpoints Requeridos
 
 ### 1. GET `/admin/email-templates`

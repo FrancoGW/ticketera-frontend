@@ -495,9 +495,7 @@ function AnimatedRoutes() {
                   exit="exit"
                   variants={pageVariants}
                 >
-                  <ProtectedRoute roles={["validator"]}>
-                    <Scanner />
-                  </ProtectedRoute>
+                  <Scanner />
                 </motion.div>
               }
             />

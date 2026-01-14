@@ -17,7 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState, useRef } from "react";
 import { QrReader } from "react-qr-reader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { qrApi } from "../../Api/qr";
 import { getObjDate } from "../../common/utils";
@@ -69,34 +69,78 @@ export default function Scanner() {
   const [qrState, setQrState] = useState("");
   const [isScanning, setIsScanning] = useState(true);
   const [hasPermission, setHasPermission] = useState(null);
+  const [validatorToken, setValidatorToken] = useState(null);
   const lastScannedQR = useRef(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
 
   useEffect(() => {
-    checkValidatorPermissions();
+    // Obtener token de la URL si está disponible
+    const tokenFromUrl = searchParams.get('token');
+    if (tokenFromUrl) {
+      setValidatorToken(tokenFromUrl);
+      // Guardar el token en localStorage temporalmente para las peticiones
+      localStorage.setItem('validatorToken', tokenFromUrl);
+    }
+    
+    checkValidatorPermissions(tokenFromUrl);
     requestCameraPermission();
-  }, []);
+  }, [searchParams]);
 
-  const checkValidatorPermissions = () => {
+  const checkValidatorPermissions = async (tokenFromUrl = null) => {
+    // Si hay token en la URL, validarlo con el backend
+    if (tokenFromUrl) {
+      try {
+        await qrApi.validateValidator(tokenFromUrl);
+        // Token válido, continuar
+        console.log('Token de validador válido');
+        return; // Permitir acceso
+      } catch (error) {
+        console.error('Token de validador inválido:', error);
+        toast({
+          title: "Token inválido",
+          description: "El token de validador no es válido o ha expirado",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        navigate('/');
+        return;
+      }
+    }
+
+    // Si no hay token en URL, verificar token del localStorage
     const token = localStorage.getItem('token');
     if (!token) {
+      // Si no hay token en URL ni en localStorage, redirigir al login
+      toast({
+        title: "Acceso requerido",
+        description: "Necesitas un token de validador para acceder al scanner",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
       navigate('/login');
       return;
     }
 
     try {
       const decoded = jwt_decode(token);
+      // Si el usuario tiene rol validator, permitir acceso
       if (decoded.rol === 'validator') {
-        toast({
-          title: "Acceso denegado",
-          description: "No tienes permisos de validador",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-        navigate('/');
+        return; // Permitir acceso
       }
+      
+      // Si no es validator, redirigir
+      toast({
+        title: "Acceso denegado",
+        description: "No tienes permisos de validador. Usa el enlace del scanner proporcionado por el organizador.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      navigate('/');
     } catch (error) {
       console.error("Error validando token:", error);
       navigate('/login');
@@ -129,7 +173,8 @@ export default function Scanner() {
     setIsScanning(false);
 
     try {
-      const token = localStorage.getItem('token');
+      // Usar token de validador si está disponible, sino usar token del usuario
+      const token = validatorToken || localStorage.getItem('validatorToken') || localStorage.getItem('token');
       const { data } = await qrApi.getQrInfo(qrId, token);
       setQrInfo(data);
       
@@ -154,7 +199,8 @@ export default function Scanner() {
   const validateTicket = async () => {
     setQrStateLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      // Usar token de validador si está disponible, sino usar token del usuario
+      const token = validatorToken || localStorage.getItem('validatorToken') || localStorage.getItem('token');
       const { data } = await qrApi.validateQr(qrInfo.qrId, token);
       setQrState(data.qrState);
       

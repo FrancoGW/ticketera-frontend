@@ -321,6 +321,48 @@ curl -X PUT http://localhost:3000/admin/email-templates/welcome \
 
 ---
 
+## 🎨 Guía de Branding y Estilo GetPass
+
+**⚠️ IMPORTANTE**: Todos los templates deben seguir la guía de branding de GetPass.
+
+### Colores Estándar
+
+- **Header Background**: `#70bbd9` (azul claro)
+- **Footer Background**: `#7253c9` (morado) - **NO usar rojo #ee4c50**
+- **Texto Principal**: `#153643` (azul oscuro)
+- **Texto Footer**: `#ffffff` (blanco)
+- **Fondo**: `#ffffff` (blanco)
+- **Borde**: `#cccccc` (gris claro)
+
+### Branding
+
+- **Nombre correcto**: `GetPass` (siempre con G y P mayúsculas)
+- **Nombres incorrectos**: `Pase Ticket`, `PaseTicket`, `@PaseTicket`
+- **Footer estándar**: `&reg; Todos los derechos reservados @GetPass {{currentYear}}`
+
+### Estructura Visual
+
+```
+Header: #70bbd9 (azul claro), altura 200px
+Contenido: #ffffff (blanco), padding 36px 30px 42px 30px
+Footer: #7253c9 (morado), padding 30px, texto blanco
+Ancho máximo: 600px
+```
+
+### Cambios Requeridos en Templates Existentes
+
+1. **Reemplazar nombres**: `Pase Ticket` → `GetPass`, `@PaseTicket` → `@GetPass`
+2. **Estandarizar footer**: Cambiar todos los footers rojos (`#ee4c50`) a morado (`#7253c9`)
+3. **Actualizar textos**: "Bienvenido a Pase Ticket!" → "Bienvenido a GetPass!"
+
+**Ver documento completo**: `GETPASS_EMAIL_BRANDING_GUIDE.md` para:
+- Template base HTML completo
+- Checklist de actualización por template
+- Detalles de tipografía y dimensiones
+- Ejemplos de cada sección
+
+---
+
 ## Prioridad de Implementación
 
 1. **Alta:** `welcome`, `password-reset`, `qr` (los 3 principales que mencionó el usuario)

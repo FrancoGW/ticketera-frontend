@@ -24,9 +24,15 @@ const previewEmailTemplate = (type, data) => {
   return api.post(`/admin/email-templates/${type}/preview`, data);
 };
 
+// Enviar email de prueba
+const testEmailTemplate = (type, email) => {
+  return api.post(`/admin/email-templates/${type}/test`, { email });
+};
+
 export const emailApi = {
   getEmailTemplates,
   getEmailTemplate,
   updateEmailTemplate,
   previewEmailTemplate,
+  testEmailTemplate,
 };

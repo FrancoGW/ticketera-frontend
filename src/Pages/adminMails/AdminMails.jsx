@@ -29,8 +29,16 @@ import {
   Divider,
   Icon,
   Flex,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
 } from '@chakra-ui/react';
-import { FiMail, FiSave, FiEye, FiRefreshCw } from 'react-icons/fi';
+import { FiMail, FiSave, FiEye, FiRefreshCw, FiSend } from 'react-icons/fi';
 import { emailApi } from '../../Api/email';
 import { motion } from 'framer-motion';
 
@@ -119,8 +127,12 @@ export default function AdminMails() {
   const [templates, setTemplates] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
+  const [testing, setTesting] = useState({});
+  const [testEmail, setTestEmail] = useState('');
+  const [testEmailType, setTestEmailType] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     loadTemplates();
@@ -231,6 +243,57 @@ export default function AdminMails() {
     }));
   };
 
+  const handleOpenTestModal = (type) => {
+    setTestEmailType(type);
+    setTestEmail('');
+    onOpen();
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmail || !testEmailType) return;
+
+    // Validar email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      toast({
+        title: 'Email inválido',
+        description: 'Por favor ingresa un email válido',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      setTesting(prev => ({ ...prev, [testEmailType]: true }));
+      const response = await emailApi.testEmailTemplate(testEmailType, testEmail);
+      
+      toast({
+        title: 'Email de prueba enviado',
+        description: response?.data?.message || `Email de prueba enviado exitosamente a ${testEmail}`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      onClose();
+      setTestEmail('');
+      setTestEmailType(null);
+    } catch (error) {
+      console.error('Error enviando email de prueba:', error);
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.message || 'No se pudo enviar el email de prueba',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setTesting(prev => ({ ...prev, [testEmailType]: false }));
+    }
+  };
+
   const renderTemplateEditor = (type) => {
     const template = templates[type] || { subject: '', body: '' };
     const variables = VARIABLES_INFO[type] || [];
@@ -301,7 +364,7 @@ export default function AdminMails() {
                 </Box>
               )}
 
-              <HStack>
+              <HStack spacing={3} flexWrap="wrap">
                 <Button
                   colorScheme="purple"
                   leftIcon={<Icon as={FiSave} />}
@@ -310,6 +373,14 @@ export default function AdminMails() {
                   loadingText="Guardando..."
                 >
                   Guardar Template
+                </Button>
+                <Button
+                  colorScheme="teal"
+                  variant="outline"
+                  leftIcon={<Icon as={FiSend} />}
+                  onClick={() => handleOpenTestModal(type)}
+                >
+                  Enviar Prueba
                 </Button>
                 <Button
                   variant="outline"
@@ -440,6 +511,64 @@ export default function AdminMails() {
           </Tabs>
         </VStack>
       </motion.div>
+
+      {/* Modal para enviar email de prueba */}
+      <Modal isOpen={isOpen} onClose={onClose} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Enviar Email de Prueba
+            {testEmailType && (
+              <Text fontSize="sm" fontWeight="normal" color="gray.600" mt={1}>
+                {EMAIL_TYPE_LABELS[testEmailType]}
+              </Text>
+            )}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Alert status="info" borderRadius="md" size="sm">
+                <AlertIcon />
+                <AlertDescription fontSize="xs">
+                  El email se enviará con el prefijo [PRUEBA] en el asunto y datos de ejemplo.
+                </AlertDescription>
+              </Alert>
+              <FormControl>
+                <FormLabel>Email de destino</FormLabel>
+                <Input
+                  type="email"
+                  placeholder="usuario@ejemplo.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendTestEmail();
+                    }
+                  }}
+                />
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Ingresa el email donde quieres recibir el email de prueba
+                </Text>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              colorScheme="teal"
+              leftIcon={<Icon as={FiSend} />}
+              onClick={handleSendTestEmail}
+              isLoading={testEmailType && testing[testEmailType]}
+              loadingText="Enviando..."
+              isDisabled={!testEmail}
+            >
+              Enviar Prueba
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 }

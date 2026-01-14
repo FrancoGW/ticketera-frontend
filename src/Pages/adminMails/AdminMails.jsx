@@ -131,6 +131,7 @@ export default function AdminMails() {
   const [testEmail, setTestEmail] = useState('');
   const [testEmailType, setTestEmailType] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
+  const [previewTabs, setPreviewTabs] = useState({}); // Estado para cada template
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -294,6 +295,39 @@ export default function AdminMails() {
     }
   };
 
+  // Generar preview del HTML con variables reemplazadas
+  const generatePreview = (type, html) => {
+    if (!html) return '';
+    
+    // Datos de ejemplo para reemplazar variables
+    const previewData = {
+      verifyUrl: 'https://ticketera-frontend-swart.vercel.app/verify-email?token=preview-token-123',
+      recoverUrl: 'https://ticketera-frontend-swart.vercel.app/require-update-password?token=preview-token-123',
+      updateUrl: 'https://ticketera-frontend-swart.vercel.app/change-password?token=preview-token-123',
+      currentYear: new Date().getFullYear(),
+      eventTitle: 'Evento de Prueba',
+      ticketTitle: 'Ticket VIP',
+      transferType: 'sender',
+      userName: 'Usuario de Prueba',
+      userEmail: 'usuario@ejemplo.com',
+      qrImage: 'cid:qr', // Para preview, mostrar placeholder
+    };
+
+    let previewHtml = html;
+    
+    // Reemplazar variables Handlebars simples
+    Object.keys(previewData).forEach(key => {
+      const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+      previewHtml = previewHtml.replace(regex, previewData[key]);
+    });
+
+    // Reemplazar imágenes QR con placeholder
+    previewHtml = previewHtml.replace(/src="cid:qr"/g, 'src="https://via.placeholder.com/200x200/7253c9/ffffff?text=QR+Code"');
+    previewHtml = previewHtml.replace(/src="cid:\d+-qr"/g, 'src="https://via.placeholder.com/200x200/7253c9/ffffff?text=QR+Code"');
+
+    return previewHtml;
+  };
+
   const renderTemplateEditor = (type) => {
     const template = templates[type] || { subject: '', body: '' };
     const variables = VARIABLES_INFO[type] || [];
@@ -324,24 +358,91 @@ export default function AdminMails() {
               </FormControl>
 
               <FormControl>
-                <FormLabel fontWeight="semibold">Cuerpo del Email (HTML)</FormLabel>
-                <Textarea
-                  value={template.body || ''}
-                  onChange={(e) => handleChange(type, 'body', e.target.value)}
-                  placeholder="Escribe el contenido del email en HTML aquí..."
-                  minH="400px"
-                  fontFamily="mono"
-                  fontSize="xs"
-                />
-                <Text fontSize="xs" color="gray.500" mt={2}>
-                  <strong>Nota:</strong> Los templates usan formato HTML con Handlebars. Puedes usar variables como {variables.map(v => v.name).join(', ')}
-                </Text>
-                <Alert status="info" mt={2} borderRadius="md" size="sm">
-                  <AlertIcon />
-                  <AlertDescription fontSize="xs">
-                    Los templates son archivos .hbs (Handlebars). El HTML se renderiza con las variables reemplazadas automáticamente.
-                  </AlertDescription>
-                </Alert>
+                <FormLabel fontWeight="semibold">Cuerpo del Email</FormLabel>
+                <Tabs 
+                  index={previewTabs[type] || 0} 
+                  onChange={(index) => setPreviewTabs(prev => ({ ...prev, [type]: index }))} 
+                  colorScheme="purple" 
+                  variant="enclosed"
+                >
+                  <TabList>
+                    <Tab>
+                      <Icon as={FiEye} mr={2} />
+                      Preview
+                    </Tab>
+                    <Tab>
+                      <Icon as={FiMail} mr={2} />
+                      HTML
+                    </Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel px={0} pt={4}>
+                      <Box
+                        border="1px solid"
+                        borderColor="gray.200"
+                        borderRadius="md"
+                        overflow="hidden"
+                        bg="white"
+                      >
+                        <Box
+                          bg="gray.50"
+                          px={4}
+                          py={2}
+                          borderBottom="1px solid"
+                          borderColor="gray.200"
+                        >
+                          <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                            Preview del Email
+                          </Text>
+                        </Box>
+                        <Box
+                          p={0}
+                          maxH="600px"
+                          overflowY="auto"
+                          bg="gray.100"
+                          display="flex"
+                          justifyContent="center"
+                          py={4}
+                        >
+                          <Box
+                            maxW="600px"
+                            w="100%"
+                            bg="white"
+                            boxShadow="lg"
+                            dangerouslySetInnerHTML={{
+                              __html: generatePreview(type, template.body || '')
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                      <Alert status="info" mt={2} borderRadius="md" size="sm">
+                        <AlertIcon />
+                        <AlertDescription fontSize="xs">
+                          Este es un preview con datos de ejemplo. Las variables se reemplazan automáticamente al enviar el email real.
+                        </AlertDescription>
+                      </Alert>
+                    </TabPanel>
+                    <TabPanel px={0} pt={4}>
+                      <Textarea
+                        value={template.body || ''}
+                        onChange={(e) => handleChange(type, 'body', e.target.value)}
+                        placeholder="Escribe el contenido del email en HTML aquí..."
+                        minH="400px"
+                        fontFamily="mono"
+                        fontSize="xs"
+                      />
+                      <Text fontSize="xs" color="gray.500" mt={2}>
+                        <strong>Nota:</strong> Los templates usan formato HTML con Handlebars. Puedes usar variables como {variables.map(v => v.name).join(', ')}
+                      </Text>
+                      <Alert status="info" mt={2} borderRadius="md" size="sm">
+                        <AlertIcon />
+                        <AlertDescription fontSize="xs">
+                          Los templates son archivos .hbs (Handlebars). El HTML se renderiza con las variables reemplazadas automáticamente.
+                        </AlertDescription>
+                      </Alert>
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
               </FormControl>
 
               {variables.length > 0 && (

@@ -34,6 +34,7 @@ import PdvSales from "./Pages/pdv/PdvSales";
 import PdvSpecialTickets from "./Pages/pdv/PdvSpecialTickets";
 import MyEvents from "./Pages/myEvents/myEvents";
 import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
+import SellerScanner from "./Pages/sellerScanner/SellerScanner";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 
 import theme from "../theme";
@@ -364,6 +365,16 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["seller", "admin"]}>
                   <LayoutWithSidebar>
                     <SellerTicketsPage />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/scanner"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerScanner />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

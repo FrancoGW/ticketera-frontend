@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Table,
+  TableContainer,
   Thead,
   Tbody,
   Tr,
@@ -184,10 +185,12 @@ const UsersManagement = () => {
 
   return (
     <>
-      <Container 
-        maxW="full" 
-        px={{ base: 4, md: 8 }} 
-        py={8}
+      <Box
+        w="100%"
+        maxW="100vw"
+        px={{ base: 2, sm: 4, md: 6, lg: 8 }}
+        py={{ base: 4, md: 8 }}
+        overflowX="hidden"
       >
             <Flex 
               justify="space-between" 
@@ -234,28 +237,61 @@ const UsersManagement = () => {
               border="1px solid"
               borderColor="gray.100"
               overflow="hidden"
+              w="100%"
+              maxW="100%"
             >
-              <TableContainer overflowX="auto">
-                <Table variant="simple" size={{ base: "sm", md: "md" }}>
+              <TableContainer 
+                overflowX="auto"
+                w="100%"
+                maxW="100%"
+                sx={{
+                  '&::-webkit-scrollbar': {
+                    height: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: '#f1f1f1',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#888',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: '#555',
+                  },
+                }}
+              >
+                <Table 
+                  variant="simple" 
+                  size={{ base: "sm", md: "md" }}
+                  w="100%"
+                  minW={{ base: "600px", md: "auto" }}
+                >
                 <Thead bg="gray.50">
                   <Tr>
-                    <Th fontFamily="secondary" fontWeight="600">Nombre</Th>
-                    <Th fontFamily="secondary" fontWeight="600">Email</Th>
-                    <Th fontFamily="secondary" fontWeight="600">DNI</Th>
-                    <Th fontFamily="secondary" fontWeight="600">Teléfono</Th>
-                    <Th fontFamily="secondary" fontWeight="600">Rol</Th>
-                    <Th fontFamily="secondary" fontWeight="600">Acciones</Th>
+                    <Th fontFamily="secondary" fontWeight="600" whiteSpace={{ base: "nowrap", md: "normal" }}>Nombre</Th>
+                    <Th fontFamily="secondary" fontWeight="600" whiteSpace={{ base: "nowrap", md: "normal" }} display={{ base: "none", md: "table-cell" }}>Email</Th>
+                    <Th fontFamily="secondary" fontWeight="600" whiteSpace={{ base: "nowrap", md: "normal" }} display={{ base: "none", lg: "table-cell" }}>DNI</Th>
+                    <Th fontFamily="secondary" fontWeight="600" whiteSpace={{ base: "nowrap", md: "normal" }} display={{ base: "none", lg: "table-cell" }}>Teléfono</Th>
+                    <Th fontFamily="secondary" fontWeight="600" whiteSpace={{ base: "nowrap", md: "normal" }}>Rol</Th>
+                    <Th fontFamily="secondary" fontWeight="600" whiteSpace={{ base: "nowrap", md: "normal" }}>Acciones</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {users.map((user) => (
                     <Tr key={user._id} _hover={{ bg: "gray.50" }}>
-                      <Td fontFamily="secondary">{`${user.firstname} ${user.lastname}`}</Td>
-                      <Td fontFamily="secondary">{user.email}</Td>
-                      <Td fontFamily="secondary">{user.dni}</Td>
-                      <Td fontFamily="secondary">{user.phoneNumber}</Td>
-                      <Td fontFamily="secondary">{user.rol || user.roles?.[0]}</Td>
-                      <Td>
+                      <Td fontFamily="secondary" whiteSpace={{ base: "nowrap", md: "normal" }}>
+                        <Box>
+                          <Box fontWeight="600">{`${user.firstname} ${user.lastname}`}</Box>
+                          <Box fontSize="xs" color="gray.500" display={{ base: "block", md: "none" }} mt={1}>
+                            {user.email}
+                          </Box>
+                        </Box>
+                      </Td>
+                      <Td fontFamily="secondary" display={{ base: "none", md: "table-cell" }}>{user.email}</Td>
+                      <Td fontFamily="secondary" display={{ base: "none", lg: "table-cell" }}>{user.dni}</Td>
+                      <Td fontFamily="secondary" display={{ base: "none", lg: "table-cell" }}>{user.phoneNumber}</Td>
+                      <Td fontFamily="secondary" whiteSpace={{ base: "nowrap", md: "normal" }}>{user.rol || user.roles?.[0]}</Td>
+                      <Td whiteSpace="nowrap">
                         <HStack spacing={2}>
                           <IconButton
                             icon={<FiEdit2 />}
@@ -403,7 +439,7 @@ const UsersManagement = () => {
                 </ModalFooter>
               </ModalContent>
             </Modal>
-      </Container>
+      </Box>
       
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}

@@ -1,6 +1,6 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser } from "react-icons/fi";
+import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser, FiMail } from "react-icons/fi";
 import { RiTicket2Line } from "react-icons/ri";
 
 const Sidebar = () => {
@@ -11,7 +11,8 @@ const Sidebar = () => {
     { path: '/admin/users', icon: FiUsers, label: 'Usuarios' },
     { path: '/admin/metrics', icon: FiBarChart2, label: 'Métricas' },
     { path: '/admin/commission', icon: FiDollarSign, label: 'Comisiones' },
-    { path: '/admin/tickets', icon: RiTicket2Line, label: 'Tickets' }
+    { path: '/admin/tickets', icon: RiTicket2Line, label: 'Tickets' },
+    { path: '/admin/mails', icon: FiMail, label: 'Mails' }
   ];
 
   const isActive = (path) => {

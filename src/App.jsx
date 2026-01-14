@@ -36,6 +36,7 @@ import MyEvents from "./Pages/myEvents/myEvents";
 import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
+import AdminMails from "./Pages/adminMails/AdminMails";
 
 import theme from "../theme";
 import "./main.css";
@@ -420,6 +421,16 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["admin"]}>
                   <LayoutWithSidebar>
                     <UserCrud />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/mails"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminMails />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

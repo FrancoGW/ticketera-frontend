@@ -1,43 +1,18 @@
-.titlePolitics{
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-top: 3rem;
+/* Estilos para la página de Términos y Condiciones */
+
+/* Asegurar que el contenido sea legible */
+.politics-container {
+  min-height: 70vh;
 }
-.contentHeadPolitics{
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    padding-top: 1rem;
-    padding-bottom: 3rem;
-    /* flex-wrap: wrap; */
-    
+
+/* Animaciones suaves para las secciones */
+.terms-section {
+  transition: all 0.3s ease-in-out;
 }
-.contentHeadPolitics2{
-    display: flex;
-    padding-bottom: 3rem;
-}
-.contenPolitics{
-    display: flex;
-    gap: 1rem;
-    padding-bottom: 3rem;
-}
-.content1{
-    width: 50%;
-}
-.content2{
-    width: 50%;
-}
-.content1 >h1{
-    font-weight: bold;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-}
-.content2 >h1{
-    font-weight: bold;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-}
-.textS{
-    max-width: 80%;
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .politics-container {
+    padding: 1rem;
+  }
 }

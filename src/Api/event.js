@@ -107,6 +107,21 @@ const getEventStats = async () => {
     const response = await getEventsbyAdmin({ page: 1, limit: 1000 });
     const events = response.data.events || [];
     
+    // Debug: Log para ver qué datos estamos recibiendo
+    console.log('📊 Eventos recibidos para métricas:', events.length);
+    if (events.length > 0) {
+      const firstEvent = events[0];
+      console.log('📋 Ejemplo de evento:', {
+        title: firstEvent.title,
+        tickets: firstEvent.tickets?.map(t => ({
+          title: t.title,
+          selled: t.selled,
+          price: t.price,
+          maxEntries: t.maxEntries
+        }))
+      });
+    }
+    
     // Calcular métricas
     const today = new Date().getTime();
     const activeEvents = events.filter(event => {
@@ -116,10 +131,32 @@ const getEventStats = async () => {
 
     // Calcular ventas por evento
     const eventsStats = events.map(event => {
-      const totalSold = event.tickets?.reduce((sum, ticket) => sum + (ticket.selled || 0), 0) || 0;
-      const totalRevenue = event.tickets?.reduce((sum, ticket) => {
-        return sum + ((ticket.price || 0) * (ticket.selled || 0));
+      // Intentar obtener tickets vendidos de múltiples fuentes
+      const totalSold = event.tickets?.reduce((sum, ticket) => {
+        // Priorizar selled, pero también considerar otros campos
+        const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
+        return sum + sold;
       }, 0) || 0;
+      
+      const totalRevenue = event.tickets?.reduce((sum, ticket) => {
+        const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
+        return sum + ((ticket.price || 0) * sold);
+      }, 0) || 0;
+      
+      // Debug: Log para eventos con tickets
+      if (event.tickets && event.tickets.length > 0) {
+        console.log(`🎫 Evento "${event.title}":`, {
+          totalSold,
+          totalRevenue,
+          tickets: event.tickets.map(t => ({
+            title: t.title,
+            selled: t.selled,
+            soldCount: t.soldCount,
+            sold: t.sold,
+            price: t.price
+          }))
+        });
+      }
       
       return {
         _id: event._id,
@@ -156,7 +193,8 @@ const getEventStats = async () => {
         }
         organizerStats[email].eventCount++;
         const eventRevenue = event.tickets?.reduce((sum, ticket) => {
-          return sum + ((ticket.price || 0) * (ticket.selled || 0));
+          const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
+          return sum + ((ticket.price || 0) * sold);
         }, 0) || 0;
         organizerStats[email].totalRevenue += eventRevenue;
       }
@@ -165,6 +203,15 @@ const getEventStats = async () => {
     const topOrganizers = Object.values(organizerStats)
       .sort((a, b) => b.eventCount - a.eventCount)
       .slice(0, 10);
+
+    // Debug: Log de resultados finales
+    console.log('📈 Métricas calculadas:', {
+      totalTicketsSold,
+      totalRevenue,
+      totalCommissions,
+      activeEventsCount: activeEvents.length,
+      eventsStatsCount: eventsStats.length
+    });
 
     return {
       data: {

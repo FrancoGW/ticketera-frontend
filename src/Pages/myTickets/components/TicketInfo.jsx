@@ -1,4 +1,4 @@
-import { Td, Tr, Button, useDisclosure, Stack } from "@chakra-ui/react";
+import { Td, Tr, Button, useDisclosure, Stack, Box } from "@chakra-ui/react";
 import { Document, Page, View, Text as PdfText, PDFDownloadLink, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
 import { QRCodeCanvas } from 'qrcode.react';
 import { useEffect, useRef, useState } from "react";
@@ -41,14 +41,28 @@ const QrPDF = ({ ticket, eventTitle, qrCodeDataUri }) => {
 const TicketInfo = ({ ticket, index, ticketsData }) => {
   const qrCodeCanvasRef = useRef(null)
   const [qrCodeDataUri, setQrCodeDataUri] = useState(null)
+  const [isQrReady, setIsQrReady] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   useEffect(() => {
-    if (!qrCodeCanvasRef.current) {
-      return
-    }
-    setQrCodeDataUri(qrCodeCanvasRef.current.children[0].toDataURL('image/jpg', 0.7))
-  }, [qrCodeCanvasRef])
+    // Esperar a que el QR se renderice completamente
+    const timer = setTimeout(() => {
+      if (qrCodeCanvasRef.current) {
+        try {
+          const canvas = qrCodeCanvasRef.current.querySelector('canvas');
+          if (canvas) {
+            const dataUri = canvas.toDataURL('image/png', 1.0);
+            setQrCodeDataUri(dataUri);
+            setIsQrReady(true);
+          }
+        } catch (error) {
+          console.error('Error generando QR data URI:', error);
+        }
+      }
+    }, 100); // Pequeño delay para asegurar que el canvas esté renderizado
+
+    return () => clearTimeout(timer);
+  }, [ticket.qrId]) // Depender del qrId en lugar del ref
 
   const handleTransferSuccess = () => {
     window.location.reload()
@@ -60,25 +74,48 @@ const TicketInfo = ({ ticket, index, ticketsData }) => {
       <Td>{ticket.value}</Td>
       <Td>
         <Stack direction="row" spacing={4} align="center">
-          <div ref={qrCodeCanvasRef}>
-            <QRCodeCanvas style={{ width: 0, height: 0 }} value={ticket.qrId} id={`qr-code-${index}`} />
-          </div>
-          <PDFDownloadLink
-            document={
-              <QrPDF
-                ticket={ticket}
-                eventTitle={ticketsData.eventTitle}
-                qrCodeDataUri={qrCodeDataUri}
+          <Box position="absolute" left="-9999px" visibility="hidden">
+            <div ref={qrCodeCanvasRef}>
+              <QRCodeCanvas 
+                value={ticket.qrId || ''} 
+                id={`qr-code-${index}`}
+                size={200}
+                level="H"
               />
-            }
-            fileName={`${ticket.title} - ${ticketsData.eventTitle}`}
-          >
-            {({ loading }) =>
-              <Button size="sm" colorScheme="gray">
-                {loading ? 'Cargando QR...' : 'Descargar QR'}
-              </Button>
-            }
-          </PDFDownloadLink>
+            </div>
+          </Box>
+          {isQrReady && qrCodeDataUri ? (
+            <PDFDownloadLink
+              document={
+                <QrPDF
+                  ticket={ticket}
+                  eventTitle={ticketsData.eventTitle}
+                  qrCodeDataUri={qrCodeDataUri}
+                />
+              }
+              fileName={`${ticket.title} - ${ticketsData.eventTitle}.pdf`}
+            >
+              {({ loading, blob, url, error }) => {
+                if (error) {
+                  console.error('Error generando PDF:', error);
+                  return (
+                    <Button size="sm" colorScheme="gray" isDisabled>
+                      Error al generar PDF
+                    </Button>
+                  );
+                }
+                return (
+                  <Button size="sm" colorScheme="gray" isLoading={loading}>
+                    {loading ? 'Generando PDF...' : 'Descargar QR'}
+                  </Button>
+                );
+              }}
+            </PDFDownloadLink>
+          ) : (
+            <Button size="sm" colorScheme="gray" isDisabled isLoading>
+              Preparando QR...
+            </Button>
+          )}
           <Button
             size="sm"
             colorScheme="blue"

@@ -35,6 +35,7 @@ function MyTickets() {
   useEffect(() => {
     const getTickets = async () => {
       try {
+        setIsLoading(true);
         const { data } = await ticketApi.getTicketsByUser();
         if (data && data.ticketsByEvent && Object.keys(data.ticketsByEvent).length > 0) {
           setTickets(data.ticketsByEvent);
@@ -43,15 +44,25 @@ function MyTickets() {
           setTickets({});
         }
       } catch (error) {
-        console.log(error);
+        console.error('Error cargando tickets:', error);
         
-        // Solo mostrar error si es un error real del servidor (no 404)
+        // Manejar diferentes tipos de errores
         const status = error?.response?.status;
+        const isTimeout = error?.code === 'ECONNABORTED' || error?.message?.includes('timeout');
         const isNotFound = status === 404;
         const isServerError = status >= 500;
         
-        // Si es 404 o no hay datos, no mostrar error (es normal que no haya tickets)
-        if (!isNotFound && isServerError) {
+        // Si es timeout, mostrar mensaje específico
+        if (isTimeout) {
+          toast({
+            title: "Tiempo de espera agotado",
+            description: "La carga de tickets está tardando mucho. Por favor, intenta recargar la página.",
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+          });
+        } else if (!isNotFound && isServerError) {
+          // Solo mostrar error si es un error real del servidor (no 404)
           toast({
             title: "Error",
             description: "No se pudieron cargar los tickets. Por favor, intenta más tarde.",

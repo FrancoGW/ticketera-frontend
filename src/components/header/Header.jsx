@@ -17,6 +17,12 @@ import {
   Heading,
   VStack,
   HStack,
+  Avatar,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
 } from "@chakra-ui/react";
 import { IoMdContact } from "react-icons/io";
 import { 
@@ -26,11 +32,12 @@ import {
   FiLogOut, 
   FiPlus,
   FiShoppingBag,
-  FiBarChart2
+  FiBarChart2,
+  FiChevronDown
 } from "react-icons/fi";
 import { RiTicket2Line } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import logo from "/assets/img/logo.png";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useAuth } from "../../auth/context/AuthContext";
@@ -204,124 +211,454 @@ function Header() {
             )}
             {user && (
               <Box m="0" py="10px">
-                <Popover trigger={"hover"} placement={"bottom-start"}>
-                  <PopoverTrigger>
-                    <Box
-                      bg="none"
-                      _active="none"
-                      fontFamily="secondary"
-                      fontSize="smaller"
-                      _hover={{ color: "#fff", bg: "none" }}
-                      cursor="pointer"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      {authLoading ? (
-                        <Flex align="center">
-                          <Text>Cargando</Text>
-                          <Spinner size="sm" ml={2} color="white" />
+                <Menu placement="bottom-end" closeOnSelect={true}>
+                  {({ isOpen }) => (
+                    <>
+                      <Box
+                        as={motion.div}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <MenuButton
+                          as={Button}
+                          variant="ghost"
+                          bg={isOpen ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)"}
+                          _hover={{ bg: "rgba(255, 255, 255, 0.15)" }}
+                          _active={{ bg: "rgba(255, 255, 255, 0.2)" }}
+                          borderRadius="xl"
+                          px={3}
+                          py={2}
+                          h="auto"
+                          minW="auto"
+                          fontFamily="secondary"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color="white"
+                          cursor="pointer"
+                          transition="all 0.2s"
+                        >
+                        <Flex align="center" gap={2}>
+                          {authLoading ? (
+                            <Flex align="center">
+                              <Spinner size="sm" color="white" />
+                            </Flex>
+                          ) : (
+                            <>
+                              <Avatar
+                                size="sm"
+                                name={user?.firstname || user?.email?.split('@')[0] || 'Usuario'}
+                                bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
+                                color="white"
+                                fontWeight="700"
+                                fontSize="xs"
+                                border="2px solid"
+                                borderColor="rgba(255, 255, 255, 0.3)"
+                                boxShadow="0 2px 8px rgba(183, 141, 234, 0.3)"
+                              />
+                              <Text display={{ base: "none", lg: "block" }} fontWeight="500">
+                                {user?.firstname || user?.email?.split('@')[0] || 'Usuario'}
+                              </Text>
+                              <motion.div
+                                animate={{ rotate: isOpen ? 180 : 0 }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                              >
+                                <Icon
+                                  as={FiChevronDown}
+                                  fontSize="md"
+                                  opacity={0.8}
+                                />
+                              </motion.div>
+                            </>
+                          )}
                         </Flex>
-                      ) : (
-                        user?.firstname || user?.email?.split('@')[0] || 'Usuario'
-                      )}
-                      <Icon
-                        ml="2"
-                        as={IoMdContact}
-                        fontSize="xl"
-                        fill="white"
-                        _hover={{ fill: "#fff" }}
-                        transition="ease 0.2s"
-                      />
-                    </Box>
-                  </PopoverTrigger>
-                  <PopoverContent bg="primary" border="none" w="160px">
-                    <PopoverBody display="flex" flexDir="column" gap="2" p="3">
-                      <Link
-                        href="/profile"
-                        _hover={{ color: "#fff", bg: "none" }}
-                        fontFamily="secondary"
-                        textTransform='capitalize'
-                      >
-                        Perfil
-                      </Link>
-                      {hasRole("admin") && (
-                        <>
-                          <Divider />
-                          <Link
-                            href="/admin/events"
-                            _hover={{ color: "#fff", bg: "none" }}
-                            fontFamily="secondary"
-                            textTransform='capitalize'
+                        </MenuButton>
+                      </Box>
+                      <AnimatePresence>
+                        {isOpen && (
+                          <MenuList
+                            as={motion.div}
+                            initial={{ opacity: 0, y: -10, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.96 }}
+                            transition={{
+                              duration: 0.2,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
+                            bg="rgba(26, 26, 26, 0.95)"
+                            backdropFilter="blur(20px) saturate(180%)"
+                            border="1px solid"
+                            borderColor="rgba(255, 255, 255, 0.1)"
+                            boxShadow="0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(183, 141, 234, 0.1)"
+                            borderRadius="xl"
+                            py={0}
+                            minW="300px"
+                            mt={2}
+                            overflow="visible"
+                            position="relative"
+                            transformOrigin="top right"
+                            zIndex={1000}
+                            _before={{
+                              content: '""',
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: "1px",
+                              background: "linear-gradient(90deg, transparent, rgba(183, 141, 234, 0.3), transparent)",
+                              zIndex: 1,
+                            }}
+                            className="user-menu-dropdown user-menu-open"
                           >
-                            Administrar
-                          </Link>
-                        </>
-                      )}
-                      {hasRole("pdv") && (
-                        <>
-                          <Divider />
-                          <Link
-                            href="/pdv/dashboard"
-                            _hover={{ color: "#fff", bg: "none" }}
-                            fontFamily="secondary"
-                            textTransform='capitalize'
-                          >
-                            Panel PDV
-                          </Link>
-                          <Link
-                            href="/pdv/tickets"
-                            _hover={{ color: "#fff", bg: "none" }}
-                            fontFamily="secondary"
-                            textTransform='capitalize'
-                          >
-                            Mis Ventas
-                          </Link>
-                          <Link
-                            href="/pdv/special-tickets"
-                            _hover={{ color: "#fff", bg: "none" }}
-                            fontFamily="secondary"
-                            textTransform='capitalize'
-                          >
-                            Tickets Especiales
-                          </Link>
-                        </>
-                      )}
-                      {(hasRole("seller") || hasRole("admin")) && (
-                        <>
-                          <Divider />
-                          <Link
-                            href="/profile/my-events"
-                            _hover={{ color: "#fff", bg: "none" }}
-                            fontFamily="secondary"
-                            textTransform='capitalize'
-                          >
-                            Mis Eventos
-                          </Link>
-                        </>
-                      )}
-                      <Divider />
-                      <Link
-                        href="/profile/my-tickets"
-                        _hover={{ color: "#fff", bg: "none" }}
-                        fontFamily="secondary"
-                        textTransform='capitalize'
-                      >
-                        Mis E-Tickets
-                      </Link>
-                      <Divider />
-                      <Link
-                        href="#"
-                        onClick={handleLogout}
-                        _hover={{ color: "#fff", bg: "none" }}
-                        fontFamily="secondary"
-                        textTransform='capitalize'
-                      >
-                        Cerrar Sesión
-                      </Link>
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
+                            {/* User Info Header */}
+                            <Box
+                              bg="rgba(183, 141, 234, 0.08)"
+                              borderBottom="1px solid"
+                              borderColor="rgba(255, 255, 255, 0.08)"
+                              px={5}
+                              py={4}
+                              color="white"
+                              position="relative"
+                              zIndex={2}
+                            >
+                              <Flex align="center" gap={3}>
+                                <Avatar
+                                  size="md"
+                                  name={user?.firstname || user?.email?.split('@')[0] || 'Usuario'}
+                                  bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
+                                  color="white"
+                                  fontWeight="700"
+                                  fontSize="lg"
+                                  border="2px solid"
+                                  borderColor="rgba(183, 141, 234, 0.4)"
+                                  boxShadow="0 4px 12px rgba(183, 141, 234, 0.25)"
+                                />
+                                <Box flex="1" minW="0">
+                                  <Text
+                                    fontFamily="secondary"
+                                    fontSize="sm"
+                                    fontWeight="700"
+                                    color="white"
+                                    mb={0.5}
+                                    noOfLines={1}
+                                    textTransform="uppercase"
+                                    letterSpacing="0.5px"
+                                  >
+                                    {user?.firstname || user?.email?.split('@')[0] || 'Usuario'}
+                                  </Text>
+                                  <Text
+                                    fontFamily="secondary"
+                                    fontSize="xs"
+                                    color="rgba(255, 255, 255, 0.5)"
+                                    noOfLines={1}
+                                  >
+                                    {user?.email}
+                                  </Text>
+                                </Box>
+                              </Flex>
+                            </Box>
+
+                            <Box py={2}>
+                              <MenuItem
+                                as={motion.div}
+                                whileHover={{ x: 4 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                onClick={() => navigate("/profile")}
+                                icon={
+                                  <Box
+                                    p={1.5}
+                                    borderRadius="md"
+                                    bg="rgba(183, 141, 234, 0.15)"
+                                    color="#b78dea"
+                                  >
+                                    <Icon as={FiUser} boxSize={4} />
+                                  </Box>
+                                }
+                                fontFamily="secondary"
+                                fontSize="sm"
+                                fontWeight="500"
+                                py={2.5}
+                                px={4}
+                                bg="transparent"
+                                color="rgba(255, 255, 255, 0.9) !important"
+                                _hover={{ 
+                                  bg: "rgba(183, 141, 234, 0.12) !important", 
+                                  color: "#b78dea !important"
+                                }}
+                                _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                borderRadius="lg"
+                                mx={2}
+                                mb={0.5}
+                              >
+                                Perfil
+                              </MenuItem>
+
+                              {hasRole("admin") && (
+                                <>
+                                  <MenuDivider mx={2} borderColor="rgba(255, 255, 255, 0.1)" />
+                                  <MenuItem
+                                    as={motion.div}
+                                    whileHover={{ x: 4 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                    onClick={() => navigate("/admin/events")}
+                                    icon={
+                                      <Box
+                                        p={1.5}
+                                        borderRadius="md"
+                                        bg="rgba(183, 141, 234, 0.15)"
+                                        color="#b78dea"
+                                      >
+                                        <Icon as={FiSettings} boxSize={4} />
+                                      </Box>
+                                    }
+                                    fontFamily="secondary"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    py={2.5}
+                                    px={4}
+                                    bg="transparent"
+                                    color="rgba(255, 255, 255, 0.9) !important"
+                                    _hover={{ 
+                                      bg: "rgba(183, 141, 234, 0.12) !important", 
+                                      color: "#b78dea !important"
+                                    }}
+                                    _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    borderRadius="lg"
+                                    mx={2}
+                                    mb={0.5}
+                                  >
+                                    Administrar
+                                  </MenuItem>
+                                </>
+                              )}
+
+                              {hasRole("pdv") && (
+                                <>
+                                  <MenuDivider mx={2} borderColor="rgba(255, 255, 255, 0.1)" />
+                                  <MenuItem
+                                    as={motion.div}
+                                    whileHover={{ x: 4 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                    onClick={() => navigate("/pdv/dashboard")}
+                                    icon={
+                                      <Box
+                                        p={1.5}
+                                        borderRadius="md"
+                                        bg="rgba(183, 141, 234, 0.15)"
+                                        color="#b78dea"
+                                      >
+                                        <Icon as={FiBarChart2} boxSize={4} />
+                                      </Box>
+                                    }
+                                    fontFamily="secondary"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    py={2.5}
+                                    px={4}
+                                    bg="transparent"
+                                    color="rgba(255, 255, 255, 0.9) !important"
+                                    _hover={{ 
+                                      bg: "rgba(183, 141, 234, 0.12) !important", 
+                                      color: "#b78dea !important"
+                                    }}
+                                    _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    borderRadius="lg"
+                                    mx={2}
+                                    mb={0.5}
+                                  >
+                                    Panel PDV
+                                  </MenuItem>
+                                  <MenuItem
+                                    as={motion.div}
+                                    whileHover={{ x: 4 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                    onClick={() => navigate("/pdv/tickets")}
+                                    icon={
+                                      <Box
+                                        p={1.5}
+                                        borderRadius="md"
+                                        bg="rgba(183, 141, 234, 0.15)"
+                                        color="#b78dea"
+                                      >
+                                        <Icon as={FiShoppingBag} boxSize={4} />
+                                      </Box>
+                                    }
+                                    fontFamily="secondary"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    py={2.5}
+                                    px={4}
+                                    bg="transparent"
+                                    color="rgba(255, 255, 255, 0.9) !important"
+                                    _hover={{ 
+                                      bg: "rgba(183, 141, 234, 0.12) !important", 
+                                      color: "#b78dea !important"
+                                    }}
+                                    _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    borderRadius="lg"
+                                    mx={2}
+                                    mb={0.5}
+                                  >
+                                    Mis Ventas
+                                  </MenuItem>
+                                  <MenuItem
+                                    as={motion.div}
+                                    whileHover={{ x: 4 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                    onClick={() => navigate("/pdv/special-tickets")}
+                                    icon={
+                                      <Box
+                                        p={1.5}
+                                        borderRadius="md"
+                                        bg="rgba(183, 141, 234, 0.15)"
+                                        color="#b78dea"
+                                      >
+                                        <Icon as={RiTicket2Line} boxSize={4} />
+                                      </Box>
+                                    }
+                                    fontFamily="secondary"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    py={2.5}
+                                    px={4}
+                                    bg="transparent"
+                                    color="rgba(255, 255, 255, 0.9) !important"
+                                    _hover={{ 
+                                      bg: "rgba(183, 141, 234, 0.12) !important", 
+                                      color: "#b78dea !important"
+                                    }}
+                                    _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    borderRadius="lg"
+                                    mx={2}
+                                    mb={0.5}
+                                  >
+                                    Tickets Especiales
+                                  </MenuItem>
+                                </>
+                              )}
+
+                              {(hasRole("seller") || hasRole("admin")) && (
+                                <>
+                                  <MenuDivider mx={2} borderColor="rgba(255, 255, 255, 0.1)" />
+                                  <MenuItem
+                                    as={motion.div}
+                                    whileHover={{ x: 4 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                    onClick={() => navigate("/profile/my-events")}
+                                    icon={
+                                      <Box
+                                        p={1.5}
+                                        borderRadius="md"
+                                        bg="rgba(183, 141, 234, 0.15)"
+                                        color="#b78dea"
+                                      >
+                                        <Icon as={FiHome} boxSize={4} />
+                                      </Box>
+                                    }
+                                    fontFamily="secondary"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    py={2.5}
+                                    px={4}
+                                    bg="transparent"
+                                    color="rgba(255, 255, 255, 0.9) !important"
+                                    _hover={{ 
+                                      bg: "rgba(183, 141, 234, 0.12) !important", 
+                                      color: "#b78dea !important"
+                                    }}
+                                    _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                    borderRadius="lg"
+                                    mx={2}
+                                    mb={0.5}
+                                  >
+                                    Mis Eventos
+                                  </MenuItem>
+                                </>
+                              )}
+
+                              <MenuDivider mx={2} borderColor="rgba(255, 255, 255, 0.1)" />
+                              <MenuItem
+                                as={motion.div}
+                                whileHover={{ x: 4 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                onClick={() => navigate("/profile/my-tickets")}
+                                icon={
+                                  <Box
+                                    p={1.5}
+                                    borderRadius="md"
+                                    bg="rgba(183, 141, 234, 0.15)"
+                                    color="#b78dea"
+                                  >
+                                    <Icon as={RiTicket2Line} boxSize={4} />
+                                  </Box>
+                                }
+                                fontFamily="secondary"
+                                fontSize="sm"
+                                fontWeight="500"
+                                py={2.5}
+                                px={4}
+                                bg="transparent"
+                                color="rgba(255, 255, 255, 0.9) !important"
+                                _hover={{ 
+                                  bg: "rgba(183, 141, 234, 0.12) !important", 
+                                  color: "#b78dea !important"
+                                }}
+                                _focus={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                _active={{ bg: "rgba(183, 141, 234, 0.12) !important", color: "#b78dea !important" }}
+                                borderRadius="lg"
+                                mx={2}
+                                mb={0.5}
+                              >
+                                Mis E-Tickets
+                              </MenuItem>
+
+                              <MenuDivider mx={2} borderColor="rgba(255, 255, 255, 0.1)" />
+                              <MenuItem
+                                as={motion.div}
+                                whileHover={{ x: 4 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                onClick={handleLogout}
+                                icon={
+                                  <Box
+                                    p={1.5}
+                                    borderRadius="md"
+                                    bg="rgba(239, 68, 68, 0.15)"
+                                    color="#ef4444"
+                                  >
+                                    <Icon as={FiLogOut} boxSize={4} />
+                                  </Box>
+                                }
+                                fontFamily="secondary"
+                                fontSize="sm"
+                                fontWeight="500"
+                                py={2.5}
+                                px={4}
+                                bg="transparent"
+                                color="#ef4444 !important"
+                                _hover={{ 
+                                  bg: "rgba(239, 68, 68, 0.12) !important", 
+                                  color: "#f87171 !important"
+                                }}
+                                _focus={{ bg: "rgba(239, 68, 68, 0.12) !important", color: "#f87171 !important" }}
+                                _active={{ bg: "rgba(239, 68, 68, 0.12) !important", color: "#f87171 !important" }}
+                                borderRadius="lg"
+                                mx={2}
+                                mt={1}
+                              >
+                                Cerrar Sesión
+                              </MenuItem>
+                            </Box>
+                          </MenuList>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </Menu>
               </Box>
             )}
           </UnorderedList>

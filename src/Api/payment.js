@@ -36,10 +36,16 @@ const disconnectMercadoPago = () => {
   return api.post('/payment/mercadopago/disconnect')
 }
 
+// Obtener todos los payments aprobados (para métricas)
+const getApprovedPayments = () => {
+  return api.get('/payment/admin/approved')
+}
+
 export const paymentApi = {
   createCheckout,
   validateDiscountCode,
   previewCheckout,
   initiateMercadoPagoAuthorization,
-  disconnectMercadoPago
+  disconnectMercadoPago,
+  getApprovedPayments
 }

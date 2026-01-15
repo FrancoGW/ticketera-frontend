@@ -1,4 +1,5 @@
 import api from "../config/axios.config";
+import { paymentApi } from "./payment";
 
 const createEvent = (data) => {
   return api.post("/events", data);
@@ -107,20 +108,55 @@ const getEventStats = async () => {
     const response = await getEventsbyAdmin({ page: 1, limit: 1000 });
     const events = response.data.events || [];
     
-    // Debug: Log para ver qué datos estamos recibiendo
-    console.log('📊 Eventos recibidos para métricas:', events.length);
-    if (events.length > 0) {
-      const firstEvent = events[0];
-      console.log('📋 Ejemplo de evento:', {
-        title: firstEvent.title,
-        tickets: firstEvent.tickets?.map(t => ({
-          title: t.title,
-          selled: t.selled,
-          price: t.price,
-          maxEntries: t.maxEntries
-        }))
-      });
+    // Obtener payments aprobados para calcular métricas reales
+    let payments = [];
+    try {
+      const paymentsResponse = await paymentApi.getApprovedPayments();
+      payments = paymentsResponse.data?.payments || paymentsResponse.data || [];
+      console.log('💳 Payments aprobados obtenidos:', payments.length);
+    } catch (error) {
+      console.warn('⚠️ No se pudieron obtener payments, usando cálculo alternativo:', error);
+      // Si no hay endpoint de payments, usar cálculo alternativo
+      payments = [];
     }
+    
+    // Crear un mapa de payments por eventId para acceso rápido
+    // Necesitamos relacionar payments con eventos a través de los ticketIds
+    const paymentsByEvent = {};
+    const ticketToEventMap = {}; // Mapa de ticketId -> eventId
+    
+    // Primero, crear un mapa de ticketId a eventId desde los eventos
+    events.forEach(event => {
+      if (event.tickets && Array.isArray(event.tickets)) {
+        event.tickets.forEach(ticket => {
+          if (ticket._id) {
+            ticketToEventMap[ticket._id.toString()] = event._id.toString();
+          }
+        });
+      }
+    });
+    
+    // Luego, asignar payments a eventos usando los ticketIds
+    payments.forEach(payment => {
+      if (payment.paymentStatus === 'approved' && payment.tickets && Array.isArray(payment.tickets)) {
+        payment.tickets.forEach(ticket => {
+          const ticketId = ticket.ticketId?._id || ticket.ticketId?.toString() || ticket.ticketId;
+          const eventId = ticketToEventMap[ticketId?.toString()];
+          
+          if (eventId) {
+            if (!paymentsByEvent[eventId]) {
+              paymentsByEvent[eventId] = [];
+            }
+            // Solo agregar el payment una vez por evento (aunque tenga múltiples tickets)
+            if (!paymentsByEvent[eventId].find(p => p._id?.toString() === payment._id?.toString())) {
+              paymentsByEvent[eventId].push(payment);
+            }
+          }
+        });
+      }
+    });
+    
+    console.log('🗺️ Mapa de payments por evento:', Object.keys(paymentsByEvent).length, 'eventos con payments');
     
     // Calcular métricas
     const today = new Date().getTime();
@@ -129,31 +165,57 @@ const getEventStats = async () => {
       return event.status === 'approved' && eventDate >= today && !event.deleted;
     });
 
-    // Calcular ventas por evento
+    // Calcular ventas por evento usando payments reales
     const eventsStats = events.map(event => {
-      // Intentar obtener tickets vendidos de múltiples fuentes
-      const totalSold = event.tickets?.reduce((sum, ticket) => {
-        // Priorizar selled, pero también considerar otros campos
-        const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
-        return sum + sold;
-      }, 0) || 0;
+      const eventPayments = paymentsByEvent[event._id] || [];
       
-      const totalRevenue = event.tickets?.reduce((sum, ticket) => {
-        const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
-        return sum + ((ticket.price || 0) * sold);
-      }, 0) || 0;
+      // Calcular desde payments reales
+      let totalSold = 0;
+      let totalRevenue = 0; // amount: lo que pagó el cliente por las entradas
+      let totalCommissions = 0; // commission: ganancia en comisiones
       
-      // Debug: Log para eventos con tickets
-      if (event.tickets && event.tickets.length > 0) {
-        console.log(`🎫 Evento "${event.title}":`, {
+      eventPayments.forEach(payment => {
+        if (payment.paymentStatus === 'approved') {
+          // Sumar cantidad de tickets vendidos
+          if (payment.tickets && Array.isArray(payment.tickets)) {
+            payment.tickets.forEach(ticket => {
+              totalSold += ticket.quantity || 0;
+            });
+          }
+          
+          // Sumar amount (lo que pagó el cliente por las entradas)
+          totalRevenue += payment.amount || 0;
+          
+          // Sumar commission (ganancia en comisiones)
+          totalCommissions += payment.commission || 0;
+        }
+      });
+      
+      // Si no hay payments, usar cálculo alternativo desde tickets (fallback)
+      if (totalSold === 0 && totalRevenue === 0) {
+        totalSold = event.tickets?.reduce((sum, ticket) => {
+          const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
+          return sum + sold;
+        }, 0) || 0;
+        
+        totalRevenue = event.tickets?.reduce((sum, ticket) => {
+          const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
+          return sum + ((ticket.price || 0) * sold);
+        }, 0) || 0;
+      }
+      
+      // Debug: Log para eventos con payments
+      if (eventPayments.length > 0) {
+        console.log(`💰 Evento "${event.title}":`, {
+          payments: eventPayments.length,
           totalSold,
           totalRevenue,
-          tickets: event.tickets.map(t => ({
-            title: t.title,
-            selled: t.selled,
-            soldCount: t.soldCount,
-            sold: t.sold,
-            price: t.price
+          totalCommissions,
+          paymentsData: eventPayments.map(p => ({
+            amount: p.amount,
+            commission: p.commission,
+            serviceFee: p.serviceFee,
+            tickets: p.tickets
           }))
         });
       }
@@ -163,7 +225,8 @@ const getEventStats = async () => {
         title: event.title,
         userEmail: event.userEmail,
         ticketsSold: totalSold,
-        revenue: totalRevenue,
+        revenue: totalRevenue, // amount del payment
+        commissions: totalCommissions, // commission del payment
         commissionPercentage: event.commissionPercentage || 0,
         lastSale: event.updatedAt || event.createdAt
       };
@@ -173,13 +236,10 @@ const getEventStats = async () => {
     const totalTicketsSold = eventsStats.reduce((sum, event) => sum + event.ticketsSold, 0);
     const totalRevenue = eventsStats.reduce((sum, event) => sum + event.revenue, 0);
     
-    // Calcular ganancias en comisiones
-    const totalCommissions = eventsStats.reduce((sum, event) => {
-      const commission = (event.revenue * (event.commissionPercentage || 0)) / 100;
-      return sum + commission;
-    }, 0);
+    // Calcular ganancias en comisiones desde payments reales
+    const totalCommissions = eventsStats.reduce((sum, event) => sum + (event.commissions || 0), 0);
 
-    // Organizadores con más eventos
+    // Organizadores con más eventos (usar revenue calculado desde payments)
     const organizerStats = {};
     events.forEach(event => {
       const email = event.userEmail;
@@ -192,10 +252,10 @@ const getEventStats = async () => {
           };
         }
         organizerStats[email].eventCount++;
-        const eventRevenue = event.tickets?.reduce((sum, ticket) => {
-          const sold = ticket.selled || ticket.soldCount || ticket.sold || 0;
-          return sum + ((ticket.price || 0) * sold);
-        }, 0) || 0;
+        
+        // Usar el revenue calculado desde payments (ya está en eventsStats)
+        const eventStats = eventsStats.find(e => e._id === event._id);
+        const eventRevenue = eventStats?.revenue || 0;
         organizerStats[email].totalRevenue += eventRevenue;
       }
     });

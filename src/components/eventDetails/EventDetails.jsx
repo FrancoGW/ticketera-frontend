@@ -37,6 +37,7 @@ import {
 import { RiCalendar2Line, RiMapPinLine, RiTicket2Line } from "react-icons/ri";
 import { paymentApi } from "../../Api/payment";
 import { getObjDate, isDateIncluded } from "../../common/utils";
+import VenueMapSelector from "../venueMap/VenueMapSelector";
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -50,6 +51,7 @@ const EventDetails = () => {
   const [total, setTotal] = useState(0); // Total final
   const [selectedDate, setSelectedDate] = useState(0);
   const [dateTickets, setDateTickets] = useState([]);
+  const [selectedZoneId, setSelectedZoneId] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
@@ -86,6 +88,8 @@ const EventDetails = () => {
     const newDateTickets = selectTicketsOfSelectedDate(event);
     console.log('New date tickets:', newDateTickets);
     setDateTickets(newDateTickets);
+    // Si cambia la fecha, reiniciar selección de zona para evitar tickets no disponibles
+    setSelectedZoneId("");
   }, [selectedDate]);
 
   const handleSelectedDate = (e) => {
@@ -331,6 +335,13 @@ const EventDetails = () => {
     }
   };
 
+  const zones = Array.isArray(event?.venueMap?.zones) ? event.venueMap.zones : [];
+  const selectedZone = selectedZoneId ? zones.find((z) => z.id === selectedZoneId) : null;
+  const selectedZoneTicketId = selectedZone?.ticketRefs?.[0];
+  const zoneFilteredTickets = selectedZoneTicketId
+    ? dateTickets.filter((t) => t._id === selectedZoneTicketId)
+    : dateTickets;
+
   return (
     <>
       <Header />
@@ -470,6 +481,39 @@ const EventDetails = () => {
                 </CardBody>
               </Card>
 
+              {/* Selector de zona (si existe mapa) */}
+              {event?.venueMap?.imageUrl && zones.length > 0 && (
+                <Box>
+                  <VenueMapSelector
+                    venueMap={event.venueMap}
+                    tickets={dateTickets}
+                    selectedZoneId={selectedZoneId}
+                    onSelectZone={(z) => {
+                      setSelectedZoneId(z.id);
+                      resetTicketsToBuy();
+                    }}
+                  />
+                  {selectedZone && (
+                    <Box mt={4} p={4} bg="gray.50" borderRadius="lg" border="1px solid" borderColor="gray.200">
+                      <Text fontFamily="secondary" fontWeight="700" color="black">
+                        Zona seleccionada: {selectedZone.name}
+                      </Text>
+                      <Text fontFamily="secondary" color="gray.600" mt={1}>
+                        Ticket:{" "}
+                        <b>
+                          {zoneFilteredTickets?.[0]?.title || "No disponible para esta fecha"}
+                        </b>
+                        {zoneFilteredTickets?.[0]?.price != null && (
+                          <>
+                            {" "}— Precio: <b>${Number(zoneFilteredTickets[0].price).toLocaleString()}</b>
+                          </>
+                        )}
+                      </Text>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
               {/* Card de Tickets */}
               <Card
                 boxShadow="xl"
@@ -488,9 +532,9 @@ const EventDetails = () => {
                       Selecciona tus entradas
                     </Heading>
 
-                    {dateTickets && dateTickets.length > 0 ? (
+                    {zoneFilteredTickets && zoneFilteredTickets.length > 0 ? (
                       <VStack align="stretch" spacing={4}>
-                        {dateTickets.map((ticket) => {
+                        {zoneFilteredTickets.map((ticket) => {
                           const isSoldOut = ticket.selled >= ticket?.maxEntries;
                           const quantity = ticketsToBuy[ticket._id]?.quantity || 0;
                           

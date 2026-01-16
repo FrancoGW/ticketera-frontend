@@ -75,6 +75,10 @@ const updateEvent = (id, { event, address }) => {
   });
 };
 
+const updateVenueMap = (id, venueMap) => {
+  return api.patch(`/events/${id}/venue-map`, { venueMap });
+};
+
 const getUserEvents = (page, limit) => {
   return api.get(`/events/user/events?page=${page}&limit=${limit}`);
 };
@@ -305,6 +309,7 @@ const eventApi = {
   getEvents,
   getEventById,
   updateEvent,
+  updateVenueMap,
   deleteEventById,
   actualizeEventStatus,
   

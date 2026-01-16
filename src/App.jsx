@@ -353,7 +353,7 @@ function AnimatedRoutes() {
             <Route
               path="/seller/new-event"
               element={
-                <ProtectedRoute roles={["seller", "admin"]}>
+                <ProtectedRoute roles={["buyer", "seller", "admin"]}>
                   <LayoutWithSidebar>
                     <NewEvent />
                   </LayoutWithSidebar>

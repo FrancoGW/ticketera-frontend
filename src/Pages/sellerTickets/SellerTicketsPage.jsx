@@ -20,12 +20,14 @@ import EditTicketModal from "../ticketsAdmin/components/EditTicketModal";
 import eventApi from "../../Api/event";
 import ConfirmDialog from "../../components/confirmDialog/ConfirmDialog";
 import useConfirmDialog from "../../hooks/useConfirmDialog";
+import VenueMapEditor from "../../components/venueMap/VenueMapEditor";
 
 const SellerTicketsPage = () => {
   const [searchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("");
   const [tickets, setTickets] = useState([]);
+  const [venueMap, setVenueMap] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -258,6 +260,28 @@ const SellerTicketsPage = () => {
     }
   }, [selectedEvent]);
 
+  useEffect(() => {
+    const loadVenueMap = async () => {
+      if (!selectedEvent) {
+        setVenueMap(null);
+        return;
+      }
+      try {
+        const { data } = await eventApi.getEventById(selectedEvent);
+        setVenueMap(data?.event?.venueMap || null);
+      } catch (e) {
+        setVenueMap(null);
+      }
+    };
+    loadVenueMap();
+  }, [selectedEvent]);
+
+  const handleSaveVenueMap = async (newVenueMap) => {
+    await eventApi.updateVenueMap(selectedEvent, newVenueMap);
+    const { data } = await eventApi.getEventById(selectedEvent);
+    setVenueMap(data?.event?.venueMap || null);
+  };
+
   const renderTickets = () => {
     if (!selectedEvent) {
       return (
@@ -419,6 +443,17 @@ const SellerTicketsPage = () => {
             )}
 
             {!isLoadingEvents && events.length > 0 && renderTickets()}
+
+            {selectedEvent && (
+              <Box mt={10}>
+                <VenueMapEditor
+                  eventId={selectedEvent}
+                  tickets={tickets}
+                  initialVenueMap={venueMap}
+                  onSaveVenueMap={handleSaveVenueMap}
+                />
+              </Box>
+            )}
 
             <CreateTicketModal
               isOpen={isCreateOpen}

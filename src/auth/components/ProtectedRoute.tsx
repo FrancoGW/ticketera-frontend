@@ -36,9 +36,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Handle both 'rol' (string) from backend and 'roles' (array) format
-  const userRoles = user.roles || (user.rol ? [user.rol] : []);
+  const userRolesRaw = user.roles || (user.rol ? [user.rol] : []);
+  const userRoles = userRolesRaw.map((r: any) => String(r).toLowerCase());
+  const requiredRoles = (roles || []).map((r) => String(r).toLowerCase());
   
-  if (roles && roles.length > 0 && !roles.some((role) => userRoles.includes(role))) {
+  if (requiredRoles.length > 0 && !requiredRoles.some((role) => userRoles.includes(role))) {
     return <Navigate to="/" replace />;
   }
 

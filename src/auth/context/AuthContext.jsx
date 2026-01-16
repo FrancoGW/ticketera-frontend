@@ -41,8 +41,20 @@ export const AuthProvider = ({
       const response = await api.get("/auth/check-status");
       // Normalize roles: backend returns 'rol' (string), frontend expects 'roles' (array)
       const userData = response.data;
+      // Si el backend devuelve un token nuevo, persistirlo para mantener el cliente sincronizado
+      if (userData?.token) {
+        localStorage.setItem("token", userData.token);
+        api.defaults.headers.common["Authorization"] = `Bearer ${userData.token}`;
+      }
       if (userData && !userData.roles) {
         userData.roles = userData.rol ? [userData.rol] : [];
+      }
+      // Normalizar roles a minúsculas para evitar mismatches (BUYER vs buyer, etc.)
+      if (userData?.roles && Array.isArray(userData.roles)) {
+        userData.roles = userData.roles.map((r) => String(r).toLowerCase());
+      }
+      if (userData?.rol) {
+        userData.rol = String(userData.rol).toLowerCase();
       }
       setUser(userData);
     } catch (error) {

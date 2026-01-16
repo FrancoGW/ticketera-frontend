@@ -4,7 +4,7 @@
   "description": "Sistema de gestión de tickets y eventos - Frontend",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host localhost --port 5173",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx"
@@ -45,7 +45,9 @@
     "react-select": "^5.7.0",
     "react-slick": "^0.29.0",
     "recharts": "^2.14.1",
-    "swiper": "^8.4.5"
+    "swiper": "^8.4.5",
+    "leaflet": "^1.9.4",
+    "@geoman-io/leaflet-geoman-free": "^2.18.3"
   },
   "devDependencies": {
     "@types/react": "^18.0.24",

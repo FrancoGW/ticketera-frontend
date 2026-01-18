@@ -64,11 +64,19 @@ api.interceptors.response.use(
     }
 
     const { status, data } = error.response;
+    const url = error.config?.url || '';
 
     // Handle 401 Unauthorized
     if (status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      // No redirigir para el GET de maintenance-mode (debe ser público)
+      // Solo el PUT requiere autenticación
+      const isMaintenanceModeGet = url.includes('/admin/settings/maintenance-mode') && 
+                                    error.config?.method?.toLowerCase() === 'get';
+      
+      if (!isMaintenanceModeGet) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
       return Promise.reject(error);
     }
 

@@ -37,6 +37,9 @@ import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
+import AdminSettings from "./Pages/adminSettings/AdminSettings";
+import MaintenanceMode from "./components/maintenanceMode/MaintenanceMode";
+import { useMaintenanceMode } from "./hooks/useMaintenanceMode";
 
 import theme from "../theme";
 import "./main.css";
@@ -66,6 +69,14 @@ const pageVariants = {
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const { isMaintenanceMode } = useMaintenanceMode();
+
+  // Si el modo mantenimiento está activo, permitir acceso solo a /admin/settings
+  const isAdminSettingsPage = location.pathname === '/admin/settings';
+
+  if (isMaintenanceMode && !isAdminSettingsPage) {
+    return <MaintenanceMode />;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -431,6 +442,16 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["admin"]}>
                   <LayoutWithSidebar>
                     <AdminMails />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminSettings />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

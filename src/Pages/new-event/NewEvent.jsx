@@ -36,6 +36,7 @@ import { getBase64FromFile, validateSelectedImg } from "../../common/utils";
 import AddDates from "../../components/AddDates";
 import jwt_decode from "jwt-decode";
 import debounce from "lodash.debounce";
+import { useAuth } from "../../auth/context/AuthContext";
 
 function NewEvent() {
   const location = useLocation();
@@ -44,6 +45,7 @@ function NewEvent() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { checkAuth } = useAuth();
   
   // Estados para códigos de descuento
   const [discountCodes, setDiscountCodes] = useState([]);
@@ -81,6 +83,14 @@ function NewEvent() {
           isClosable: true,
         });
       }
+
+      // Refrescar usuario/rol desde backend (el backend puede promover BUYER -> SELLER)
+      try {
+        await checkAuth();
+      } catch (e) {
+        // No bloquear navegación si falla el refresh
+      }
+
       // Navegar según el rol del usuario
       const token = localStorage.getItem('token');
       if (token) {

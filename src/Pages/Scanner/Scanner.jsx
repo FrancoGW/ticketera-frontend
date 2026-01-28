@@ -170,6 +170,7 @@ export default function Scanner({ embedded = false }) {
   const [validatorToken, setValidatorToken] = useState(null);
   const lastScannedQR = useRef(null);
   const errorCountRef = useRef(0);
+  const [scannerKey, setScannerKey] = useState(0); // fuerza remount del QrReader al resetear
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const toast = useToast();
@@ -294,13 +295,20 @@ export default function Scanner({ embedded = false }) {
       const { data } = await qrApi.getQrInfo(qrId);
       setQrInfo(data);
       
-      // Sonido de éxito al escanear
+      // Sonido breve al escanear (sin depender de archivo externo, evita 404)
       try {
-        const audio = new Audio('/assets/sounds/beep.mp3');
-        await audio.play();
-      } catch (e) {
-        // Silenciar error de audio si no existe el archivo
-      }
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+      } catch (_) {}
       
     } catch (error) {
       console.error('Error obteniendo información del QR:', error);
@@ -354,6 +362,7 @@ export default function Scanner({ embedded = false }) {
     setIsScanning(true);
     lastScannedQR.current = null;
     errorCountRef.current = 0;
+    setScannerKey((k) => k + 1); // fuerza remount del QrReader para evitar errores de video
   };
 
   const formatDate = (dateString) => {
@@ -369,7 +378,7 @@ export default function Scanner({ embedded = false }) {
     if (error) {
       const errorMessage = error.message || error.toString();
       
-      // Ignorar errores comunes de decodificación
+      // Ignorar errores comunes de decodificación y de video del QrReader
       const ignorableErrors = [
         'No QR code found',
         'QR code not found',
@@ -377,7 +386,13 @@ export default function Scanner({ embedded = false }) {
         'Found QR code',
         'video',
         'NotFoundError',
-        'NotAllowedError'
+        'NotAllowedError',
+        'AbortError',
+        'play',
+        'interrupted',
+        'e2',
+        'already playing',
+        'LdLk22'
       ];
       
       const shouldIgnore = ignorableErrors.some(ignorable => 
@@ -604,6 +619,7 @@ export default function Scanner({ embedded = false }) {
             ) : (
               isScanning && (
                 <motion.div
+                  key={scannerKey}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}

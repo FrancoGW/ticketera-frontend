@@ -17,7 +17,7 @@ import {
 import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import { FiCheckCircle, FiCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { paymentApi } from "../../../Api/payment";
+// Mercado Pago es opcional: no lo incluimos en el checklist mínimo.
 
 const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false }) => {
   const navigate = useNavigate();
@@ -36,6 +36,8 @@ const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false }) => {
     );
   }, [userEvents, hasEvents]);
 
+  // Configuración de Mercado Pago es opcional (no bloquea la visibilidad/uso del sistema).
+  // Mantenemos solo los pasos mínimos para empezar a operar.
   const checklistItems = [
     {
       id: "create-event",
@@ -51,39 +53,6 @@ const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false }) => {
       action: () => navigate("/seller/tickets"),
       actionLabel: "Gestionar tickets",
       disabled: !hasEvents,
-    },
-    {
-      id: "configure-mercadopago",
-      label: "Configura tu cuenta de Mercado Pago",
-      completed: hasMercadoPago,
-      action: async () => {
-        try {
-          // Intentar iniciar el flujo OAuth de Mercado Pago
-          const response = await paymentApi.initiateMercadoPagoAuthorization();
-          
-          if (response.data?.authorizationUrl) {
-            // Redirigir al usuario a la URL de autorización de Mercado Pago
-            window.location.href = response.data.authorizationUrl;
-          } else {
-            throw new Error("No se recibió la URL de autorización");
-          }
-        } catch (error) {
-          console.error("Error iniciando autorización de Mercado Pago:", error);
-          
-          // Si el endpoint no existe aún, mostrar mensaje y redirigir a página de desarrolladores
-          toast({
-            title: "Configuración de Mercado Pago",
-            description: "Por favor, contacta al soporte para configurar tu cuenta de Mercado Pago o visita el panel de desarrolladores.",
-            status: "info",
-            duration: 5000,
-            isClosable: true,
-          });
-          
-          // Fallback: redirigir a la página de desarrolladores de Mercado Pago
-          window.open("https://www.mercadopago.com.ar/developers/panel/app/", "_blank");
-        }
-      },
-      actionLabel: "Configurar Mercado Pago",
     },
   ];
 

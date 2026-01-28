@@ -175,6 +175,7 @@ function MyEvents() {
               <SetupChecklist
                 user={user}
                 userEvents={userEvents}
+                // Mercado Pago es opcional (no bloquear UX)
                 hasMercadoPago={user?.mercadoPagoConfigured || user?.hasMercadoPago || false}
               />
             )}

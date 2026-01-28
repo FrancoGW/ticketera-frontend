@@ -80,7 +80,10 @@ export default function VenueMapEditor({
 
   const ticketsById = useMemo(() => {
     const m = new Map();
-    tickets.forEach((t) => m.set(t._id, t));
+    tickets.forEach((t) => {
+      const id = t?._id || t?.id;
+      if (id) m.set(id, t);
+    });
     return m;
   }, [tickets]);
 
@@ -302,18 +305,28 @@ export default function VenueMapEditor({
       });
       return;
     }
-    const invalid = zones.find(
-      (z) => !z.name || !Array.isArray(z.polygon) || z.polygon.length < 3 || !Array.isArray(z.ticketRefs) || z.ticketRefs.length !== 1
-    );
+    const invalid = zones.find((z) => {
+      if (!z.name) return true;
+      if (!Array.isArray(z.polygon) || z.polygon.length < 3) return true;
+      // El ticket por zona es opcional (0 o 1). Solo invalidamos si hay más de 1.
+      if (!Array.isArray(z.ticketRefs)) return false;
+      return z.ticketRefs.length > 1;
+    });
     if (invalid) {
       toast({
         title: "Zonas incompletas",
-        description: "Cada zona debe tener nombre, un polígono válido y 1 ticket asociado.",
+        description: "Cada zona debe tener nombre y un polígono válido. El ticket asociado es opcional (máx. 1).",
         status: "error",
         duration: 4000,
       });
       return;
     }
+
+    // Normalizar: ticketRefs puede ser [] (opcional) o [ticketId] (máx 1)
+    const zonesToSave = zones.map((z) => ({
+      ...z,
+      ticketRefs: Array.isArray(z.ticketRefs) ? z.ticketRefs : [],
+    }));
 
     setIsSaving(true);
     try {
@@ -322,7 +335,7 @@ export default function VenueMapEditor({
         imageUrl,
         imageWidth,
         imageHeight,
-        zones: zones.map((z) => ({
+        zones: zonesToSave.map((z) => ({
           id: z.id,
           name: z.name,
           color: z.color || "#000000",
@@ -496,11 +509,18 @@ export default function VenueMapEditor({
                               fontFamily="secondary"
                               borderRadius="lg"
                             >
-                              {tickets.map((t) => (
-                                <option key={t._id} value={t._id}>
-                                  {t.title} — ${Number(t.price || 0).toLocaleString()}
-                                </option>
-                              ))}
+                              {tickets
+                                .map((t) => ({
+                                  ...t,
+                                  __id: t?._id || t?.id,
+                                  __title: t?.title || t?.name || "Ticket",
+                                }))
+                                .filter((t) => t.__id)
+                                .map((t) => (
+                                  <option key={t.__id} value={t.__id}>
+                                    {t.__title} — ${Number(t.price || 0).toLocaleString()}
+                                  </option>
+                                ))}
                             </Select>
                             {ticket && (
                               <Text fontFamily="secondary" fontSize="sm" color="gray.600" mt={2}>

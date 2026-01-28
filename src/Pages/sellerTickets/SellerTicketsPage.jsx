@@ -89,10 +89,26 @@ const SellerTicketsPage = () => {
       }
 
       const responseData = await response.json();
-      const ticketsArray = Array.isArray(responseData.tickets)
-        ? responseData.tickets
-        : [];
-      setTickets(ticketsArray);
+
+      // Normalizar respuesta (algunos backends/dev proxies devuelven `tickets` o el array directo)
+      const ticketsArray =
+        (Array.isArray(responseData?.tickets) && responseData.tickets) ||
+        (Array.isArray(responseData?.data?.tickets) && responseData.data.tickets) ||
+        (Array.isArray(responseData?.tickets?.tickets) && responseData.tickets.tickets) ||
+        (Array.isArray(responseData) && responseData) ||
+        [];
+
+      // Normalizar shape mínimo para el editor (soporta `id` en vez de `_id`)
+      const normalized = ticketsArray
+        .filter(Boolean)
+        .map((t) => ({
+          ...t,
+          _id: t?._id || t?.id,
+          title: t?.title || t?.name,
+        }))
+        .filter((t) => t?._id);
+
+      setTickets(normalized);
     } catch (error) {
       console.error("Error fetching tickets:", error);
       setTickets([]);

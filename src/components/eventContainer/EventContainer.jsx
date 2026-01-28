@@ -12,22 +12,75 @@ function EventContainer() {
   const [isMoreEventsClicked, setIsMoreEventsClicked] = useState(false);
   const [searchBarValues, setSearchBarValues] = useState({});
 
+  const computeCheapestTicket = (tickets) => {
+    if (!Array.isArray(tickets) || tickets.length === 0) return null;
+    const priced = tickets.filter((t) => t && typeof t.price === "number" && !Number.isNaN(t.price));
+    if (priced.length === 0) return null;
+    return priced.reduce((min, t) => (t.price < min.price ? t : min), priced[0]);
+  };
+
+  const mergeEvents = (ownEvents, publicEvents) => {
+    const map = new Map();
+    // Primero: propios (para que aparezcan aunque estén pending)
+    (ownEvents || []).forEach((e) => {
+      if (!e?._id) return;
+      map.set(String(e._id), e);
+    });
+    // Luego: públicos (pueden traer cheapestTicket ya calculado)
+    (publicEvents || []).forEach((e) => {
+      if (!e?._id) return;
+      // Si ya existía el mismo evento, mantenemos el más completo (priorizamos el público si trae cheapestTicket)
+      const key = String(e._id);
+      const prev = map.get(key);
+      if (!prev) {
+        map.set(key, e);
+        return;
+      }
+      const merged = {
+        ...prev,
+        ...e,
+        cheapestTicket: e.cheapestTicket || prev.cheapestTicket,
+      };
+      map.set(key, merged);
+    });
+    return Array.from(map.values());
+  };
+
   useEffect(() => {
     const loadEvents = async () => {
       setIsLoading(true);
       try {
-        const res = await eventApi.getEvents({
+        const token = localStorage.getItem("token");
+
+        // Público (participante): solo aprobados
+        const publicRes = await eventApi.getEvents({
           page: 1,
           limit: 10,
           status: 'approved',
-          hasMercadoPago: true // Solo mostrar eventos de organizadores con Mercado Pago configurado
+          // Para testing/QA: no filtramos por Mercado Pago configurado.
+          // Si querés reactivar el filtro, volvemos a pasar hasMercadoPago: true.
         });
-        if (res.data && res.data.events) {
-          setEvents(res.data.events);
-          if (res.data.events.length < 10) {
-            setNoMoreEvents(true);
+
+        // Propios (si está logueado): incluir pending/rejected para poder testear antes de aprobación
+        let ownEvents = [];
+        if (token) {
+          try {
+            const ownRes = await eventApi.getUserEvents(1, 50);
+            ownEvents = (ownRes?.data?.events || []).map((e) => ({
+              ...e,
+              cheapestTicket: e.cheapestTicket || computeCheapestTicket(e.tickets),
+            }));
+          } catch (e) {
+            // No bloquear el home si falla
           }
         }
+
+        const publicEvents = publicRes?.data?.events || [];
+        const merged = mergeEvents(ownEvents, publicEvents);
+        setEvents(merged);
+
+        // Paginación: basada en públicos (los propios son “extra” para el organizador)
+        if (publicEvents.length < 10) setNoMoreEvents(true);
       } catch (err) {
         console.error('Error loading events:', err);
       } finally {
@@ -44,9 +97,11 @@ function EventContainer() {
         page: eventsPage + 1,
         limit: 10,
         status: 'approved',
-        hasMercadoPago: true // Solo mostrar eventos de organizadores con Mercado Pago configurado
+        // Para testing/QA: no filtramos por Mercado Pago configurado.
       });
-      setEvents([...events, ...res.data.events]);
+      // Nota: el “ver más” solo pagina públicos; los propios ya se incluyen en el primer load
+      const merged = mergeEvents(events, res.data.events || []);
+      setEvents(merged);
       setEventsPage(eventsPage + 1);
       if (res.data.events.length === 0 || res.data.events.length < 10) {
         setNoMoreEvents(true);
@@ -73,23 +128,18 @@ function EventContainer() {
           justifyItems="center"
         >
           {events?.map((event, index) => {
-            // El backend ya filtra los eventos por Mercado Pago configurado
-            // Solo mostramos eventos aprobados
-            if (event.status === "approved") {
-              return (
-                <EventCard
-                  key={event._id}
-                  id={event._id}
-                  pictures={event.pictures}
-                  title={event.title}
-                  dates={event.dates}
-                  addressRef={event.addressRef}
-                  cheapestTicket={event.cheapestTicket}
-                  index={index}
-                />
-              );
-            }
-            return null;
+            return (
+              <EventCard
+                key={event._id}
+                id={event._id}
+                pictures={event.pictures}
+                title={event.title}
+                dates={event.dates}
+                addressRef={event.addressRef}
+                cheapestTicket={event.cheapestTicket}
+                index={index}
+              />
+            );
           })}
         </Grid>
         {isLoading && (

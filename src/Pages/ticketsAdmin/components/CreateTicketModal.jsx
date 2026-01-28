@@ -14,9 +14,28 @@ import {
   Stack,
   useToast,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const CreateTicketModal = ({ isOpen, onClose, onCreate }) => {
+// Convierte timestamp (ms) a string YYYY-MM-DD en hora local
+const timestampToDateStr = (ts) => {
+  const d = new Date(ts);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+// Convierte timestamp (ms) a string HH:mm en hora local
+const timestampToTimeStr = (ts) => {
+  const d = new Date(ts);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+// "Ahora" en formato datetime-local para prellenar inicio de venta y visible desde
+const nowDatetimeLocal = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const CreateTicketModal = ({ isOpen, onClose, onCreate, event: selectedEvent }) => {
   const toast = useToast();
   const initialTicketState = {
     title: "",
@@ -38,6 +57,31 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }) => {
   };
 
   const [newTicket, setNewTicket] = useState(initialTicketState);
+
+  // Prellenar dinámicamente según el evento seleccionado al abrir el modal
+  useEffect(() => {
+    if (!isOpen) return;
+    if (selectedEvent?.dates?.length > 0) {
+      const first = selectedEvent.dates[0];
+      const tsStart = first.timestampStart;
+      const tsEnd = first.timestampEnd;
+      const eventDate = timestampToDateStr(tsStart);
+      const eventTimeStart = timestampToTimeStr(tsStart);
+      const eventTimeEnd = timestampToTimeStr(tsEnd);
+      // Fin de venta = hasta el día y hora que arranca el evento. Visible desde = ahora.
+      const saleEnd = `${eventDate}T${eventTimeStart}`;
+      const now = nowDatetimeLocal();
+      setNewTicket((prev) => ({
+        ...prev,
+        dates: [{ date: eventDate, timeStart: eventTimeStart, timeEnd: eventTimeEnd }],
+        saleEndDate: saleEnd,
+        saleStartDate: now,
+        visibleFrom: now,
+      }));
+    } else {
+      setNewTicket(initialTicketState);
+    }
+  }, [isOpen, selectedEvent?._id]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -181,12 +225,16 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }) => {
                 <Input
                   type="date"
                   value={newTicket.dates[0].date}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    const { timeStart } = newTicket.dates[0];
                     setNewTicket({
                       ...newTicket,
-                      dates: [{ ...newTicket.dates[0], date: e.target.value }],
-                    })
-                  }
+                      dates: [{ ...newTicket.dates[0], date: newDate }],
+                      // Fin de venta = hasta el día y hora que arranca el evento (dinámico)
+                      saleEndDate: timeStart ? `${newDate}T${timeStart}` : newTicket.saleEndDate,
+                    });
+                  }}
                 />
               </FormControl>
 
@@ -195,14 +243,18 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }) => {
                 <Input
                   type="time"
                   value={newTicket.dates[0].timeStart}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newTimeStart = e.target.value;
+                    const { date } = newTicket.dates[0];
                     setNewTicket({
                       ...newTicket,
                       dates: [
-                        { ...newTicket.dates[0], timeStart: e.target.value },
+                        { ...newTicket.dates[0], timeStart: newTimeStart },
                       ],
-                    })
-                  }
+                      // Fin de venta = hasta el día y hora que arranca el evento (dinámico)
+                      saleEndDate: date ? `${date}T${newTimeStart}` : newTicket.saleEndDate,
+                    });
+                  }}
                 />
               </FormControl>
 
@@ -241,6 +293,11 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }) => {
                 <Input
                   type="datetime-local"
                   value={newTicket.saleEndDate}
+                  max={
+                    newTicket.dates[0].date && newTicket.dates[0].timeStart
+                      ? `${newTicket.dates[0].date}T${newTicket.dates[0].timeStart}`
+                      : undefined
+                  }
                   onChange={(e) =>
                     setNewTicket({ ...newTicket, saleEndDate: e.target.value })
                   }

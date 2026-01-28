@@ -13,7 +13,9 @@ export const useMaintenanceMode = () => {
         setIsLoading(true);
         const response = await settingsApi.getMaintenanceMode();
         // El backend debe devolver { isActive: boolean }
-        setIsMaintenanceMode(response.data?.isActive || false);
+        const isActive = response.data?.isActive || false;
+        console.log('🔧 Modo mantenimiento cargado desde backend:', isActive);
+        setIsMaintenanceMode(isActive);
         setError(null);
       } catch (err) {
         console.error('Error cargando modo mantenimiento:', err);

@@ -133,6 +133,8 @@ const generateCourtesyTicket = (data) => {
     ticketId: data.ticketId,
     email: data.email,
     date: data.date,
+    quantity: data.quantity || 1, // Cantidad de tickets a generar
+    sendEmail: data.sendEmail !== undefined ? data.sendEmail : true, // Opción para enviar por email
   });
 };
 

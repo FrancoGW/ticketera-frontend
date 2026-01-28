@@ -160,7 +160,7 @@ const Viewfinder = () => {
   );
 };
 
-export default function Scanner() {
+export default function Scanner({ embedded = false }) {
   const [qrInfo, setQrInfo] = useState(null);
   const [qrInfoLoading, setQrInfoLoading] = useState(false);
   const [qrStateLoading, setQrStateLoading] = useState(false);
@@ -175,6 +175,13 @@ export default function Scanner() {
   const toast = useToast();
 
   useEffect(() => {
+    // Cuando está embebido en /admin/scanner, la ruta ya está protegida por ProtectedRoute admin
+    // No hace falta comprobar permisos; el usuario ya es admin
+    if (embedded) {
+      requestCameraPermission();
+      return;
+    }
+
     // Obtener token de la URL si está disponible
     const tokenFromUrl = searchParams.get('token');
     if (tokenFromUrl) {
@@ -185,7 +192,7 @@ export default function Scanner() {
     
     checkValidatorPermissions(tokenFromUrl);
     requestCameraPermission();
-  }, [searchParams]);
+  }, [searchParams, embedded]);
 
   const checkValidatorPermissions = async (tokenFromUrl = null) => {
     // Si hay token en la URL, validarlo con el backend (endpoint público)
@@ -210,18 +217,18 @@ export default function Scanner() {
           duration: 5000,
           isClosable: true,
         });
-        navigate('/');
+        navigate(embedded ? '/admin' : '/');
         return;
       }
     }
 
-    // Si no hay token en URL, verificar token del localStorage
+    // Si no hay token en URL, verificar token del localStorage (admin o validator)
     const token = localStorage.getItem('token');
     if (!token) {
       // Si no hay token en URL ni en localStorage, redirigir al login
       toast({
         title: "Acceso requerido",
-        description: "Necesitas un token de validador para acceder al scanner",
+        description: embedded ? "Debes iniciar sesión como admin." : "Necesitas un token de validador para acceder al scanner",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -232,12 +239,16 @@ export default function Scanner() {
 
     try {
       const decoded = jwt_decode(token);
+      // Admin puede validar cualquier entrada, sin importar el evento
+      if (decoded.rol === 'admin') {
+        return; // Permitir acceso
+      }
       // Si el usuario tiene rol validator, permitir acceso
       if (decoded.rol === 'validator') {
         return; // Permitir acceso
       }
       
-      // Si no es validator, redirigir
+      // Si no es admin ni validator, redirigir
       toast({
         title: "Acceso denegado",
         description: "No tienes permisos de validador. Usa el enlace del scanner proporcionado por el organizador.",
@@ -245,7 +256,7 @@ export default function Scanner() {
         duration: 5000,
         isClosable: true,
       });
-      navigate('/');
+      navigate(embedded ? '/admin' : '/');
     } catch (error) {
       console.error("Error validando token:", error);
       navigate('/login');
@@ -383,11 +394,21 @@ export default function Scanner() {
     }
   };
 
-  if (hasPermission === null) {
-    return (
+  const LayoutWrapper = ({ children }) =>
+    embedded ? (
+      <>{children}</>
+    ) : (
       <>
         <Header />
-        <Container maxW="container.md" py={8} marginTop={40}>
+        {children}
+        <Footer />
+      </>
+    );
+
+  if (hasPermission === null) {
+    return (
+      <LayoutWrapper>
+        <Container maxW="container.md" py={8} marginTop={embedded ? 0 : 40}>
           <Center h="50vh">
             <VStack spacing={4}>
               <Spinner
@@ -401,16 +422,14 @@ export default function Scanner() {
             </VStack>
           </Center>
         </Container>
-        <Footer />
-      </>
+      </LayoutWrapper>
     );
   }
 
   if (!hasPermission) {
     return (
-      <>
-        <Header />
-        <Container maxW="container.md" py={8} marginTop={40}>
+      <LayoutWrapper>
+        <Container maxW="container.md" py={8} marginTop={embedded ? 0 : 40}>
           <Card>
             <CardBody>
               <Alert status="error" borderRadius="lg">
@@ -434,16 +453,13 @@ export default function Scanner() {
             </CardBody>
           </Card>
         </Container>
-        <Footer />
-      </>
+      </LayoutWrapper>
     );
   }
 
   return (
-    <>
-      <Header />
-      
-      <Container maxW="container.lg" py={6} marginTop={40}>
+    <LayoutWrapper>
+      <Container maxW="container.lg" py={6} marginTop={embedded ? 0 : 40}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -659,7 +675,6 @@ export default function Scanner() {
           </VStack>
         </motion.div>
       </Container>
-      <Footer />
-    </>
+    </LayoutWrapper>
   );
 }

@@ -24,7 +24,6 @@ import VerifyEmail from "./Pages/verifyEmail/verifyEmail";
 import PaymentFinished from "./Pages/PaymentFinished/PaymentFinished";
 import Main from "./Pages/main/Main";
 import Scanner from "./Pages/Scanner/Scanner";
-import Wpp from "./components/whatsapp/wpp";
 import MetricsPage from "./Pages/eventsAdmin/MetricsPage";
 import CommissionPage from "./Pages/eventsAdmin/Comission";
 import UserCrud from "./components/userCrud/userCrud";
@@ -38,8 +37,12 @@ import SellerScanner from "./Pages/sellerScanner/SellerScanner";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
 import AdminSettings from "./Pages/adminSettings/AdminSettings";
+import AdminDashboard from "./Pages/adminDashboard/AdminDashboard";
 import MaintenanceMode from "./components/maintenanceMode/MaintenanceMode";
 import { useMaintenanceMode } from "./hooks/useMaintenanceMode";
+import { PreviewRoute } from "./components/previewRoute/PreviewRoute";
+import LandingVender from "./Pages/landingVender/LandingVender";
+import { ConditionalNewEvent } from "./components/conditionalNewEvent/ConditionalNewEvent";
 
 import theme from "../theme";
 import "./main.css";
@@ -71,10 +74,11 @@ function AnimatedRoutes() {
   const location = useLocation();
   const { isMaintenanceMode } = useMaintenanceMode();
 
-  // Si el modo mantenimiento está activo, permitir acceso solo a /admin/settings
+  // Si el modo mantenimiento está activo, permitir acceso solo a /admin/settings y /preview/*
   const isAdminSettingsPage = location.pathname === '/admin/settings';
+  const isPreviewRoute = location.pathname.startsWith('/preview');
 
-  if (isMaintenanceMode && !isAdminSettingsPage) {
+  if (isMaintenanceMode && !isAdminSettingsPage && !isPreviewRoute) {
     return <MaintenanceMode />;
   }
 
@@ -312,6 +316,26 @@ function AnimatedRoutes() {
 
             {/* Protected Routes for Admins */}
             <Route
+              path="/admin"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminDashboard />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminDashboard />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/new-event"
               element={
                 <ProtectedRoute roles={["admin"]}>
@@ -342,6 +366,16 @@ function AnimatedRoutes() {
               }
             />
             <Route
+              path="/admin/scanner"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <Scanner embedded />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/events/:id"
               element={
                 <ProtectedRoute roles={["admin"]}>
@@ -362,12 +396,23 @@ function AnimatedRoutes() {
               }
             />
             <Route
+              path="/vender"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <LandingVender />
+                </motion.div>
+              }
+            />
+            <Route
               path="/seller/new-event"
               element={
                 <ProtectedRoute roles={["buyer", "seller", "admin"]}>
-                  <LayoutWithSidebar>
-                    <NewEvent />
-                  </LayoutWithSidebar>
+                  <ConditionalNewEvent />
                 </ProtectedRoute>
               }
             />
@@ -532,6 +577,217 @@ function AnimatedRoutes() {
               }
             />
 
+            {/* Preview Routes - Solo funcionan cuando el modo mantenimiento está activo */}
+            {/* Public Preview Routes */}
+            <Route
+              path="/preview"
+              element={
+                <PreviewRoute>
+                  <motion.div
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageVariants}
+                  >
+                    <Main />
+                  </motion.div>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/contact"
+              element={
+                <PreviewRoute>
+                  <motion.div
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageVariants}
+                  >
+                    <Contact />
+                  </motion.div>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/about-us"
+              element={
+                <PreviewRoute>
+                  <motion.div
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageVariants}
+                  >
+                    <Nosotros />
+                  </motion.div>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/login"
+              element={
+                <PreviewRoute>
+                  <motion.div
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageVariants}
+                  >
+                    <Login />
+                  </motion.div>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/event/:id"
+              element={
+                <PreviewRoute>
+                  <motion.div
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageVariants}
+                  >
+                    <EventDetails />
+                  </motion.div>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/profile"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["buyer", "seller", "admin", "validator", "pdv"]}>
+                    <LayoutWithSidebar>
+                      <Profile />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/profile/my-tickets"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["buyer", "seller", "admin"]}>
+                    <LayoutWithSidebar>
+                      <MyTickets />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            {/* Admin Preview Routes */}
+            <Route
+              path="/preview/admin/events"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <GeneralEvents />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/events/:id"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <AdminEventDetails />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/users"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <UserCrud />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/tickets"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <TicketsPage />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/metrics"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <MetricsPage />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/commission"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <CommissionPage />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/mails"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <AdminMails />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/admin/new-event"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["admin"]}>
+                    <LayoutWithSidebar>
+                      <NewEvent />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+            <Route
+              path="/preview/profile/my-events"
+              element={
+                <PreviewRoute>
+                  <ProtectedRoute roles={["seller", "admin"]}>
+                    <LayoutWithSidebar>
+                      <MyEvents />
+                    </LayoutWithSidebar>
+                  </ProtectedRoute>
+                </PreviewRoute>
+              }
+            />
+
             {/* Catch-all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -544,7 +800,6 @@ function App() {
     <Box h="100%">
       <ChakraProvider theme={theme}>
         <AuthProvider>
-          <Wpp />
           <AnimatedRoutes />
         </AuthProvider>
       </ChakraProvider>

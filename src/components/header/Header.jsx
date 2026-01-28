@@ -98,10 +98,24 @@ function Header() {
   };
 
   const handleCreateEvent = () => {
-    // Si está logueado, permitir crear evento (aunque sea buyer).
-    // Si no está logueado, redirigir a login.
-    if (user) return navigate("/seller/new-event");
-    return navigate("/login");
+    // Si no está logueado, ir a la landing de venta
+    if (!user) {
+      return navigate("/vender");
+    }
+    
+    // Si está logueado, verificar si es seller o admin
+    const userRoles = user?.roles || (user?.rol ? [user.rol] : []);
+    const isSellerOrAdmin = userRoles.some(role => 
+      String(role).toLowerCase() === 'seller' || String(role).toLowerCase() === 'admin'
+    );
+    
+    // Si es seller o admin, ir directamente a crear evento
+    // Si no, ir a la landing para que vea las opciones
+    if (isSellerOrAdmin) {
+      return navigate("/seller/new-event");
+    }
+    
+    return navigate("/vender");
   };
 
   // Marcar que el header ya se animó después del primer render
@@ -395,7 +409,7 @@ function Header() {
                                     as={motion.div}
                                     whileHover={{ x: 4 }}
                                     transition={{ duration: 0.15, ease: "easeOut" }}
-                                    onClick={() => navigate("/admin/events")}
+                                    onClick={() => navigate("/admin")}
                                     icon={
                                       <Box
                                         p={1.5}
@@ -423,7 +437,7 @@ function Header() {
                                     mx={2}
                                     mb={0.5}
                                   >
-                                    Administrar
+                                    Dashboard
                                   </MenuItem>
                                 </>
                               )}
@@ -839,9 +853,9 @@ function Header() {
 
                       {hasRole("admin") && (
                         <MobileMenuItem
-                          href="/admin/events"
+                          href="/admin"
                           icon={FiSettings}
-                          label="Administrar"
+                          label="Dashboard"
                           delay={0.3}
                           onClick={getButtonProps().onClick}
                         />

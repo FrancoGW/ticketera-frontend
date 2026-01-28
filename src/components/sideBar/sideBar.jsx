@@ -1,25 +1,42 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser, FiMail, FiSettings } from "react-icons/fi";
-import { RiTicket2Line } from "react-icons/ri";
+import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser, FiMail, FiSettings, FiLayout } from "react-icons/fi";
+import { RiTicket2Line, RiQrScanLine } from "react-icons/ri";
 
 const Sidebar = () => {
   const location = useLocation();
   const menuItems = [
-    { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
+    { path: '/admin', icon: FiLayout, label: 'Dashboard' },
     { path: '/admin/events', icon: FiHome, label: 'Eventos' },
     { path: '/admin/users', icon: FiUsers, label: 'Usuarios' },
     { path: '/admin/metrics', icon: FiBarChart2, label: 'Métricas' },
     { path: '/admin/commission', icon: FiDollarSign, label: 'Comisiones' },
     { path: '/admin/tickets', icon: RiTicket2Line, label: 'Tickets' },
+    { path: '/admin/scanner', icon: RiQrScanLine, label: 'Scanner' },
     { path: '/admin/mails', icon: FiMail, label: 'Mails' },
+    { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
     { path: '/admin/settings', icon: FiSettings, label: 'Configuración' }
   ];
 
   const isActive = (path) => {
-    if (path === '/admin/events') {
-      return location.pathname === path || location.pathname === '/admin';
+    // Dashboard es activo solo en /admin o /admin/dashboard
+    if (path === '/admin') {
+      return location.pathname === '/admin' || location.pathname === '/admin/dashboard';
     }
+    // Para otros paths, verificar si coincide exactamente o empieza con el path + '/'
+    // Pero excluir /admin para evitar conflictos
+    if (path === '/admin/events') {
+      return location.pathname === '/admin/events' || location.pathname.startsWith('/admin/events/');
+    }
+    // Para /profile, solo activo si es exactamente /profile
+    if (path === '/profile') {
+      return location.pathname === '/profile' || location.pathname.startsWith('/profile/');
+    }
+    // Para /admin/scanner
+    if (path === '/admin/scanner') {
+      return location.pathname === '/admin/scanner';
+    }
+    // Para otros paths de admin
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 

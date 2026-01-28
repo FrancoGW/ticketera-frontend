@@ -59,7 +59,14 @@ function Login() {
 
   useEffect(() => {
     if (user) {
-      const redirectTo = location?.state?.from?.pathname || "/";
+      // Si es admin, redirigir al dashboard
+      const userRoles = user?.roles || (user?.rol ? [user.rol] : []);
+      const isAdmin = userRoles.some(role => String(role).toLowerCase() === 'admin');
+      
+      let redirectTo = location?.state?.from?.pathname || "/";
+      if (isAdmin && redirectTo === "/") {
+        redirectTo = "/admin";
+      }
       navigate(redirectTo);
     }
   }, [user, location, navigate]);

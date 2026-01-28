@@ -113,7 +113,14 @@ export const AuthProvider = ({
         hasCheckedAuth.current = true; // Marcar que ya verificamos
         
         // Navegar después de establecer el usuario
-        const redirectTo = location?.state?.from?.pathname || "/";
+        // Si es admin, redirigir al dashboard
+        const userRoles = userData?.roles || (userData?.rol ? [userData.rol] : []);
+        const isAdmin = userRoles.some(role => String(role).toLowerCase() === 'admin');
+        
+        let redirectTo = location?.state?.from?.pathname || "/";
+        if (isAdmin && redirectTo === "/") {
+          redirectTo = "/admin";
+        }
         navigate(redirectTo);
       } catch (error) {
         setIsLoading(false);

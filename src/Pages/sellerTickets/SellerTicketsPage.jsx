@@ -459,7 +459,7 @@ const SellerTicketsPage = () => {
               isOpen={isCreateOpen}
               onClose={onCreateClose}
               onCreate={handleCreateTicket}
-              eventId={selectedEvent}
+              event={events.find((e) => e._id === selectedEvent) ?? null}
             />
 
             <EditTicketModal

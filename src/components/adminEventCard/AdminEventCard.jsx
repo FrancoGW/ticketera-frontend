@@ -34,11 +34,15 @@ import {
   Td,
   Stack,
   Switch,
+  Badge,
+  VStack,
 } from "@chakra-ui/react";
+import { FiGift } from "react-icons/fi";
 import AsyncSelect from "react-select/async";
 import AddDates from "../../components/AddDates";
 import eventApi from "../../Api/event";
 import ticketApi from "../../Api/ticket";
+import CourtesyTicketModal from "../../Pages/myEvents/components/CourtesyTicketModal";
 import {
   bufferToBase64,
   getBase64FromFile,
@@ -51,6 +55,8 @@ const AdminEventCard = ({ event, pictures, id, title, status, onStatusChange, on
   const navigate = useNavigate();
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
+  const [isCourtesyTicketModalOpen, setIsCourtesyTicketModalOpen] = useState(false);
+  const [eventDetails, setEventDetails] = useState(null);
   const cancelRef = useRef();
   const [updateEventStatus, setUpdateEventStatus] = useState({ status });
   const [isLoading, setIsLoading] = useState(false);
@@ -435,128 +441,219 @@ const AdminEventCard = ({ event, pictures, id, title, status, onStatusChange, on
     <>
       <Flex
         flexDir="column"
-        w="300px"
-        h="500px"
-        mb="6"
-        boxShadow="rgba(0, 0, 0, 0.35) 0px 5px 15px"
-        borderRadius="none"
+        w="100%"
+        maxW="350px"
+        minH="500px"
+        bg="white"
+        borderRadius="xl"
+        overflow="hidden"
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+        _hover={{
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.15)",
+          transform: "translateY(-4px)",
+        }}
+        transition="all 0.3s ease"
+        position="relative"
       >
         {pictures && (
-          <Image
-            minH={300}
-            src={
-              pictures
-                ? (typeof pictures === 'string' && (pictures.startsWith('http://') || pictures.startsWith('https://'))
-                    ? pictures
-                    : "data:image/png;base64," + pictures)
-                : "/imagenes/img1.jpeg"
-            }
-            alt={title}
-            h="50%"
+          <Box
+            position="relative"
             w="100%"
-            borderTopRadius="none"
-          />
+            h="200px"
+            overflow="hidden"
+          >
+            <Image
+              src={
+                pictures
+                  ? (typeof pictures === 'string' && (pictures.startsWith('http://') || pictures.startsWith('https://'))
+                      ? pictures
+                      : "data:image/png;base64," + pictures)
+                  : "/imagenes/img1.jpeg"
+              }
+              alt={title}
+              w="100%"
+              h="100%"
+              objectFit="cover"
+            />
+            {/* Badge de estado */}
+            <Badge
+              position="absolute"
+              top={3}
+              right={3}
+              colorScheme={
+                updateEventStatus.status === "approved" ? "green" :
+                updateEventStatus.status === "rejected" ? "red" : "orange"
+              }
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontSize="xs"
+              fontWeight="600"
+              textTransform="uppercase"
+            >
+              {updateEventStatus.status === "approved" ? "Aprobado" :
+               updateEventStatus.status === "rejected" ? "Rechazado" : "Pendiente"}
+            </Badge>
+          </Box>
         )}
         {isLoading ? (
-          <Flex w="100%" align="center" justify="center" h="50%">
+          <Flex w="100%" align="center" justify="center" h="300px">
             <Image src="/assets/img/loading.svg" />
           </Flex>
         ) : (
           <Flex
             flexDir="column"
-            align="center"
-            h="50%"
-            fontSize="smaller"
-            gap="3"
+            align="stretch"
+            flex="1"
+            p={5}
+            gap={3}
           >
             <Heading
               as="h2"
               fontSize={
-                title.length > 30 ? "20px" : title.length > 24 ? "18px" : "2xl"
+                title.length > 40 ? "lg" : title.length > 30 ? "xl" : "2xl"
               }
               fontFamily="secondary"
-              fontWeight="500"
-              mt="2"
+              fontWeight="600"
+              color="gray.800"
+              lineHeight="1.2"
+              noOfLines={2}
+              mb={1}
             >
               {title}
             </Heading>
 
 
-            <Button
-              bg="primary"
-              borderRadius="5px"
-              color="#fff"
-              _hover={{ bg: "buttonHover" }}
-              _active={{ bg: "buttonHover" }}
-              fontFamily="secondary"
-              fontWeight="normal"
-              w="80%"
-              onClick={() => navigate(`/admin/events/${id}`)}
-            >
-              Detalles del evento
-            </Button>
+            <VStack spacing={3} align="stretch" mt="auto">
+              <Button
+                bg="black"
+                borderRadius="lg"
+                color="white"
+                _hover={{ bg: "gray.800", transform: "translateY(-2px)" }}
+                _active={{ bg: "gray.800" }}
+                fontFamily="secondary"
+                fontWeight="500"
+                size="md"
+                onClick={() => navigate(`/admin/events/${id}`)}
+                transition="all 0.2s"
+              >
+                Detalles del evento
+              </Button>
 
-            {/* Botones de Aprobar/Rechazar según el status */}
-            {updateEventStatus.status === "pending" && (
-              <>
+              {/* Botón de Tickets de Cortesía - Solo para eventos aprobados */}
+              {updateEventStatus.status === "approved" && (
                 <Button
-                  w="80%"
-                  colorScheme="green"
-                  onClick={() => handleApproveEvent(id)}
-                  isLoading={isLoading}
+                  bgGradient="linear(to-r, purple.500, purple.600)"
+                  borderRadius="lg"
+                  color="white"
+                  _hover={{ 
+                    bgGradient: "linear(to-r, purple.600, purple.700)",
+                    transform: "translateY(-2px)",
+                    boxShadow: "md"
+                  }}
+                  _active={{ bgGradient: "linear(to-r, purple.600, purple.700)" }}
                   fontFamily="secondary"
-                  fontWeight="normal"
+                  fontWeight="500"
+                  size="md"
+                  leftIcon={<FiGift />}
+                  onClick={async () => {
+                    try {
+                      // Cargar los detalles completos del evento con tickets y fechas
+                      const response = await eventApi.getEventById(id);
+                      setEventDetails(response.data.event);
+                      setIsCourtesyTicketModalOpen(true);
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "No se pudieron cargar los detalles del evento",
+                        status: "error",
+                        duration: 3000,
+                      });
+                    }
+                  }}
+                  transition="all 0.2s"
                 >
-                  Aprobar
+                  Tickets de Cortesía
                 </Button>
+              )}
+
+              {/* Botones de Aprobar/Rechazar según el status */}
+              {updateEventStatus.status === "pending" && (
+                <>
+                  <Button
+                    colorScheme="green"
+                    borderRadius="lg"
+                    onClick={() => handleApproveEvent(id)}
+                    isLoading={isLoading}
+                    fontFamily="secondary"
+                    fontWeight="500"
+                    size="md"
+                    transition="all 0.2s"
+                    _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+                  >
+                    Aprobar
+                  </Button>
+                  <Button
+                    colorScheme="orange"
+                    borderRadius="lg"
+                    onClick={() => handleRejectEvent(id)}
+                    isLoading={isLoading}
+                    fontFamily="secondary"
+                    fontWeight="500"
+                    size="md"
+                    transition="all 0.2s"
+                    _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+                  >
+                    Rechazar
+                  </Button>
+                </>
+              )}
+
+              {updateEventStatus.status === "approved" && (
                 <Button
-                  w="80%"
                   colorScheme="orange"
+                  borderRadius="lg"
                   onClick={() => handleRejectEvent(id)}
                   isLoading={isLoading}
                   fontFamily="secondary"
-                  fontWeight="normal"
+                  fontWeight="500"
+                  size="md"
+                  transition="all 0.2s"
+                  _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
                 >
                   Rechazar
                 </Button>
-              </>
-            )}
+              )}
 
-            {updateEventStatus.status === "approved" && (
+              {updateEventStatus.status === "rejected" && (
+                <Button
+                  colorScheme="green"
+                  borderRadius="lg"
+                  onClick={() => handleApproveEvent(id)}
+                  isLoading={isLoading}
+                  fontFamily="secondary"
+                  fontWeight="500"
+                  size="md"
+                  transition="all 0.2s"
+                  _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+                >
+                  Aprobar
+                </Button>
+              )}
+
               <Button
-                w="80%"
-                colorScheme="orange"
-                onClick={() => handleRejectEvent(id)}
-                isLoading={isLoading}
+                colorScheme="red"
+                borderRadius="lg"
+                onClick={() => setIsDeleteAlertOpen(true)}
                 fontFamily="secondary"
-                fontWeight="normal"
+                fontWeight="500"
+                size="md"
+                transition="all 0.2s"
+                _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
               >
-                Rechazar
+                Eliminar
               </Button>
-            )}
-
-            {updateEventStatus.status === "rejected" && (
-              <Button
-                w="80%"
-                colorScheme="green"
-                onClick={() => handleApproveEvent(id)}
-                isLoading={isLoading}
-                fontFamily="secondary"
-                fontWeight="normal"
-              >
-                Aprobar
-              </Button>
-            )}
-
-            <Button
-              w="80%"
-              colorScheme="red"
-              onClick={() => setIsDeleteAlertOpen(true)}
-              fontFamily="secondary"
-              fontWeight="normal"
-            >
-              Eliminar
-            </Button>
+            </VStack>
           </Flex>
         )}
       </Flex>
@@ -1150,6 +1247,18 @@ const AdminEventCard = ({ event, pictures, id, title, status, onStatusChange, on
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
+
+      {/* Modal de Tickets de Cortesía */}
+      {eventDetails && (
+        <CourtesyTicketModal
+          isOpen={isCourtesyTicketModalOpen}
+          onClose={() => {
+            setIsCourtesyTicketModalOpen(false);
+            setEventDetails(null);
+          }}
+          event={eventDetails}
+        />
+      )}
     </>
   );
 };

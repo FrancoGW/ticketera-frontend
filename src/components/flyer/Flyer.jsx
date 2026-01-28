@@ -43,10 +43,24 @@ const Flyer = () => {
   const { user } = useAuth();
 
   const handleCreateEvent = () => {
-    // Si está logueado, permitir crear evento (aunque sea buyer).
-    // Si no está logueado, redirigir a login.
-    if (user) return navigate("/seller/new-event");
-    return navigate("/login");
+    // Si no está logueado, ir a la landing de venta
+    if (!user) {
+      return navigate("/vender");
+    }
+    
+    // Si está logueado, verificar si es seller o admin
+    const userRoles = user?.roles || (user?.rol ? [user.rol] : []);
+    const isSellerOrAdmin = userRoles.some(role => 
+      String(role).toLowerCase() === 'seller' || String(role).toLowerCase() === 'admin'
+    );
+    
+    // Si es seller o admin, ir directamente a crear evento
+    // Si no, ir a la landing para que vea las opciones
+    if (isSellerOrAdmin) {
+      return navigate("/seller/new-event");
+    }
+    
+    return navigate("/vender");
   };
 
   return (

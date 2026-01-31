@@ -1,4 +1,4 @@
-import { Grid, Image, Flex, Button, Text, Divider } from "@chakra-ui/react";
+import { Grid, Image, Flex, Button, Text, Divider, Heading } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import EventCard from "../eventCard/EventCard.jsx";
@@ -93,8 +93,30 @@ function EventContainer() {
           })}
         </Grid>
         {isLoading && (
-          <Flex w="100%" align="center" justify="center">
-            <Image src="/assets/img/loading.svg" />
+          <Flex
+            w="100%"
+            minH="40vh"
+            align="center"
+            justify="center"
+            flexDirection="column"
+            gap={6}
+            bg="gray.50"
+            py={12}
+            mx={{ base: -4, md: 0 }}
+            px={{ base: 4, md: 0 }}
+          >
+            <Flex position="relative" align="center" justify="center" flexDirection="column" gap={4}>
+              <Image src="/assets/img/loading.svg" maxW="80px" alt="" />
+              <Heading
+                as="span"
+                fontFamily="'Monument Extended', sans-serif"
+                fontWeight="300"
+                fontSize={{ base: "xl", md: "2xl" }}
+                color="gray.800"
+              >
+                GetPass
+              </Heading>
+            </Flex>
           </Flex>
         )}
         {events.length === 0 && !isLoading && (

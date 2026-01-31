@@ -167,13 +167,13 @@ function Header() {
           transition={{ duration: 0.2 }}
         >
           <Heading
-            color="#fff"
             fontSize="25px"
             textAlign="center"
             fontWeight="300"
             fontFamily="Monument Extended"
           >
-            GetPass
+            <Box as="span" color="#fff">Get</Box>
+            <Box as="span" color="#B78DEA">Pass</Box>
           </Heading>
         </Link>
         <Flex

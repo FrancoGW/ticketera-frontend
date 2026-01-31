@@ -16,19 +16,15 @@
     display: none !important;
 }
 
-/* Features Slider Styles */
-.features-swiper {
+/* Carrusel de beneficios - bajo y transición suave (fade) */
+.benefits-swiper {
     width: 100%;
     overflow: hidden;
 }
 
-.features-swiper .swiper-slide {
+.benefits-swiper .swiper-slide {
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-}
-
-.features-swiper .swiper-wrapper {
-    transition-timing-function: linear;
 }

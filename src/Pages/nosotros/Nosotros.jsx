@@ -17,11 +17,7 @@ import { motion } from "framer-motion";
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
 import { 
-  FiUsers, 
-  FiTarget, 
-  FiHeart, 
   FiTrendingUp,
-  FiAward,
   FiZap,
   FiGlobe
 } from "react-icons/fi";
@@ -48,6 +44,57 @@ const staggerContainer = {
   }
 };
 
+// Componente de pelotitas flotantes animadas
+const FloatingBubbles = () => {
+  const bubbles = [
+    { size: 20, x: "10%", y: "20%", duration: 6, delay: 0 },
+    { size: 35, x: "80%", y: "15%", duration: 8, delay: 1 },
+    { size: 15, x: "70%", y: "70%", duration: 5, delay: 0.5 },
+    { size: 28, x: "20%", y: "75%", duration: 7, delay: 2 },
+    { size: 12, x: "50%", y: "10%", duration: 4, delay: 1.5 },
+    { size: 25, x: "90%", y: "50%", duration: 9, delay: 0.8 },
+    { size: 18, x: "5%", y: "50%", duration: 6, delay: 2.5 },
+    { size: 10, x: "40%", y: "80%", duration: 5, delay: 3 },
+    { size: 22, x: "60%", y: "30%", duration: 7, delay: 1.2 },
+    { size: 14, x: "30%", y: "45%", duration: 6, delay: 0.3 },
+    { size: 30, x: "85%", y: "85%", duration: 8, delay: 2.2 },
+    { size: 16, x: "15%", y: "60%", duration: 5, delay: 1.8 },
+  ];
+
+  return (
+    <>
+      {bubbles.map((bubble, index) => (
+        <motion.div
+          key={index}
+          style={{
+            position: "absolute",
+            left: bubble.x,
+            top: bubble.y,
+            width: `${bubble.size}px`,
+            height: `${bubble.size}px`,
+            borderRadius: "50%",
+            backgroundColor: "#B78DEA",
+            opacity: 0.25,
+            filter: "blur(1px)",
+          }}
+          animate={{
+            y: [0, -20, 0, 20, 0],
+            x: [0, 15, 0, -15, 0],
+            scale: [1, 1.2, 1, 0.8, 1],
+            opacity: [0.25, 0.35, 0.25, 0.15, 0.25],
+          }}
+          transition={{
+            duration: bubble.duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: bubble.delay,
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
 function Nosotros() {
   const bgGradient = useColorModeValue(
     "linear(to-br, gray.50, white)",
@@ -67,8 +114,13 @@ function Nosotros() {
         color="white"
         py={{ base: 20, md: 32 }}
         px={4}
+        position="relative"
+        overflow="hidden"
       >
-        <Container maxW="6xl">
+        {/* Pelotitas flotantes animadas */}
+        <FloatingBubbles />
+        
+        <Container maxW="6xl" position="relative" zIndex={1}>
           <VStack spacing={8} textAlign="center">
             <Heading
               as="h1"
@@ -196,143 +248,181 @@ function Nosotros() {
                 </Text>
               </MotionBox>
             </SimpleGrid>
-          </VStack>
-        </MotionBox>
-      </Container>
 
-      {/* Trayectoria Section */}
-      <Box bg="gray.50" py={{ base: 16, md: 24 }}>
-        <Container maxW="6xl" px={4}>
-          <MotionBox
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-          >
-            <VStack spacing={12}>
-              <VStack spacing={4} textAlign="center" maxW="3xl">
-                <Heading
-                  as="h2"
-                  fontSize={{ base: "3xl", md: "4xl" }}
-                  fontWeight="700"
-                  letterSpacing="-0.01em"
-                >
-                  Nuestra Trayectoria
-                </Heading>
-                <Text
-                  fontSize={{ base: "md", md: "lg" }}
-                  color="gray.600"
-                  lineHeight="1.8"
-                >
-                  Desde nuestros inicios, hemos trabajado incansablemente para 
-                  democratizar el acceso a la gestión de eventos.
-                </Text>
-              </VStack>
-
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} w="100%">
-                {[
-                  { year: "2020", title: "Nacimiento", desc: "Fundación de GetPass con la visión de revolucionar la industria de eventos." },
-                  { year: "2021", title: "Primeros Eventos", desc: "Lanzamiento de la plataforma y gestión de los primeros eventos exitosos." },
-                  { year: "2022", title: "Expansión", desc: "Crecimiento a nivel nacional y miles de eventos gestionados." },
-                  { year: "2024", title: "Liderazgo", desc: "Posicionamiento como plataforma líder en gestión de eventos digitales." }
-                ].map((milestone, index) => (
-                  <MotionBox
-                    key={index}
-                    variants={fadeInUp}
-                    p={6}
-                    borderRadius="xl"
-                    bg="white"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    textAlign="center"
-                    _hover={{ 
-                      borderColor: "black",
-                      transform: "translateY(-4px)",
-                      transition: "all 0.3s"
-                    }}
-                  >
-                    <Text fontSize="2xl" fontWeight="700" color="black" mb={2}>
-                      {milestone.year}
-                    </Text>
-                    <Heading fontSize="lg" fontWeight="600" mb={2}>
-                      {milestone.title}
-                    </Heading>
-                    <Text fontSize="sm" color="gray.600" lineHeight="1.6">
-                      {milestone.desc}
-                    </Text>
-                  </MotionBox>
-                ))}
-              </SimpleGrid>
-            </VStack>
-          </MotionBox>
-        </Container>
-      </Box>
-
-      {/* Valores Section */}
-      <Container maxW="6xl" py={{ base: 16, md: 24 }} px={4}>
-        <MotionBox
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-        >
-          <VStack spacing={12}>
-            <VStack spacing={4} textAlign="center" maxW="3xl">
+            {/* Métodos de Pago */}
+            <VStack spacing={6} w="100%" pt={8}>
               <Heading
-                as="h2"
-                fontSize={{ base: "3xl", md: "4xl" }}
+                as="h3"
+                fontSize={{ base: "2xl", md: "3xl" }}
                 fontWeight="700"
                 letterSpacing="-0.01em"
+                textAlign="center"
               >
-                Nuestros Valores
+                Métodos de Pago
               </Heading>
               <Text
                 fontSize={{ base: "md", md: "lg" }}
                 color="gray.600"
                 lineHeight="1.8"
+                textAlign="center"
+                maxW="2xl"
               >
-                Los principios que guían cada decisión y acción en GetPass
+                Conectamos con las mejores plataformas para que recibas tus pagos de forma segura.
               </Text>
-            </VStack>
-
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} w="100%">
-              {[
-                { icon: FiTarget, title: "Excelencia", desc: "Buscamos la perfección en cada detalle de nuestra plataforma." },
-                { icon: FiHeart, title: "Pasión", desc: "Amamos lo que hacemos y eso se refleja en nuestro trabajo." },
-                { icon: FiUsers, title: "Comunidad", desc: "Construimos una comunidad fuerte y unida alrededor de los eventos." },
-                { icon: FiAward, title: "Innovación", desc: "Estamos siempre a la vanguardia de la tecnología y las tendencias." }
-              ].map((value, index) => (
+              
+              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} w="100%" pt={4}>
+                {/* Mercado Pago - Activo */}
                 <MotionBox
-                  key={index}
                   variants={fadeInUp}
-                  p={8}
-                  borderRadius="2xl"
-                  bg="gray.50"
-                  textAlign="center"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  p={6}
+                  borderRadius="xl"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="#00BCFF"
+                  position="relative"
                   _hover={{ 
-                    bg: "black",
-                    color: "white",
                     transform: "translateY(-4px)",
-                    transition: "all 0.3s",
-                    "& svg": { color: "white" }
+                    boxShadow: "lg",
+                    transition: "all 0.3s"
                   }}
                 >
-                  <Icon 
-                    as={value.icon} 
-                    boxSize={12} 
-                    color="black" 
-                    mb={4}
-                    mx="auto"
-                  />
-                  <Heading fontSize="xl" fontWeight="600" mb={3}>
-                    {value.title}
-                  </Heading>
-                  <Text fontSize="sm" lineHeight="1.7" opacity={0.8}>
-                    {value.desc}
-                  </Text>
+                  <Box
+                    position="absolute"
+                    top={-3}
+                    right={4}
+                    bg="#00BCFF"
+                    color="white"
+                    px={3}
+                    py={1}
+                    borderRadius="full"
+                    fontSize="xs"
+                    fontWeight="600"
+                  >
+                    Activo
+                  </Box>
+                  <Flex align="center" gap={4}>
+                    <Box
+                      as="img"
+                      src="/assets/img/mercado-pago.png"
+                      alt="Mercado Pago"
+                      height="50px"
+                      objectFit="contain"
+                    />
+                    <VStack align="start" spacing={1}>
+                      <Heading fontSize="lg" fontWeight="600">
+                        Mercado Pago
+                      </Heading>
+                      <Text fontSize="sm" color="gray.600">
+                        Pagos instantáneos y seguros
+                      </Text>
+                    </VStack>
+                  </Flex>
                 </MotionBox>
-              ))}
-            </SimpleGrid>
+
+                {/* Depósito Directo - Próximamente */}
+                <MotionBox
+                  variants={fadeInUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  p={6}
+                  borderRadius="xl"
+                  bg="gray.100"
+                  border="2px dashed"
+                  borderColor="gray.300"
+                  position="relative"
+                  opacity={0.7}
+                >
+                  <Box
+                    position="absolute"
+                    top={-3}
+                    right={4}
+                    bg="gray.500"
+                    color="white"
+                    px={3}
+                    py={1}
+                    borderRadius="full"
+                    fontSize="xs"
+                    fontWeight="600"
+                  >
+                    Próximamente
+                  </Box>
+                  <Flex align="center" gap={4}>
+                    <Flex
+                      w="50px"
+                      h="50px"
+                      bg="gray.300"
+                      borderRadius="lg"
+                      align="center"
+                      justify="center"
+                    >
+                      <Text fontSize="2xl">🏦</Text>
+                    </Flex>
+                    <VStack align="start" spacing={1}>
+                      <Heading fontSize="lg" fontWeight="600" color="gray.600">
+                        Depósito Directo
+                      </Heading>
+                      <Text fontSize="sm" color="gray.500">
+                        Transferencias bancarias
+                      </Text>
+                    </VStack>
+                  </Flex>
+                </MotionBox>
+
+                {/* Tokens x Entrada - Próximamente */}
+                <MotionBox
+                  variants={fadeInUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  p={6}
+                  borderRadius="xl"
+                  bg="gray.100"
+                  border="2px dashed"
+                  borderColor="gray.300"
+                  position="relative"
+                  opacity={0.7}
+                >
+                  <Box
+                    position="absolute"
+                    top={-3}
+                    right={4}
+                    bg="gray.500"
+                    color="white"
+                    px={3}
+                    py={1}
+                    borderRadius="full"
+                    fontSize="xs"
+                    fontWeight="600"
+                  >
+                    Próximamente
+                  </Box>
+                  <Flex align="center" gap={4}>
+                    <Flex
+                      w="50px"
+                      h="50px"
+                      bg="gray.300"
+                      borderRadius="lg"
+                      align="center"
+                      justify="center"
+                    >
+                      <Text fontSize="2xl">🎟️</Text>
+                    </Flex>
+                    <VStack align="start" spacing={1}>
+                      <Heading fontSize="lg" fontWeight="600" color="gray.600">
+                        Tokens x Entrada
+                      </Heading>
+                      <Text fontSize="sm" color="gray.500">
+                        Comprá tokens para vender entradas
+                      </Text>
+                    </VStack>
+                  </Flex>
+                </MotionBox>
+              </SimpleGrid>
+            </VStack>
           </VStack>
         </MotionBox>
       </Container>
@@ -368,10 +458,26 @@ function Nosotros() {
 
               <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={8} w="100%">
                 {[
-                  { name: "Equipo GetPass", role: "Fundadores", image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=400&fit=crop" },
-                  { name: "Equipo GetPass", role: "Desarrollo", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop" },
-                  { name: "Equipo GetPass", role: "Diseño", image: "https://images.unsplash.com/photo-1556155092-8707de31f9c4?w=400&h=400&fit=crop" },
-                  { name: "Equipo GetPass", role: "Soporte", image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=400&fit=crop" }
+                  { 
+                    name: "Lautaro Garay", 
+                    role: "Founder & FullStack Developer", 
+                    image: "/assets/img/lauta.jpeg" 
+                  },
+                  { 
+                    name: "Sebastian Dikowiec", 
+                    role: "Co-Founder & System Engineer", 
+                    image: "/assets/img/seba-dico.png" 
+                  },
+                  { 
+                    name: "Tobias Cantarella", 
+                    role: "Co-Founder & Sales Manager", 
+                    image: "/assets/img/pancho.png" 
+                  },
+                  { 
+                    name: "Sebastian Tost", 
+                    role: "Co-Founder & Sales Manager", 
+                    image: "/assets/img/seba.png" 
+                  }
                 ].map((member, index) => (
                   <MotionBox
                     key={index}

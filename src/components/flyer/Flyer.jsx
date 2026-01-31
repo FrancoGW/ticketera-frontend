@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Flex,
   Box,
@@ -12,6 +12,14 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/context/AuthContext";
 import { FiPlus } from "react-icons/fi";
 import background from "/assets/img/slide/sliderrr.webp";
+import { settingsApi } from "../../Api/settings";
+
+const DEFAULT_HERO = {
+  heroTitle: "Creá un evento inolvidable y compartilo con el mundo",
+  heroSubtitle:
+    "Vendé entradas, butacas y consumiciones y recibí el 100% de tus ventas al instante",
+  heroButtonText: "Crear mi evento",
+};
 
 const textVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -41,6 +49,23 @@ const buttonVariants = {
 const Flyer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [content, setContent] = useState(DEFAULT_HERO);
+
+  useEffect(() => {
+    settingsApi
+      .getLandingContent()
+      .then((res) => {
+        const data = res.data;
+        if (data) {
+          setContent({
+            heroTitle: data.heroTitle ?? DEFAULT_HERO.heroTitle,
+            heroSubtitle: data.heroSubtitle ?? DEFAULT_HERO.heroSubtitle,
+            heroButtonText: data.heroButtonText ?? DEFAULT_HERO.heroButtonText,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleCreateEvent = () => {
     // Si no está logueado, ir a la landing de venta
@@ -130,7 +155,7 @@ const Flyer = () => {
               lineHeight={{ base: "1.3", md: "1.2" }}
               mb={{ base: 4, md: 5, lg: 6 }}
             >
-              Creá un evento inolvidable y compartilo con el mundo
+              {content.heroTitle}
             </Heading>
           </motion.div>
 
@@ -147,8 +172,7 @@ const Flyer = () => {
               opacity={0.95}
               mb={{ base: 5, md: 6, lg: 8 }}
             >
-              Vendé entradas, butacas y consumiciones y recibí el 100% de tus
-              ventas al instante
+              {content.heroSubtitle}
             </Text>
           </motion.div>
 
@@ -185,7 +209,7 @@ const Flyer = () => {
               whileTap={{ scale: 0.98 }}
               leftIcon={<FiPlus />}
             >
-              Crear mi evento
+              {content.heroButtonText}
             </Button>
           </motion.div>
         </Flex>

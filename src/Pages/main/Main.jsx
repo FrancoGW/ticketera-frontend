@@ -3,91 +3,77 @@ import Header from "../../components/header/Header.jsx";
 import Footer from "../../components/footer/Footer.jsx";
 import { Container, Box, Flex, Text, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { FaTicketAlt, FaDollarSign, FaChair, FaLock } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper";
+import { Autoplay, EffectFade } from "swiper";
 import "swiper/css";
+import "swiper/css/effect-fade";
 import Flyer from "../../components/flyer/Flyer";
 import "./Style.css";
 
-const Main = () => {
-  const features = [
-    {
-      icon: FaTicketAlt,
-      text: "Gestión de entradas",
-    },
-    {
-      icon: FaDollarSign,
-      text: "Cobros instantáneos",
-    },
-    {
-      icon: FaChair,
-      text: "Sistema de Butacas",
-    },
-    {
-      icon: FaLock,
-      text: "Holding de ingresos",
-    },
-  ];
+const CAROUSEL_SLIDES = [
+  { id: 1, text: "Fácil de usar" },
+  { id: 2, text: "Tickets al instante" },
+  { id: 3, text: "Conectado con", withLogo: true },
+];
 
+const Main = () => {
   return (
     <Box w="100%" position="relative">
       <Header />
       <Box pt="5rem" position="relative">
         <Flyer />
       </Box>
-      
-      {/* Banner de Features - Slider */}
-      <Box bg="white" py={6} borderBottom="1px solid" borderColor="gray.200">
+
+      {/* Carrusel de beneficios */}
+      <Box bg="white" py={4} borderBottom="1px solid" borderColor="gray.200">
         <Container maxW="7xl">
           <Swiper
             slidesPerView={1}
-            spaceBetween={30}
+            spaceBetween={0}
             loop={true}
+            effect="fade"
+            fadeEffect={{ crossFade: true }}
+            speed={500}
             autoplay={{
-              delay: 3000,
+              delay: 3500,
               disableOnInteraction: false,
             }}
-            modules={[Autoplay]}
-            className="features-swiper"
-            style={{
-              padding: "0 20px",
-            }}
+            modules={[Autoplay, EffectFade]}
+            className="benefits-swiper"
           >
-            {features.map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <SwiperSlide key={index}>
-                  <Flex
-                    align="center"
-                    justify="center"
-                    gap={3}
-                    py={2}
+            {CAROUSEL_SLIDES.map((slide) => (
+              <SwiperSlide key={slide.id}>
+                <Flex
+                  align="center"
+                  justify="center"
+                  gap={4}
+                  py={2}
+                  px={4}
+                  flexDirection={{ base: "column", sm: "row" }}
+                  minH="72px"
+                >
+                  <Text
+                    fontFamily="secondary"
+                    fontSize={{ base: "xl", md: "2xl" }}
+                    color="gray.800"
+                    fontWeight="600"
+                    textAlign="center"
                   >
+                    {slide.text}
+                  </Text>
+                  {slide.withLogo && (
                     <Box
-                      bg="black"
-                      color="white"
-                      p={3}
-                      borderRadius="md"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <IconComponent size={18} />
-                    </Box>
-                    <Text
-                      fontFamily="secondary"
-                      fontSize={{ base: "sm", md: "md" }}
-                      color="gray.700"
-                      fontWeight="600"
-                      textAlign="center"
-                    >
-                      {feature.text}
-                    </Text>
-                  </Flex>
-                </SwiperSlide>
-              );
-            })}
+                      as="img"
+                      src="/assets/img/mercado-pago.png"
+                      alt="Mercado Pago"
+                      height={{ base: "48px", md: "56px" }}
+                      objectFit="contain"
+                      display="inline-block"
+                    />
+                  )}
+                </Flex>
+              </SwiperSlide>
+            ))}
           </Swiper>
         </Container>
       </Box>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -21,15 +21,74 @@ import {
   Badge,
   Spinner,
   Center,
+  Input,
+  Textarea,
 } from '@chakra-ui/react';
-import { FiSettings } from 'react-icons/fi';
+import { FiSettings, FiType } from 'react-icons/fi';
 import { useMaintenanceMode } from '../../hooks/useMaintenanceMode';
+import { settingsApi } from '../../Api/settings';
 import { motion } from 'framer-motion';
+
+const DEFAULT_HERO = {
+  heroTitle: 'Creá un evento inolvidable y compartilo con el mundo',
+  heroSubtitle: 'Vendé entradas, butacas y consumiciones y recibí el 100% de tus ventas al instante',
+  heroButtonText: 'Crear mi evento',
+};
 
 export default function AdminSettings() {
   const { isMaintenanceMode, isLoading, error, setMaintenanceMode } = useMaintenanceMode();
   const [isUpdating, setIsUpdating] = useState(false);
   const toast = useToast();
+
+  const [landingContent, setLandingContent] = useState(DEFAULT_HERO);
+  const [landingLoading, setLandingLoading] = useState(true);
+  const [landingSaving, setLandingSaving] = useState(false);
+  const [landingForm, setLandingForm] = useState(DEFAULT_HERO);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await settingsApi.getLandingContent();
+        const data = res.data || DEFAULT_HERO;
+        setLandingContent(data);
+        setLandingForm({
+          heroTitle: data.heroTitle ?? DEFAULT_HERO.heroTitle,
+          heroSubtitle: data.heroSubtitle ?? DEFAULT_HERO.heroSubtitle,
+          heroButtonText: data.heroButtonText ?? DEFAULT_HERO.heroButtonText,
+        });
+      } catch {
+        setLandingForm(DEFAULT_HERO);
+      } finally {
+        setLandingLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleSaveLanding = async () => {
+    setLandingSaving(true);
+    try {
+      const res = await settingsApi.updateLandingContent(landingForm);
+      setLandingContent(res.data);
+      toast({
+        title: 'Contenido del banner guardado',
+        description: 'Los cambios se verán en la página principal.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'No se pudo guardar el contenido. Intentá de nuevo.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLandingSaving(false);
+    }
+  };
 
   const handleToggleMaintenance = async () => {
     const newValue = !isMaintenanceMode;
@@ -149,6 +208,85 @@ export default function AdminSettings() {
                     <Spinner size="md" color="purple.500" />
                     <Text ml={3} color="gray.600">Cargando configuración...</Text>
                   </Center>
+                )}
+              </VStack>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                <Box>
+                  <HStack spacing={3} mb={2}>
+                    <FiType size={20} color="#7253c9" />
+                    <Heading size="md">
+                      Contenido del banner principal
+                    </Heading>
+                  </HStack>
+                  <Text color="gray.600" fontSize="sm" mt={2}>
+                    Textos y botón que se muestran en el banner de la página de inicio.
+                  </Text>
+                </Box>
+
+                <Divider />
+
+                {landingLoading ? (
+                  <Center py={4}>
+                    <Spinner size="md" color="purple.500" />
+                    <Text ml={3} color="gray.600">Cargando contenido...</Text>
+                  </Center>
+                ) : (
+                  <>
+                    <FormControl>
+                      <FormLabel fontWeight="semibold">Título del banner</FormLabel>
+                      <Input
+                        value={landingForm.heroTitle}
+                        onChange={(e) =>
+                          setLandingForm((f) => ({ ...f, heroTitle: e.target.value }))
+                        }
+                        placeholder={DEFAULT_HERO.heroTitle}
+                        fontFamily="secondary"
+                        size="md"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="semibold">Subtítulo / descripción</FormLabel>
+                      <Textarea
+                        value={landingForm.heroSubtitle}
+                        onChange={(e) =>
+                          setLandingForm((f) => ({ ...f, heroSubtitle: e.target.value }))
+                        }
+                        placeholder={DEFAULT_HERO.heroSubtitle}
+                        fontFamily="secondary"
+                        rows={3}
+                        resize="vertical"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="semibold">Texto del botón</FormLabel>
+                      <Input
+                        value={landingForm.heroButtonText}
+                        onChange={(e) =>
+                          setLandingForm((f) => ({ ...f, heroButtonText: e.target.value }))
+                        }
+                        placeholder={DEFAULT_HERO.heroButtonText}
+                        fontFamily="secondary"
+                        size="md"
+                      />
+                    </FormControl>
+
+                    <Button
+                      colorScheme="purple"
+                      onClick={handleSaveLanding}
+                      isLoading={landingSaving}
+                      loadingText="Guardando..."
+                      fontFamily="secondary"
+                    >
+                      Guardar contenido del banner
+                    </Button>
+                  </>
                 )}
               </VStack>
             </CardBody>

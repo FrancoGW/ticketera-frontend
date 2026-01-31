@@ -11,7 +11,6 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router'
-import logo from "/assets/img/logo.png"
 
 const footerVariants = {
   hidden: {
@@ -52,7 +51,6 @@ function Footer() {
         >
           <Flex
             align="center"
-            gap={3}
             cursor="pointer"
             onClick={() => navigate("/")}
             as={motion.div}
@@ -60,23 +58,16 @@ function Footer() {
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <Box
-              as="img"
-              src={logo}
-              alt="GetPass Logo"
-              height="40px"
-              width="auto"
-            />
             <Heading
               as="h3"
-              color="#fff"
-              fontFamily="secondary"
-              fontWeight="600"
+              fontFamily="'Monument Extended', sans-serif"
+              fontWeight="300"
               fontSize={{ base: "xl", md: "2xl" }}
               letterSpacing="-0.01em"
               translate="no"
             >
-              GetPass
+              <Box as="span" color="#fff">Get</Box>
+              <Box as="span" color="#B78DEA">Pass</Box>
             </Heading>
           </Flex>
         </Flex>
@@ -191,6 +182,8 @@ function Footer() {
         <Flex
           justify="center"
           align="center"
+          direction="column"
+          gap={3}
           py={4}
         >
           <Text
@@ -201,6 +194,20 @@ function Footer() {
           >
             © {currentYear} GetPass. Todos los derechos reservados.
           </Text>
+          <Link
+            href="https://sftdevelopment.com/"
+            isExternal
+            fontFamily="secondary"
+            fontSize="xs"
+            fontWeight="500"
+            color="#D8FF37"
+            _hover={{
+              color: "#D8FF37",
+              textDecoration: "none",
+            }}
+          >
+            Powered by SFT DEVELOPMENT
+          </Link>
         </Flex>
       </Container>
     </Box>

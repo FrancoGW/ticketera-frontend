@@ -20,6 +20,7 @@ import {
   Icon
 } from "@chakra-ui/react";
 import { useEffect, useState, useRef } from "react";
+// El warning "defaultProps will be removed" viene de react-qr-reader; no afecta el uso
 import { QrReader } from "react-qr-reader";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import jwt_decode from "jwt-decode";
@@ -169,8 +170,9 @@ export default function Scanner({ embedded = false }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [validatorToken, setValidatorToken] = useState(null);
   const lastScannedQR = useRef(null);
-  const errorCountRef = useRef(0);
-  const [scannerKey, setScannerKey] = useState(0); // fuerza remount del QrReader al resetear
+  const lastResetTimeRef = useRef(0); // cooldown: ignorar escaneos justo después de "Escanear otro"
+  const [scannerKey, setScannerKey] = useState(0);
+  const [delayBeforeScanner, setDelayBeforeScanner] = useState(false); // pausa antes de remontar cámara (reduce AbortError)
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const toast = useToast();
@@ -283,6 +285,8 @@ export default function Scanner({ embedded = false }) {
   };
 
   const handleScan = async (qrId) => {
+    // Cooldown: ignorar escaneos ~1.5s después de "Escanear otro" (el lector suele re-disparar el mismo QR al montar)
+    if (lastResetTimeRef.current && Date.now() - lastResetTimeRef.current < 1500) return;
     if (!isScanning || lastScannedQR.current === qrId) return;
 
     lastScannedQR.current = qrId;
@@ -293,6 +297,19 @@ export default function Scanner({ embedded = false }) {
       // Usar token de validador si está disponible, sino usar token del usuario
       const token = validatorToken || localStorage.getItem('validatorToken') || localStorage.getItem('token');
       const { data } = await qrApi.getQrInfo(qrId);
+      // Si el QR ya fue validado, solo aviso y seguimos en el escáner (más eficiente)
+      if (data.qrState === 'used') {
+        toast({
+          title: "QR ya validado",
+          description: "Este ticket ya fue utilizado anteriormente.",
+          status: "warning",
+          duration: 4000,
+          isClosable: true,
+        });
+        setQrInfoLoading(false);
+        setIsScanning(true); // mantener cámara visible, no sacar del escáner
+        return;
+      }
       setQrInfo(data);
       
       // Sonido breve al escanear (sin depender de archivo externo, evita 404)
@@ -357,13 +374,24 @@ export default function Scanner({ embedded = false }) {
   };
 
   const resetScanner = () => {
+    lastResetTimeRef.current = Date.now();
+    setDelayBeforeScanner(true); // pausa antes de mostrar cámara de nuevo (reduce AbortError / "video already playing")
     setQrInfo(null);
     setQrState("");
     setIsScanning(true);
-    lastScannedQR.current = null;
-    errorCountRef.current = 0;
-    setScannerKey((k) => k + 1); // fuerza remount del QrReader para evitar errores de video
+    // No resetear lastScannedQR: así, cuando la cámara vuelva y el lector dispare de nuevo con el mismo QR
+    // (p. ej. el ticket recién validado aún en pantalla), handleScan lo ignora y no vuelve a mostrar el mismo ticket.
+    // Solo se procesará un escaneo cuando sea un qrId distinto.
+    setScannerKey((k) => k + 1);
   };
+
+  // Tras "Escanear otro", esperar un poco antes de remontar el QrReader para que se libere el stream
+  useEffect(() => {
+    if (delayBeforeScanner && isScanning && !qrInfo) {
+      const t = setTimeout(() => setDelayBeforeScanner(false), 500);
+      return () => clearTimeout(t);
+    }
+  }, [delayBeforeScanner, isScanning, qrInfo]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -371,43 +399,9 @@ export default function Scanner({ embedded = false }) {
     return `${objDate.date} - Inicio: ${objDate.timeStart} - Fin: ${objDate.timeEnd}`;
   };
 
-  // Manejar errores del QR Reader de forma silenciosa
-  const handleQrError = (error) => {
-    // Los errores de decodificación son normales cuando no hay QR en el frame
-    // Solo loguear errores reales (no de decodificación)
-    if (error) {
-      const errorMessage = error.message || error.toString();
-      
-      // Ignorar errores comunes de decodificación y de video del QrReader
-      const ignorableErrors = [
-        'No QR code found',
-        'QR code not found',
-        'Could not find QR code',
-        'Found QR code',
-        'video',
-        'NotFoundError',
-        'NotAllowedError',
-        'AbortError',
-        'play',
-        'interrupted',
-        'e2',
-        'already playing',
-        'LdLk22'
-      ];
-      
-      const shouldIgnore = ignorableErrors.some(ignorable => 
-        errorMessage.toLowerCase().includes(ignorable.toLowerCase())
-      );
-      
-      if (!shouldIgnore) {
-        errorCountRef.current += 1;
-        // Solo mostrar error en consola si es un error real y no es muy frecuente
-        if (errorCountRef.current % 50 === 0) {
-          console.warn('Error QR (ocasional):', errorMessage);
-        }
-      }
-    }
-  };
+  // Errores del QR Reader (decodificación, video, etc.): no loguear en consola.
+  // Son normales cuando no hay QR en cámara o hay interrupciones de video.
+  const handleQrError = () => {};
 
   const LayoutWrapper = ({ children }) =>
     embedded ? (
@@ -624,6 +618,27 @@ export default function Scanner({ embedded = false }) {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 >
+                  {delayBeforeScanner ? (
+                    <Card shadow="lg" borderRadius="xl">
+                      <CardBody>
+                        <Center h={{ base: "50vh", md: "60vh" }}>
+                          <VStack spacing={4}>
+                            <Spinner
+                              thickness="4px"
+                              speed="0.65s"
+                              emptyColor="gray.200"
+                              color="purple.500"
+                              size="lg"
+                            />
+                            <Text fontSize="md" fontWeight="medium" color="gray.600">
+                              Preparando cámara...
+                            </Text>
+                          </VStack>
+                        </Center>
+                      </CardBody>
+                    </Card>
+                  ) : (
+                    <>
                   <Card shadow="lg" borderRadius="xl" overflow="hidden">
                     <CardBody p={0}>
                       <Box 
@@ -643,7 +658,9 @@ export default function Scanner({ embedded = false }) {
                             handleQrError(error);
                           }}
                           constraints={{
-                            facingMode: "environment"
+                            facingMode: "environment",
+                            width: { ideal: 1280, min: 640 },
+                            height: { ideal: 720, min: 480 },
                           }}
                           videoStyle={{ 
                             width: '100%', 
@@ -654,7 +671,7 @@ export default function Scanner({ embedded = false }) {
                             width: '100%', 
                             height: '100%'
                           }}
-                          scanDelay={300}
+                          scanDelay={100}
                         />
                         <Viewfinder />
                         
@@ -675,7 +692,6 @@ export default function Scanner({ embedded = false }) {
                       </Box>
                     </CardBody>
                   </Card>
-                  
                   <Text 
                     textAlign="center" 
                     color="gray.600" 
@@ -685,6 +701,8 @@ export default function Scanner({ embedded = false }) {
                   >
                     Apunta la cámara hacia el código QR del ticket
                   </Text>
+                    </>
+                  )}
                 </motion.div>
               )
             )}

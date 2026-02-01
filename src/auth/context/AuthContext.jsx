@@ -106,6 +106,13 @@ export const AuthProvider = ({
         if (userData && !userData.roles) {
           userData.roles = userData.rol ? [userData.rol] : [];
         }
+        // Normalizar roles a minúsculas para evitar mismatches
+        if (userData?.roles && Array.isArray(userData.roles)) {
+          userData.roles = userData.roles.map((r) => String(r).toLowerCase());
+        }
+        if (userData?.rol) {
+          userData.rol = String(userData.rol).toLowerCase();
+        }
         
         // Establecer el usuario inmediatamente
         setUser(userData);

@@ -33,12 +33,15 @@ import {
   FiPlus,
   FiShoppingBag,
   FiBarChart2,
-  FiChevronDown
+  FiChevronDown,
+  FiUsers,
+  FiDollarSign,
+  FiMail,
+  FiLayout
 } from "react-icons/fi";
-import { RiTicket2Line } from "react-icons/ri";
+import { RiTicket2Line, RiQrScanLine } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import logo from "/assets/img/logo.png";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useAuth } from "../../auth/context/AuthContext";
 import "./Style.css";
@@ -91,10 +94,12 @@ function Header() {
     }
   };
 
-  // Helper function to check roles
+  // Helper function to check roles (case-insensitive)
   const hasRole = (roleToCheck) => {
     const userRoles = user?.roles || (user?.rol ? [user.rol] : []);
-    return user && Array.isArray(userRoles) && userRoles.includes(roleToCheck);
+    if (!user) return false;
+    const roles = Array.isArray(userRoles) ? userRoles : [];
+    return roles.some((r) => String(r).toLowerCase() === String(roleToCheck).toLowerCase());
   };
 
   const handleCreateEvent = () => {
@@ -804,16 +809,16 @@ function Header() {
                   transition={{ delay: 0.1 }}
                   mb={8}
                 >
-                  <Link href="/" display="block" mb={6}>
-                    <img 
-                      src={logo} 
-                      alt="Logo" 
-                      style={{ 
-                        width: "120px", 
-                        height: "auto",
-                        filter: "brightness(0) invert(1)"
-                      }} 
-                    />
+                  <Link href="/" display="block" mb={6} onClick={getButtonProps().onClick}>
+                    <Heading
+                      fontSize="2xl"
+                      textAlign="left"
+                      fontWeight="300"
+                      fontFamily="'Monument Extended', sans-serif"
+                    >
+                      <Box as="span" color="#fff">Get</Box>
+                      <Box as="span" color="#B78DEA">Pass</Box>
+                    </Heading>
                   </Link>
                   <Divider borderColor="rgba(255, 255, 255, 0.1)" />
                 </motion.div>
@@ -828,7 +833,7 @@ function Header() {
                   <MobileMenuItem
                     href="/about-us"
                     icon={FiHome}
-                    label="Sobre PaseTicket"
+                    label="¿Qué es GetPass?"
                     delay={0.15}
                     onClick={getButtonProps().onClick}
                   />
@@ -852,13 +857,83 @@ function Header() {
                       />
 
                       {hasRole("admin") && (
-                        <MobileMenuItem
-                          href="/admin"
-                          icon={FiSettings}
-                          label="Dashboard"
-                          delay={0.3}
-                          onClick={getButtonProps().onClick}
-                        />
+                        <>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="bold"
+                            textTransform="uppercase"
+                            letterSpacing="wider"
+                            color="rgba(255, 255, 255, 0.5)"
+                            px={4}
+                            pt={2}
+                            pb={1}
+                          >
+                            Panel de Control
+                          </Text>
+                          <MobileMenuItem
+                            href="/admin"
+                            icon={FiLayout}
+                            label="Dashboard"
+                            delay={0.3}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/events"
+                            icon={FiHome}
+                            label="Eventos"
+                            delay={0.3}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/users"
+                            icon={FiUsers}
+                            label="Usuarios"
+                            delay={0.31}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/metrics"
+                            icon={FiBarChart2}
+                            label="Métricas"
+                            delay={0.32}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/commission"
+                            icon={FiDollarSign}
+                            label="Comisiones"
+                            delay={0.33}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/tickets"
+                            icon={RiTicket2Line}
+                            label="Tickets"
+                            delay={0.34}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/scanner"
+                            icon={RiQrScanLine}
+                            label="Scanner"
+                            delay={0.35}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/mails"
+                            icon={FiMail}
+                            label="Mails"
+                            delay={0.36}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/settings"
+                            icon={FiSettings}
+                            label="Configuración"
+                            delay={0.37}
+                            onClick={getButtonProps().onClick}
+                          />
+                        </>
                       )}
 
                       {hasRole("pdv") && (

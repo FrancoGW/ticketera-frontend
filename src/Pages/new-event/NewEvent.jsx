@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Select,
@@ -28,6 +28,7 @@ import {
 import { DeleteIcon, AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import img from "/assets/img/banner.png";
 import eventApi from "../../Api/event";
+import userService from "../../Api/user";
 import "./Style.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import AsyncSelect from "react-select/async";
@@ -59,6 +60,25 @@ function NewEvent() {
 
   // Detectar si es admin o seller
   const isAdmin = location.pathname.includes('/admin/new-event');
+  const [sellers, setSellers] = useState([]);
+  const [selectedOrganizerEmail, setSelectedOrganizerEmail] = useState("");
+
+  useEffect(() => {
+    if (isAdmin) {
+      userService.getAllUsers()
+        .then((res) => {
+          const users = res.data.users || [];
+          const sellerList = users.filter(
+            (u) => (u.roles || []).includes("seller") || u.rol === "seller"
+          );
+          setSellers(sellerList);
+          if (sellerList.length > 0) {
+            setSelectedOrganizerEmail((prev) => prev || sellerList[0].email);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isAdmin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,6 +91,10 @@ function NewEvent() {
     data.pictures = await getBase64FromFile(data.pictures);
     data.dates = eventDates;
     data.discountCodes = discountCodes;
+    // Solo enviar organizerEmail si admin seleccionó un seller
+    if (isAdmin && selectedOrganizerEmail && selectedOrganizerEmail.trim()) {
+      data.organizerEmail = selectedOrganizerEmail.trim();
+    }
 
     try {
       setIsLoading(true);
@@ -239,6 +263,32 @@ function NewEvent() {
                   </CardHeader>
                   <CardBody bg="white">
                     <VStack spacing={5}>
+                      {isAdmin && (
+                        <FormControl id="organizer" isRequired>
+                          <FormLabel fontFamily="secondary" fontWeight="500">
+                            Asignar al organizador (seller)
+                          </FormLabel>
+                          <Select
+                            value={selectedOrganizerEmail}
+                            onChange={(e) => setSelectedOrganizerEmail(e.target.value)}
+                            size="lg"
+                            borderRadius="lg"
+                            borderColor="gray.200"
+                            _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
+                          >
+                            <option value="">Seleccionar organizador</option>
+                            {sellers.map((s) => (
+                              <option key={s._id} value={s.email}>
+                                {s.email} {s.firstname && `(${s.firstname} ${s.lastname || ""})`}
+                              </option>
+                            ))}
+                          </Select>
+                          <Text fontSize="sm" color="gray.500" mt={1}>
+                            El evento quedará asignado a este usuario. Creá un seller en Usuarios si no hay ninguno.
+                          </Text>
+                        </FormControl>
+                      )}
+
                       <FormControl id="title" isRequired>
                         <FormLabel fontFamily="secondary" fontWeight="500">
                           Nombre del Evento

@@ -19,7 +19,7 @@ import { FiCheckCircle, FiCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { paymentApi } from "../../../Api/payment";
 
-const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false }) => {
+const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false, isAdmin = false }) => {
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -36,7 +36,8 @@ const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false }) => {
     );
   }, [userEvents, hasEvents]);
 
-  const checklistItems = [
+  // Admin no necesita configurar Mercado Pago (se gestiona desde variables de entorno)
+  const baseChecklistItems = [
     {
       id: "create-event",
       label: "Crea tu primer evento",
@@ -86,6 +87,10 @@ const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false }) => {
       actionLabel: "Configurar Mercado Pago",
     },
   ];
+
+  const checklistItems = isAdmin
+    ? baseChecklistItems.filter((item) => item.id !== "configure-mercadopago")
+    : baseChecklistItems;
 
   const allCompleted = checklistItems.every((item) => item.completed);
   const completedCount = checklistItems.filter((item) => item.completed).length;

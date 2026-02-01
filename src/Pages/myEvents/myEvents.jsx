@@ -176,6 +176,7 @@ function MyEvents() {
                 user={user}
                 userEvents={userEvents}
                 hasMercadoPago={user?.mercadoPagoConfigured || user?.hasMercadoPago || false}
+                isAdmin={user?.roles?.includes?.("admin") || user?.rol === "admin"}
               />
             )}
 

@@ -1,10 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/img/QRLogo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GetPass: Vendé tickets online sin cargo por servicio. Creá tu evento, vendé tus entradas y recibí el 100% de tus ventas al instante. Fácil, rápido y conectado con Mercado Pago." />
+    <meta name="keywords" content="tickets, entradas, eventos, vender entradas, ticketera, Mercado Pago, GetPass" />
+    <meta name="author" content="GetPass" />
+    <link rel="canonical" href="https://getpass.com.ar" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo.png" />
+    <link rel="apple-touch-icon" href="/assets/img/logo.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://getpass.com.ar" />
+    <meta property="og:title" content="GetPass: Vendé tickets online sin cargo por servicio" />
+    <meta property="og:description" content="Creá tu evento, vendé tus entradas y recibí el 100% de tus ventas al instante. Fácil, rápido y conectado con Mercado Pago." />
+    <meta property="og:image" content="https://getpass.com.ar/assets/img/banner.png" />
+    <meta property="og:image:alt" content="GetPass - Ticketera QR" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:site_name" content="GetPass" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://getpass.com.ar" />
+    <meta name="twitter:title" content="GetPass: Vendé tickets online sin cargo por servicio" />
+    <meta name="twitter:description" content="Creá tu evento, vendé tus entradas y recibí el 100% de tus ventas al instante. Fácil, rápido y conectado con Mercado Pago." />
+    <meta name="twitter:image" content="https://getpass.com.ar/assets/img/banner.png" />
+
+    <title>GetPass: Vendé tickets online sin cargo por servicio</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/metropolis.min.css"
@@ -13,11 +40,54 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-                
     <link rel="stylesheet" type="text/css" charset="UTF-8" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" /> 
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" />
-    <meta name="description" content="GetPass " />
-    <title>GetPass</title>
+
+    <!-- Schema.org JSON-LD para SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://getpass.com.ar/#organization",
+          "name": "GetPass",
+          "url": "https://getpass.com.ar",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://getpass.com.ar/assets/img/logo.png"
+          },
+          "description": "Ticketera QR para vender entradas online sin cargo por servicio. Conectado con Mercado Pago."
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://getpass.com.ar/#website",
+          "url": "https://getpass.com.ar",
+          "name": "GetPass",
+          "description": "Vendé tickets online sin cargo por servicio. Creá tu evento, vendé tus entradas y recibí el 100% de tus ventas al instante.",
+          "publisher": { "@id": "https://getpass.com.ar/#organization" },
+          "inLanguage": "es-AR",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://getpass.com.ar/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://getpass.com.ar/#webpage",
+          "url": "https://getpass.com.ar",
+          "name": "GetPass: Vendé tickets online sin cargo por servicio",
+          "description": "Creá tu evento, vendé tus entradas y recibí el 100% de tus ventas al instante. Fácil, rápido y conectado con Mercado Pago.",
+          "isPartOf": { "@id": "https://getpass.com.ar/#website" },
+          "about": { "@id": "https://getpass.com.ar/#organization" }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

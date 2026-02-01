@@ -809,7 +809,7 @@ function Header() {
                   transition={{ delay: 0.1 }}
                   mb={8}
                 >
-                  <Link href="/" display="block" mb={6} onClick={getButtonProps().onClick}>
+                  <Link as={RouterLink} to="/" display="block" mb={6} onClick={getButtonProps().onClick}>
                     <Heading
                       fontSize="2xl"
                       textAlign="left"
@@ -829,33 +829,9 @@ function Header() {
                   spacing={2}
                   flex="1"
                 >
-                  {/* Public Links */}
-                  <MobileMenuItem
-                    href="/about-us"
-                    icon={FiHome}
-                    label="¿Qué es GetPass?"
-                    delay={0.15}
-                    onClick={getButtonProps().onClick}
-                  />
-                  <MobileMenuItem
-                    href="/Contact"
-                    icon={IoMdContact}
-                    label="Contacto"
-                    delay={0.2}
-                    onClick={getButtonProps().onClick}
-                  />
-
                   {user && (
                     <>
                       <Box h={4} />
-                      <MobileMenuItem
-                        href="/profile"
-                        icon={FiUser}
-                        label="Mi Perfil"
-                        delay={0.25}
-                        onClick={getButtonProps().onClick}
-                      />
-
                       {hasRole("admin") && (
                         <>
                           <Text
@@ -1032,6 +1008,43 @@ function Header() {
                           Crear Evento
                         </Button>
                       </motion.div>
+
+                      <Box h={6} />
+                      <Divider borderColor="rgba(255, 255, 255, 0.1)" />
+                      <Box h={2} />
+                      <Text
+                        fontSize="xs"
+                        fontWeight="bold"
+                        textTransform="uppercase"
+                        letterSpacing="wider"
+                        color="rgba(255, 255, 255, 0.5)"
+                        px={4}
+                        pt={2}
+                        pb={1}
+                      >
+                        Más información
+                      </Text>
+                      <MobileMenuItem
+                        href="/about-us"
+                        icon={FiHome}
+                        label="¿Qué es GetPass?"
+                        delay={0.5}
+                        onClick={getButtonProps().onClick}
+                      />
+                      <MobileMenuItem
+                        href="/Contact"
+                        icon={IoMdContact}
+                        label="Contacto"
+                        delay={0.51}
+                        onClick={getButtonProps().onClick}
+                      />
+                      <MobileMenuItem
+                        href="/profile"
+                        icon={FiUser}
+                        label="Mi Perfil"
+                        delay={0.52}
+                        onClick={getButtonProps().onClick}
+                      />
                     </>
                   )}
 
@@ -1058,8 +1071,7 @@ function Header() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.35 }}
                       >
-                        <Link href="/register" onClick={getButtonProps().onClick}>
-                          <Button
+                        <Button
                             onClick={(e) => {
                               e.preventDefault();
                               handleCreateEvent();
@@ -1087,8 +1099,37 @@ function Header() {
                           >
                             Crear Evento
                           </Button>
-                        </Link>
                       </motion.div>
+
+                      <Box h={6} />
+                      <Divider borderColor="rgba(255, 255, 255, 0.1)" />
+                      <Box h={2} />
+                      <Text
+                        fontSize="xs"
+                        fontWeight="bold"
+                        textTransform="uppercase"
+                        letterSpacing="wider"
+                        color="rgba(255, 255, 255, 0.5)"
+                        px={4}
+                        pt={2}
+                        pb={1}
+                      >
+                        Más información
+                      </Text>
+                      <MobileMenuItem
+                        href="/about-us"
+                        icon={FiHome}
+                        label="¿Qué es GetPass?"
+                        delay={0.35}
+                        onClick={getButtonProps().onClick}
+                      />
+                      <MobileMenuItem
+                        href="/Contact"
+                        icon={IoMdContact}
+                        label="Contacto"
+                        delay={0.36}
+                        onClick={getButtonProps().onClick}
+                      />
                     </>
                   )}
                 </VStack>
@@ -1101,29 +1142,13 @@ function Header() {
   );
 }
 
-// Mobile Menu Item Component
+// Mobile Menu Item Component - usa React Router para evitar recargas
 const MobileMenuItem = ({ href, icon, label, delay = 0, onClick, isDestructive = false, isPrimary = false }) => {
   const IconComponent = icon;
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ 
-        delay,
-        type: "spring",
-        damping: 25,
-        stiffness: 200
-      }}
-    >
-      <Link
-        href={href}
-        onClick={onClick}
-        display="block"
-        textDecoration="none"
-        _hover={{ textDecoration: "none" }}
-      >
-        <Flex
+  const isInternalLink = href && href !== "#";
+
+  const content = (
+    <Flex
           align="center"
           px={4}
           py={4}
@@ -1164,7 +1189,45 @@ const MobileMenuItem = ({ href, icon, label, delay = 0, onClick, isDestructive =
             {label}
           </Text>
         </Flex>
-      </Link>
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 50 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ 
+        delay,
+        type: "spring",
+        damping: 25,
+        stiffness: 200
+      }}
+    >
+      {isInternalLink ? (
+        <Link
+          as={RouterLink}
+          to={href}
+          onClick={onClick}
+          display="block"
+          textDecoration="none"
+          _hover={{ textDecoration: "none" }}
+        >
+          {content}
+        </Link>
+      ) : (
+        <Box
+          as="button"
+          onClick={onClick}
+          display="block"
+          w="100%"
+          textAlign="left"
+          bg="transparent"
+          border="none"
+          cursor="pointer"
+          p={0}
+        >
+          {content}
+        </Box>
+      )}
     </motion.div>
   );
 };

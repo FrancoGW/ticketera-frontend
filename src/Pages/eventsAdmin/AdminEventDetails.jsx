@@ -33,6 +33,7 @@ import {
 import { EditIcon, ArrowBackIcon, DeleteIcon } from "@chakra-ui/icons";
 import { RiCalendar2Line, RiUserLine, RiPercentLine } from "react-icons/ri";
 import eventApi from "../../Api/event";
+import userService from "../../Api/user";
 import { getObjDate, bufferToBase64, getBase64FromFile, validateSelectedImg } from "../../common/utils";
 import AddDates from "../../components/AddDates";
 import AsyncSelect from "react-select/async";
@@ -50,6 +51,8 @@ const AdminEventDetails = () => {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedLocality, setSelectedLocality] = useState("");
   const [newPicture, setNewPicture] = useState("");
+  const [sellers, setSellers] = useState([]);
+  const [selectedOrganizerEmail, setSelectedOrganizerEmail] = useState("");
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -61,6 +64,7 @@ const AdminEventDetails = () => {
         setEventDates(data.event.dates || []);
         setSelectedProvince(data.event.addressRef?.province || "");
         setSelectedLocality(data.event.addressRef?.locality || "");
+        setSelectedOrganizerEmail(data.event.userEmail || "");
       } catch (error) {
         console.error("Error fetching event details:", error);
         toast({
@@ -79,11 +83,24 @@ const AdminEventDetails = () => {
     }
   }, [id, toast]);
 
+  useEffect(() => {
+    userService.getAllUsers()
+      .then((res) => {
+        const users = res.data.users || [];
+        const sellerList = users.filter(
+          (u) => (u.roles || []).includes("seller") || u.rol === "seller"
+        );
+        setSellers(sellerList);
+      })
+      .catch(() => {});
+  }, []);
+
   const resetOriginalValues = () => {
     setEvent(originalEvent);
     setEventDates(originalEvent?.dates || []);
     setSelectedProvince(originalEvent?.addressRef?.province || "");
     setSelectedLocality(originalEvent?.addressRef?.locality || "");
+    setSelectedOrganizerEmail(originalEvent?.userEmail || "");
     setNewPicture("");
   };
 
@@ -118,6 +135,7 @@ const AdminEventDetails = () => {
       pictures: newPicture
         ? await getBase64FromFile(newPicture)
         : event.pictures,
+      userEmail: selectedOrganizerEmail || event.userEmail,
     };
 
     delete updatedEvent.addressRef;
@@ -144,6 +162,7 @@ const AdminEventDetails = () => {
       setEventDates(data.updatedEvent.dates);
       setSelectedProvince(data.updatedEvent.addressRef.province);
       setSelectedLocality(data.updatedEvent.addressRef.locality);
+      setSelectedOrganizerEmail(data.updatedEvent.userEmail || "");
       setIsEditing(false);
     } catch (error) {
       console.log(error);
@@ -580,6 +599,25 @@ const AdminEventDetails = () => {
                       <Box flex="1" order={{ base: 2, lg: 1 }}>
                         <form onSubmit={handleSubmit}>
                           <VStack align="stretch" spacing={4}>
+                            <FormControl id="organizer">
+                              <FormLabel fontFamily="secondary">Organizador (seller)</FormLabel>
+                              <Select
+                                value={selectedOrganizerEmail}
+                                onChange={(e) => setSelectedOrganizerEmail(e.target.value)}
+                                fontFamily="secondary"
+                              >
+                                <option value="">Seleccionar organizador</option>
+                                {sellers.map((s) => (
+                                  <option key={s._id} value={s.email}>
+                                    {s.email} {s.firstname && `(${s.firstname} ${s.lastname || ""})`}
+                                  </option>
+                                ))}
+                              </Select>
+                              <Text fontSize="sm" color="gray.500" mt={1}>
+                                Reasignar el evento a otro seller
+                              </Text>
+                            </FormControl>
+
                             <FormControl id="title" isRequired>
                               <FormLabel fontFamily="secondary">Nombre del Evento</FormLabel>
                               <Input

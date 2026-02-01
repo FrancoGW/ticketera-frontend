@@ -32,7 +32,7 @@ import userService from '../../Api/user';
 import ConfirmDialog from '../confirmDialog/ConfirmDialog';
 import useConfirmDialog from '../../hooks/useConfirmDialog';
 
-const validRoles = ['admin', 'pdv', 'validator', 'user'];
+const validRoles = ['admin', 'seller', 'pdv', 'validator', 'user'];
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);

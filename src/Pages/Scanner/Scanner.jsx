@@ -173,6 +173,8 @@ export default function Scanner({ embedded = false }) {
   const lastResetTimeRef = useRef(0); // cooldown: ignorar escaneos justo después de "Escanear otro"
   const [scannerKey, setScannerKey] = useState(0);
   const [delayBeforeScanner, setDelayBeforeScanner] = useState(false); // pausa antes de remontar cámara (reduce AbortError)
+  const streamRef = useRef(null); // ref al MediaStream de la cámara para detenerla al salir
+  const scannerContainerRef = useRef(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const toast = useToast();
@@ -392,6 +394,37 @@ export default function Scanner({ embedded = false }) {
       return () => clearTimeout(t);
     }
   }, [delayBeforeScanner, isScanning, qrInfo]);
+
+  // Capturar el stream de video del QrReader para poder detenerlo al salir
+  useEffect(() => {
+    if (!delayBeforeScanner && isScanning && hasPermission) {
+      const timer = setTimeout(() => {
+        const video = scannerContainerRef.current?.querySelector('video');
+        if (video?.srcObject) {
+          streamRef.current = video.srcObject;
+        }
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+    streamRef.current = null;
+  }, [delayBeforeScanner, isScanning, hasPermission, scannerKey]);
+
+  // Cleanup: detener la cámara al salir del Scanner
+  useEffect(() => {
+    return () => {
+      if (streamRef.current?.getTracks) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      // Por si el ref no capturó el stream, intentar detener cualquier video activo en el DOM
+      const videos = document.querySelectorAll('video');
+      videos.forEach((video) => {
+        if (video.srcObject?.getTracks) {
+          video.srcObject.getTracks().forEach((track) => track.stop());
+        }
+      });
+    };
+  }, []);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -642,6 +675,7 @@ export default function Scanner({ embedded = false }) {
                   <Card shadow="lg" borderRadius="xl" overflow="hidden">
                     <CardBody p={0}>
                       <Box 
+                        ref={scannerContainerRef}
                         position="relative" 
                         w="100%" 
                         h={{ base: "50vh", md: "60vh" }}

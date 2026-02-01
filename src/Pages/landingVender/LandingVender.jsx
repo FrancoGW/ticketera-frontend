@@ -10,7 +10,6 @@ import {
   CardBody,
   Icon,
   Flex,
-  useColorModeValue,
   SimpleGrid,
   Divider,
   Badge,
@@ -19,12 +18,11 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
-import { FiDollarSign, FiCreditCard, FiSettings, FiCheck, FiUserPlus, FiEdit3, FiCreditCard as FiPayment, FiArrowRight } from 'react-icons/fi';
+import { FiCreditCard, FiCheck, FiUserPlus, FiEdit3, FiCreditCard as FiPayment, FiArrowRight } from 'react-icons/fi';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 
 const MotionBox = motion(Box);
-const MotionCard = motion(Card);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,13 +45,17 @@ const itemVariants = {
   },
 };
 
+const ACCENT = '#B78DEA';
+const CARD_BG = '#161616';
+const CARD_BG_BLUR = 'rgba(22, 22, 22, 0.6)';
+const CARD_BORDER = 'rgba(255,255,255,0.08)';
+const CARD_BORDER_ACTIVE = 'rgba(183, 141, 234, 0.5)';
+const TEXT_MUTED = 'rgba(255,255,255,0.65)';
+const TEXT_WHITE = 'white';
+
 const LandingVender = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const bgGradient = useColorModeValue(
-    'linear(to-b, gray.50, white)',
-    'linear(to-b, gray.900, gray.800)'
-  );
 
   const handleCreateOrganizerAccount = () => {
     if (user) {
@@ -67,103 +69,123 @@ const LandingVender = () => {
     navigate('/contact');
   };
 
-  const plans = [
+  const paymentMethods = [
     {
       id: 1,
-      title: 'Holding',
-      icon: FiDollarSign,
-      description: 'Nosotros nos hacemos cargo de los ingresos de tu evento y hacemos el depósito del dinero a una cuenta bancaria.',
+      planName: 'SIMPLE',
+      title: 'Depósito Directo',
+      priceLabel: 'Directo a tu CBU',
+      priceSubtext: 'Suscripción GetPass, para pequeños eventos',
+      topBadge: null,
+      iconType: 'emoji',
+      emoji: '🏦',
+      description: 'Configurá tu CBU y recibí pagos directamente en tu cuenta bancaria.',
       features: [
-        'Gestión completa de ingresos',
-        'Depósito automático a cuenta bancaria',
-        'Sin preocupaciones administrativas',
+        'CBU o alias para recibir',
+        'Depósito automático',
+        'Sin intermediarios de pago',
+        'Sin cargo por servicio para tus clientes',
         'Soporte 24hs x WhatsApp',
       ],
       hasButton: true,
       buttonText: 'Hablar con un asesor',
       buttonAction: handleContactAdvisor,
+      isActive: false,
     },
     {
       id: 2,
-      title: 'Forma Directa',
-      icon: FiCreditCard,
-      description: 'Te registras como organizador de eventos, conectas tu cuenta de Mercado Pago, generas tickets y empiezas a vender.',
+      planName: 'FAST',
+      title: 'Mercado Pago',
+      priceLabel: 'Sin cargo',
+      priceSubtext: 'Solo comisión estándar MP',
+      topBadge: 'Popular',
+      iconType: 'logo',
+      logoSrc: '/assets/img/mercadopago.png',
+      description: 'Pagos instantáneos y seguros. Conectá tu cuenta y empezá a vender ya.',
       features: [
-        'Control total de tus ventas',
-        'Integración con Mercado Pago',
-        'Gestión autónoma',
+        'Pagos al instante',
+        'Requiere cuenta de Mercado Pago',
+        'La opción más rápida',
         'Soporte 24hs x WhatsApp',
       ],
       hasButton: true,
       buttonText: 'Crear cuenta organizador',
       buttonAction: handleCreateOrganizerAccount,
+      isActive: true,
     },
     {
       id: 3,
-      title: 'A Medida',
-      icon: FiSettings,
-      description: 'Si necesitas vender butacas o mesas, podemos ayudarte a generar tu evento personalizado con cualquiera de los dos métodos de cobranza.',
+      planName: 'CUSTOM',
+      title: 'A tu medida',
+      priceLabel: 'Entradas desde',
+      priceSubtext: 'ARS 119.99 c/u',
+      topBadge: 'Próximamente',
+      iconType: 'emoji',
+      emoji: '🎟️',
+      description: 'Selecciona cuántas entradas querés vender, pagá, vendé!',
       features: [
-        'Solución personalizada',
-        'Butacas y mesas',
-        'Elige tu método de cobro',
+        'Compra paquetes de GP-COINS',
+        'Un GP-COIN = 1 Entrada',
+        'Varios métodos de pago',
+        'Sin cargo por servicio para tus clientes',
         'Soporte 24hs x WhatsApp',
       ],
       hasButton: true,
       buttonText: 'Hablar con un asesor',
       buttonAction: handleContactAdvisor,
+      isActive: false,
     },
   ];
 
   return (
-    <Box minH="100vh" bgGradient={bgGradient}>
+    <Box minH="100vh" bg="#000">
       <Header />
-      <Container maxW="container.xl" py={12} mt="80px">
+      <Container maxW="container.xl" py={12} pt={{ base: 24, md: 28 }} px={{ base: 4, md: 8 }}>
         <MotionBox variants={containerVariants} initial="hidden" animate="visible">
-          {/* Hero Section */}
-          <VStack spacing={6} mb={12} textAlign="center">
+          {/* Hero */}
+          <VStack spacing={6} mb={16} textAlign="center">
             <MotionBox variants={itemVariants}>
               <Heading
                 as="h1"
                 fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
                 fontFamily="secondary"
                 fontWeight="bold"
-                color="primary"
+                color={TEXT_WHITE}
                 mb={4}
               >
                 ¿Cómo vender en GetPass?
               </Heading>
-              <Text fontSize={{ base: 'lg', md: 'xl' }} color="gray.600" maxW="3xl">
-                Ofrecemos 3 formas de vender tus eventos. Elige la que mejor se adapte a tus necesidades.
+              <Text fontSize={{ base: 'lg', md: 'xl' }} color={TEXT_MUTED} maxW="3xl">
+                Tres métodos de pago. Mercado Pago ya está disponible: es el más rápido para empezar a vender.
               </Text>
             </MotionBox>
           </VStack>
 
-          {/* How It Works Section */}
-          <MotionBox variants={itemVariants} mb={16}>
-            <VStack spacing={10} align="stretch">
+          {/* Cómo funciona */}
+          <MotionBox variants={itemVariants} mb={20}>
+            <VStack spacing={12} align="stretch">
               <VStack spacing={4} textAlign="center">
                 <Heading
                   as="h2"
                   fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
                   fontFamily="secondary"
                   fontWeight="bold"
-                  color="primary"
+                  color={TEXT_WHITE}
                 >
                   ¿Cómo funciona?
                 </Heading>
-                <Text 
-                  fontSize={{ base: 'md', md: 'lg' }} 
-                  color="gray.600" 
+                <Text
+                  fontSize={{ base: 'md', md: 'lg' }}
+                  color={TEXT_MUTED}
                   lineHeight="tall"
                   maxW="3xl"
                   mx="auto"
                 >
-                  Comenzar a vender tus eventos es más fácil de lo que imaginas. El proceso está diseñado para que puedas tener tu primer evento activo en pocos minutos, sin complicaciones técnicas ni trámites burocráticos.
+                  Comenzar a vender tus eventos es más fácil de lo que imaginas. El proceso está diseñado para que puedas tener tu primer evento activo en pocos minutos.
                 </Text>
               </VStack>
 
-              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 6, md: 8 }} mt={4}>
+              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 6, md: 8 }}>
                 {[
                   {
                     number: '01',
@@ -172,106 +194,91 @@ const LandingVender = () => {
                     description: (
                       <>
                         Podés{' '}
-                        <Box as="span" color="purple.600" fontWeight="600" cursor="pointer" 
-                          onClick={() => navigate('/producers')} textDecoration="underline"
-                          _hover={{ color: 'purple.700' }}>
+                        <Box
+                          as="span"
+                          color={ACCENT}
+                          fontWeight="600"
+                          cursor="pointer"
+                          onClick={() => navigate('/register')}
+                          textDecoration="underline"
+                          _hover={{ opacity: 0.9 }}
+                        >
                           crear tu cuenta de productor ahora mismo
                         </Box>
-                        {' '}o registrarte directamente cuando crees tu primer evento. Solo necesitás unos datos básicos y estás listo para comenzar.
+                        {' '}o registrarte cuando crees tu primer evento. Solo necesitás unos datos básicos.
                       </>
                     ),
-                    gradient: 'linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)',
                   },
                   {
                     number: '02',
                     icon: FiEdit3,
                     title: 'Configuración intuitiva',
-                    description: 'Una vez dentro de la plataforma, elegís el método de cobranza que prefieras (Holding o Forma Directa) y completás los datos de tu evento: nombre, descripción, fechas, precios y ubicación. Nuestra interfaz te guía en cada paso.',
-                    gradient: 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)',
+                    description: 'Conectás Mercado Pago y completás los datos de tu evento: nombre, descripción, fechas, precios y ubicación. La interfaz te guía en cada paso.',
                   },
                   {
                     number: '03',
                     icon: FiPayment,
-                    title: 'Vinculación de pagos y publicación',
-                    description: 'Si elegiste la Forma Directa, vinculás tu cuenta de Mercado Pago con un solo clic. Si preferiste Holding, ingresás tu CBU o alias para recibir los depósitos. ¡Y listo! Tu evento ya está publicado y disponible para la venta.',
-                    gradient: 'linear-gradient(135deg, #38b2ac 0%, #319795 100%)',
+                    title: 'Vinculación y publicación',
+                    description: 'Vinculás tu cuenta de Mercado Pago con un solo clic. Tu evento queda publicado y disponible para la venta. Depósito directo y Tokens llegarán pronto.',
                   },
                 ].map((step, index) => (
-                  <MotionBox
-                    key={index}
-                    variants={itemVariants}
-                    position="relative"
-                  >
+                  <MotionBox key={index} variants={itemVariants}>
                     <Box
-                      bg="white"
+                      bg={CARD_BG}
                       borderRadius="2xl"
                       p={{ base: 6, md: 8 }}
-                      boxShadow="0 4px 20px rgba(0, 0, 0, 0.08)"
                       border="1px solid"
-                      borderColor="gray.100"
+                      borderColor={CARD_BORDER}
                       h="100%"
                       display="flex"
                       flexDirection="column"
                       position="relative"
                       overflow="hidden"
                       _hover={{
-                        transform: 'translateY(-8px)',
-                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-                        borderColor: 'gray.200',
+                        borderColor: 'whiteAlpha.200',
+                        boxShadow: '0 0 0 1px rgba(255,255,255,0.06)',
                       }}
                       transition="all 0.3s ease"
                     >
-                      {/* Number Badge */}
                       <Box
                         position="absolute"
                         top={4}
                         right={4}
-                        fontSize="6xl"
+                        fontSize="5xl"
                         fontWeight="900"
-                        color="gray.100"
+                        color="whiteAlpha.06"
                         lineHeight="1"
                         fontFamily="mono"
                         zIndex={0}
                       >
                         {step.number}
                       </Box>
-
                       <VStack spacing={5} align="flex-start" position="relative" zIndex={1}>
-                        {/* Icon */}
                         <Box
                           p={4}
                           borderRadius="xl"
-                          bgGradient={step.gradient}
+                          bgGradient="linear(135deg, #B78DEA 0%, #9d6dd8 100%)"
                           color="white"
-                          boxShadow="lg"
                           display="flex"
                           alignItems="center"
                           justifyContent="center"
-                          _hover={{
-                            transform: 'scale(1.1) rotate(5deg)',
-                          }}
-                          transition="all 0.3s ease"
+                          _hover={{ transform: 'scale(1.05)' }}
+                          transition="transform 0.3s"
                         >
                           <Icon as={step.icon} boxSize={7} />
                         </Box>
-
-                        {/* Content */}
-                        <VStack spacing={3} align="flex-start" flex="1">
+                        <VStack spacing={3} align="flex-start" flex={1}>
                           <Heading
                             as="h3"
                             fontSize={{ base: 'xl', md: '2xl' }}
                             fontFamily="secondary"
                             fontWeight="bold"
-                            color="gray.800"
+                            color={TEXT_WHITE}
                             lineHeight="shorter"
                           >
                             {step.title}
                           </Heading>
-                          <Text 
-                            fontSize={{ base: 'sm', md: 'md' }} 
-                            color="gray.600" 
-                            lineHeight="tall"
-                          >
+                          <Text fontSize={{ base: 'sm', md: 'md' }} color={TEXT_MUTED} lineHeight="tall">
                             {step.description}
                           </Text>
                         </VStack>
@@ -283,214 +290,240 @@ const LandingVender = () => {
             </VStack>
           </MotionBox>
 
-          {/* Plans Grid */}
-          <MotionBox variants={itemVariants} mb={12}>
+          {/* Métodos de venta */}
+          <MotionBox variants={itemVariants} mb={16}>
             <VStack spacing={10} mb={10}>
               <Heading
                 as="h2"
                 fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
                 fontFamily="secondary"
                 fontWeight="bold"
-                color="primary"
+                color={TEXT_WHITE}
                 textAlign="center"
               >
                 Elige tu método de venta
               </Heading>
-              <Text 
-                fontSize={{ base: 'md', md: 'lg' }} 
-                color="gray.600" 
+              <Text
+                fontSize={{ base: 'md', md: 'lg' }}
+                color={TEXT_MUTED}
                 textAlign="center"
                 maxW="2xl"
               >
-                Tres opciones diseñadas para adaptarse a las necesidades de tu evento, sin importar su tamaño o complejidad.
+                Los mismos métodos que en GetPass. Mercado Pago está activo y es la forma más rápida de cobrar.
               </Text>
             </VStack>
 
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 6, md: 8 }}>
-              {plans.map((plan, index) => (
-                <MotionCard
-                  key={plan.id}
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 6, md: 8 }} alignItems="stretch">
+              {paymentMethods.map((method) => (
+                <MotionBox
+                  key={method.id}
                   variants={itemVariants}
-                  bg="gray.900"
-                  borderRadius="3xl"
-                  boxShadow="0 8px 30px rgba(0, 0, 0, 0.5)"
-                  overflow="hidden"
-                  border="2px solid"
-                  borderColor="gray.700"
+                  transform={method.isActive ? { base: 'none', md: 'scale(1.02)' } : undefined}
+                  zIndex={method.isActive ? 1 : 0}
                   position="relative"
-                  h="100%"
-                  display="flex"
-                  flexDirection="column"
-                  _hover={{
-                    transform: 'translateY(-16px) scale(1.02)',
-                    boxShadow: `0 20px 60px rgba(0, 0, 0, 0.8)`,
-                    borderColor: 'gray.600',
-                  }}
-                  transition="all 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
                 >
-                  {/* Top Accent Bar */}
-                  <Box
-                    h="6px"
-                    bg="gray.800"
-                    w="100%"
+                  <Card
+                    bg={CARD_BG_BLUR}
+                    sx={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+                    borderRadius="2xl"
+                    overflow="visible"
+                    border="1px solid"
+                    borderColor={method.isActive ? ACCENT : CARD_BORDER}
                     position="relative"
-                    zIndex={1}
-                  />
-                  
-                  <CardBody p={{ base: 6, md: 8 }} position="relative" zIndex={1} flex="1" display="flex" flexDirection="column">
-                    <VStack spacing={6} align="stretch" h="100%">
-                      {/* Icon & Title Section */}
-                      <VStack spacing={4} align="stretch">
-                        <Flex justify="space-between" align="flex-start">
+                    h="100%"
+                    display="flex"
+                    flexDirection="column"
+                    boxShadow={
+                      method.isActive
+                        ? `0 8px 32px ${ACCENT}30, 0 0 0 1px ${ACCENT}40`
+                        : '0 4px 24px rgba(0,0,0,0.4)'
+                    }
+                    _hover={{
+                      borderColor: method.isActive ? ACCENT : 'whiteAlpha.2',
+                      boxShadow: method.isActive
+                        ? `0 12px 40px ${ACCENT}35, 0 0 0 1px ${ACCENT}50`
+                        : '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)',
+                    }}
+                    transition="all 0.3s ease"
+                  >
+                    {/* Badge arriba (Popular o Próximamente) */}
+                    {method.topBadge && (
+                      <Flex justify="center" position="absolute" top={-4} left={0} right={0} zIndex={2}>
+                        <Badge
+                          bg={method.topBadge === 'Popular' ? ACCENT : 'whiteAlpha.300'}
+                          color={method.topBadge === 'Popular' ? 'white' : 'whiteAlpha.800'}
+                          fontSize="xs"
+                          fontWeight="700"
+                          px={5}
+                          py={2}
+                          borderRadius="full"
+                          textTransform="uppercase"
+                          letterSpacing="wider"
+                          boxShadow={method.topBadge === 'Popular' ? `0 4px 16px ${ACCENT}60` : '0 4px 16px rgba(0,0,0,0.3)'}
+                        >
+                          {method.topBadge}
+                        </Badge>
+                      </Flex>
+                    )}
+
+                    <CardBody
+                      p={{ base: 6, md: 8 }}
+                      pt={method.topBadge ? 8 : 6}
+                      position="relative"
+                      zIndex={1}
+                      flex={1}
+                      display="flex"
+                      flexDirection="column"
+                    >
+                      <VStack spacing={6} align="stretch" h="100%" flex={1}>
+                        {/* Header: icono + nombre del plan */}
+                        <Flex align="center" gap={4}>
                           <Box
-                            p={6}
-                            borderRadius="2xl"
-                            bg="gray.800"
-                            color="white"
-                            boxShadow="0 8px 24px rgba(0, 0, 0, 0.5)"
-                            position="relative"
-                            border="2px solid"
-                            borderColor="gray.700"
-                            _hover={{
-                              transform: 'scale(1.1) rotate(5deg)',
-                              borderColor: 'gray.600',
-                            }}
-                            transition="all 0.3s ease"
-                          >
-                            <Icon as={plan.icon} boxSize={8} />
-                          </Box>
-                          <Badge
-                            bg="gray.800"
-                            color="gray.300"
-                            fontSize="xs"
-                            fontWeight="700"
-                            px={3}
-                            py={1.5}
-                            borderRadius="full"
-                            textTransform="uppercase"
-                            letterSpacing="wider"
+                            boxSize="56px"
+                            borderRadius="xl"
+                            bg={method.isActive ? `${ACCENT}20` : 'whiteAlpha.06'}
                             border="1px solid"
-                            borderColor="gray.700"
+                            borderColor={method.isActive ? `${ACCENT}40` : 'whiteAlpha.08'}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            flexShrink={0}
                           >
-                            {index === 1 ? 'Popular' : `Opción ${index + 1}`}
-                          </Badge>
+                            {method.iconType === 'logo' ? (
+                              <Image
+                                src={method.logoSrc}
+                                alt={method.title}
+                                maxW="44px"
+                                maxH="44px"
+                                w="auto"
+                                h="auto"
+                                objectFit="contain"
+                                mx="auto"
+                              />
+                            ) : (
+                              <Text fontSize="2xl" opacity={0.95} textAlign="center">{method.emoji}</Text>
+                            )}
+                          </Box>
+                          <Text
+                            fontSize={{ base: 'xl', md: '2xl' }}
+                            fontWeight="800"
+                            color={method.isActive ? ACCENT : TEXT_WHITE}
+                            letterSpacing="wider"
+                          >
+                            {method.planName}
+                          </Text>
                         </Flex>
 
+                        {/* Título */}
                         <Heading
                           as="h3"
-                          fontSize={{ base: 'xl', md: '2xl' }}
+                          fontSize={{ base: 'lg', md: 'xl' }}
                           fontFamily="secondary"
                           fontWeight="bold"
-                          color="white"
+                          color={TEXT_WHITE}
                           lineHeight="shorter"
-                          mt={2}
                         >
-                          {plan.title}
+                          {method.title}
                         </Heading>
-                        
-                        <Text 
-                          color="gray.400" 
-                          lineHeight="tall"
-                          fontSize={{ base: 'sm', md: 'md' }}
-                          minH="60px"
-                        >
-                          {plan.description}
+
+                        {/* Precio / valor (estilo pricing) */}
+                        <Box>
+                          <Text
+                            fontSize={{ base: 'xl', md: '2xl' }}
+                            fontWeight="800"
+                            color={method.isActive ? ACCENT : TEXT_WHITE}
+                            lineHeight="1"
+                            letterSpacing="tight"
+                          >
+                            {method.priceLabel}
+                          </Text>
+                          <Text color={TEXT_MUTED} fontSize="sm" mt={1}>
+                            {method.priceSubtext}
+                          </Text>
+                        </Box>
+
+                        <Text color={TEXT_MUTED} lineHeight="tall" fontSize="sm" flexShrink={0}>
+                          {method.description}
                         </Text>
+
+                        <Divider borderColor="whiteAlpha.12" />
+
+                        {/* Lista de features */}
+                        <VStack spacing={3} align="stretch" flex={1}>
+                          {method.features.map((feature, idx) => (
+                            <HStack key={idx} spacing={3} align="center">
+                              <Flex
+                                boxSize={5}
+                                borderRadius="full"
+                                bg={method.isActive ? ACCENT : 'whiteAlpha.2'}
+                                align="center"
+                                justify="center"
+                                flexShrink={0}
+                              >
+                                <Icon as={FiCheck} boxSize={3} color="white" />
+                              </Flex>
+                              <Text
+                                color={TEXT_MUTED}
+                                fontSize="sm"
+                                fontWeight="500"
+                                flex={1}
+                                lineHeight="tall"
+                              >
+                                {feature}
+                              </Text>
+                            </HStack>
+                          ))}
+                        </VStack>
+
+                        {/* CTA */}
+                        {method.hasButton && (
+                          <Button
+                            mt="auto"
+                            pt={2}
+                            bg={method.buttonText === 'Hablar con un asesor' ? 'transparent' : ACCENT}
+                            color="white"
+                            size="lg"
+                            fontWeight="700"
+                            fontSize="sm"
+                            py={6}
+                            borderRadius="xl"
+                            rightIcon={method.buttonText === 'Hablar con un asesor' ? undefined : <FiArrowRight />}
+                            border={method.buttonText === 'Hablar con un asesor' ? '2px solid' : 'none'}
+                            borderColor="whiteAlpha.3"
+                            _hover={{
+                              bg: method.buttonText === 'Hablar con un asesor' ? 'whiteAlpha.08' : '#9d6dd8',
+                              borderColor: method.buttonText === 'Hablar con un asesor' ? 'whiteAlpha.4' : undefined,
+                              transform: 'translateY(-2px)',
+                              boxShadow: method.buttonText === 'Hablar con un asesor' ? 'none' : `0 8px 24px ${ACCENT}40`,
+                            }}
+                            _active={{ transform: 'translateY(0)' }}
+                            transition="all 0.3s ease"
+                            onClick={method.buttonAction}
+                            w="100%"
+                          >
+                            {method.buttonText}
+                          </Button>
+                        )}
                       </VStack>
-
-                      <Divider borderColor="gray.700" borderWidth="1px" />
-
-                      {/* Features */}
-                      <VStack spacing={4} align="stretch" flex="1">
-                        <Text 
-                          fontSize="sm" 
-                          fontWeight="700" 
-                          color="gray.500" 
-                          textTransform="uppercase"
-                          letterSpacing="wide"
-                          mb={2}
-                        >
-                          Incluye:
-                        </Text>
-                        {plan.features.map((feature, idx) => (
-                          <HStack key={idx} spacing={3} align="flex-start">
-                            <Box
-                              as={motion.div}
-                              whileHover={{ scale: 1.3, rotate: 10 }}
-                              transition={{ type: "spring", stiffness: 400 }}
-                            >
-                              <Icon
-                                as={FiCheck}
-                                boxSize={6}
-                                color="gray.400"
-                                mt={0.5}
-                              />
-                            </Box>
-                            <Text 
-                              color="gray.300" 
-                              fontSize={{ base: 'sm', md: 'md' }}
-                              fontWeight="500"
-                              flex="1"
-                              lineHeight="tall"
-                            >
-                              {feature}
-                            </Text>
-                          </HStack>
-                        ))}
-                      </VStack>
-
-                      {/* Button */}
-                      {plan.hasButton && (
-                        <Button
-                          mt={6}
-                          bg={plan.buttonText === 'Hablar con un asesor' ? 'blue.500' : 'purple.600'}
-                          color="white"
-                          size="lg"
-                          fontWeight="700"
-                          fontSize={{ base: 'sm', md: 'md' }}
-                          py={7}
-                          borderRadius="xl"
-                          rightIcon={plan.buttonText === 'Hablar con un asesor' ? undefined : <FiArrowRight />}
-                          boxShadow={plan.buttonText === 'Hablar con un asesor' ? '0 4px 16px rgba(59, 130, 246, 0.4)' : '0 4px 16px rgba(147, 51, 234, 0.4)'}
-                          _hover={{
-                            bg: plan.buttonText === 'Hablar con un asesor' ? 'blue.600' : 'purple.700',
-                            transform: 'translateY(-3px)',
-                            boxShadow: plan.buttonText === 'Hablar con un asesor' ? '0 12px 32px rgba(59, 130, 246, 0.6)' : '0 12px 32px rgba(147, 51, 234, 0.6)',
-                          }}
-                          _active={{
-                            transform: 'translateY(-1px)',
-                          }}
-                          transition="all 0.3s ease"
-                          onClick={plan.buttonAction}
-                          w="100%"
-                        >
-                          {plan.buttonText}
-                        </Button>
-                      )}
-                      
-                      {!plan.hasButton && (
-                        <Box h={10} />
-                      )}
-                    </VStack>
-                  </CardBody>
-                </MotionCard>
+                    </CardBody>
+                  </Card>
+                </MotionBox>
               ))}
             </SimpleGrid>
           </MotionBox>
 
-          {/* Support Section */}
+          {/* Soporte WhatsApp */}
           <MotionBox variants={itemVariants} mb={12}>
-            <Card 
-              bg="white"
+            <Box
+              bg={CARD_BG}
               borderRadius="2xl"
-              boxShadow="0 4px 20px rgba(0, 0, 0, 0.08)"
-              border="2px solid"
-              borderColor="green.200"
+              border="1px solid"
+              borderColor="whiteAlpha.1"
               overflow="hidden"
               position="relative"
               _hover={{
-                boxShadow: '0 8px 30px rgba(37, 211, 102, 0.2)',
-                borderColor: 'green.300',
+                borderColor: 'rgba(37, 211, 102, 0.3)',
+                boxShadow: '0 0 30px rgba(37, 211, 102, 0.08)',
               }}
               transition="all 0.3s"
             >
@@ -499,18 +532,17 @@ const LandingVender = () => {
                 top={0}
                 left={0}
                 right={0}
-                h="4px"
+                h="3px"
                 bgGradient="linear(to-r, #25D366, #128C7E)"
               />
-              <CardBody p={8}>
-                <HStack 
-                  spacing={6} 
-                  justify={{ base: 'center', md: 'flex-start' }} 
+              <Box p={8}>
+                <HStack
+                  spacing={6}
+                  justify={{ base: 'center', md: 'flex-start' }}
                   flexWrap="wrap"
                   align="center"
                 >
                   <Box
-                    position="relative"
                     w="64px"
                     h="64px"
                     borderRadius="full"
@@ -518,36 +550,18 @@ const LandingVender = () => {
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
-                    boxShadow="0 4px 15px rgba(37, 211, 102, 0.4)"
-                    _hover={{
-                      transform: 'scale(1.1) rotate(5deg)',
-                    }}
-                    transition="all 0.3s"
+                    boxShadow="0 4px 20px rgba(37, 211, 102, 0.35)"
+                    _hover={{ transform: 'scale(1.05)' }}
+                    transition="transform 0.3s"
                   >
-                    <Box
-                      as="i"
-                      className="fab fa-whatsapp"
-                      fontSize="32px"
-                      color="white"
-                    />
+                    <Box as="i" className="fab fa-whatsapp" fontSize="32px" color="white" />
                   </Box>
-                  <VStack 
-                    spacing={2} 
-                    align={{ base: 'center', md: 'flex-start' }}
-                    flex="1"
-                    minW="200px"
-                  >
-                    <Heading
-                      as="h3"
-                      fontSize="2xl"
-                      fontFamily="secondary"
-                      fontWeight="bold"
-                      color="gray.800"
-                    >
+                  <VStack spacing={2} align={{ base: 'center', md: 'flex-start' }} flex={1} minW="200px">
+                    <Heading as="h3" fontSize="2xl" fontFamily="secondary" fontWeight="bold" color={TEXT_WHITE}>
                       Soporte 24hs x WhatsApp
                     </Heading>
-                    <Text 
-                      color="gray.600" 
+                    <Text
+                      color={TEXT_MUTED}
                       textAlign={{ base: 'center', md: 'left' }}
                       fontSize="md"
                       maxW="500px"
@@ -556,10 +570,9 @@ const LandingVender = () => {
                     </Text>
                   </VStack>
                 </HStack>
-              </CardBody>
-            </Card>
+              </Box>
+            </Box>
           </MotionBox>
-
         </MotionBox>
       </Container>
       <Footer />

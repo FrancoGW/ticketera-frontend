@@ -1,8 +1,8 @@
-import { Box, Center, Text } from "@chakra-ui/react";
+import { Box, Center, Text, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
-const MotionText = motion(Text);
+const MotionHeading = motion(Heading);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -46,19 +46,19 @@ const MaintenanceMode = () => {
       animate="visible"
     >
       <Center h="100vh" w="100vw">
-        <MotionText
+        <MotionHeading
           fontSize={{ base: "4xl", md: "6xl", lg: "8xl" }}
-          fontWeight="bold"
-          color="white"
-          fontFamily="secondary"
-          letterSpacing="wider"
+          fontWeight="300"
+          fontFamily="'Monument Extended', sans-serif"
+          letterSpacing="-0.01em"
           textAlign="center"
           variants={textVariants}
           initial="hidden"
           animate="visible"
         >
-          GetPass
-        </MotionText>
+          <Box as="span" color="#fff">Get</Box>
+          <Box as="span" color="#B78DEA">Pass</Box>
+        </MotionHeading>
       </Center>
     </MotionBox>
   );

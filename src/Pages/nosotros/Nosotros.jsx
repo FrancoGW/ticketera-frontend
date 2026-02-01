@@ -10,7 +10,7 @@ import {
   SimpleGrid,
   Avatar,
   Icon,
-  Divider,
+  Image,
   useColorModeValue
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
@@ -19,7 +19,8 @@ import Footer from "../../components/footer/Footer";
 import { 
   FiTrendingUp,
   FiZap,
-  FiGlobe
+  FiGlobe,
+  FiCheck
 } from "react-icons/fi";
 
 const MotionBox = motion(Box);
@@ -249,7 +250,7 @@ function Nosotros() {
               </MotionBox>
             </SimpleGrid>
 
-            {/* Métodos de Pago */}
+            {/* Formas de venta (alineado con /vender) */}
             <VStack spacing={6} w="100%" pt={8}>
               <Heading
                 as="h3"
@@ -258,7 +259,7 @@ function Nosotros() {
                 letterSpacing="-0.01em"
                 textAlign="center"
               >
-                Métodos de Pago
+                Formas de venta
               </Heading>
               <Text
                 fontSize={{ base: "md", md: "lg" }}
@@ -267,160 +268,138 @@ function Nosotros() {
                 textAlign="center"
                 maxW="2xl"
               >
-                Conectamos con las mejores plataformas para que recibas tus pagos de forma segura.
+                Tres opciones para que cobres como prefieras: SIMPLE, FAST y CUSTOM.
               </Text>
               
               <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} w="100%" pt={4}>
-                {/* Mercado Pago - Activo */}
+              {[
+                {
+                  planName: "SIMPLE",
+                  title: "Depósito Directo",
+                  priceLabel: "Directo a tu CBU",
+                  priceSubtext: "Suscripción GetPass, para pequeños eventos",
+                  topBadge: null,
+                  iconType: "emoji",
+                  emoji: "🏦",
+                  description: "Configurá tu CBU y recibí pagos directamente en tu cuenta bancaria.",
+                  features: ["CBU o alias para recibir", "Depósito automático", "Sin cargo por servicio para tus clientes"],
+                  borderColor: "#B78DEA",
+                  bg: "white",
+                },
+                {
+                  planName: "FAST",
+                  title: "Mercado Pago",
+                  priceLabel: "Sin cargo",
+                  priceSubtext: "Solo comisión estándar MP",
+                  topBadge: "Popular",
+                  iconType: "logo",
+                  logoSrc: "/assets/img/mercadopago.png",
+                  description: "Pagos instantáneos y seguros. Conectá tu cuenta y empezá a vender ya.",
+                  features: ["Pagos al instante", "Requiere cuenta de Mercado Pago", "La opción más rápida"],
+                  borderColor: "#B78DEA",
+                  bg: "white",
+                },
+                {
+                  planName: "CUSTOM",
+                  title: "A tu medida",
+                  priceLabel: "Entradas desde",
+                  priceSubtext: "ARS 119.99 c/u",
+                  topBadge: "Próximamente",
+                  iconType: "emoji",
+                  emoji: "🎟️",
+                  description: "Selecciona cuántas entradas querés vender, pagá, vendé!",
+                  features: ["Compra paquetes de GP-COINS", "Un GP-COIN = 1 Entrada", "Varios métodos de pago", "Sin cargo por servicio para tus clientes"],
+                  borderColor: "gray.300",
+                  bg: "gray.50",
+                },
+              ].map((plan) => (
                 <MotionBox
+                  key={plan.planName}
                   variants={fadeInUp}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
                   p={6}
                   borderRadius="xl"
-                  bg="white"
+                  bg={plan.bg}
                   border="2px solid"
-                  borderColor="#00BCFF"
+                  borderColor={plan.borderColor}
                   position="relative"
-                  _hover={{ 
+                  h="100%"
+                  _hover={{
                     transform: "translateY(-4px)",
                     boxShadow: "lg",
-                    transition: "all 0.3s"
+                    transition: "all 0.3s",
                   }}
                 >
-                  <Box
-                    position="absolute"
-                    top={-3}
-                    right={4}
-                    bg="#00BCFF"
-                    color="white"
-                    px={3}
-                    py={1}
-                    borderRadius="full"
-                    fontSize="xs"
-                    fontWeight="600"
-                  >
-                    Activo
-                  </Box>
-                  <Flex align="center" gap={4}>
+                  {plan.topBadge && (
                     <Box
-                      as="img"
-                      src="/assets/img/mercado-pago.png"
-                      alt="Mercado Pago"
-                      height="50px"
-                      objectFit="contain"
-                    />
-                    <VStack align="start" spacing={1}>
-                      <Heading fontSize="lg" fontWeight="600">
-                        Mercado Pago
-                      </Heading>
-                      <Text fontSize="sm" color="gray.600">
-                        Pagos instantáneos y seguros
-                      </Text>
-                    </VStack>
-                  </Flex>
-                </MotionBox>
-
-                {/* Depósito Directo - Próximamente */}
-                <MotionBox
-                  variants={fadeInUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  p={6}
-                  borderRadius="xl"
-                  bg="gray.100"
-                  border="2px dashed"
-                  borderColor="gray.300"
-                  position="relative"
-                  opacity={0.7}
-                >
-                  <Box
-                    position="absolute"
-                    top={-3}
-                    right={4}
-                    bg="gray.500"
-                    color="white"
-                    px={3}
-                    py={1}
-                    borderRadius="full"
-                    fontSize="xs"
-                    fontWeight="600"
-                  >
-                    Próximamente
-                  </Box>
-                  <Flex align="center" gap={4}>
+                      position="absolute"
+                      top={-3}
+                      right={4}
+                      bg={plan.topBadge === "Popular" ? "#B78DEA" : "gray.500"}
+                      color="white"
+                      px={3}
+                      py={1}
+                      borderRadius="full"
+                      fontSize="xs"
+                      fontWeight="600"
+                    >
+                      {plan.topBadge}
+                    </Box>
+                  )}
+                  <Flex align="center" gap={4} mb={4}>
                     <Flex
-                      w="50px"
-                      h="50px"
-                      bg="gray.300"
-                      borderRadius="lg"
+                      w="56px"
+                      h="56px"
+                      borderRadius="xl"
+                      bg={plan.topBadge === "Popular" ? "purple.50" : "gray.100"}
                       align="center"
                       justify="center"
+                      flexShrink={0}
                     >
-                      <Text fontSize="2xl">🏦</Text>
+                      {plan.iconType === "logo" ? (
+                        <Image
+                          src={plan.logoSrc}
+                          alt={plan.title}
+                          maxW="44px"
+                          maxH="44px"
+                          objectFit="contain"
+                        />
+                      ) : (
+                        <Text fontSize="2xl">{plan.emoji}</Text>
+                      )}
                     </Flex>
-                    <VStack align="start" spacing={1}>
-                      <Heading fontSize="lg" fontWeight="600" color="gray.600">
-                        Depósito Directo
-                      </Heading>
-                      <Text fontSize="sm" color="gray.500">
-                        Transferencias bancarias
+                    <VStack align="start" spacing={0}>
+                      <Text fontSize="sm" fontWeight="800" letterSpacing="wider" color="gray.700">
+                        {plan.planName}
                       </Text>
+                      <Heading fontSize="lg" fontWeight="600" color="black">
+                        {plan.title}
+                      </Heading>
                     </VStack>
                   </Flex>
+                  <Text fontWeight="700" fontSize="md" color="gray.800" mb={1}>
+                    {plan.priceLabel}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" mb={3}>
+                    {plan.priceSubtext}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" lineHeight="1.6" mb={4}>
+                    {plan.description}
+                  </Text>
+                  <VStack align="stretch" spacing={2}>
+                    {plan.features.slice(0, 4).map((feature, i) => (
+                      <HStack key={i} spacing={2} align="center">
+                        <Icon as={FiCheck} color="#B78DEA" boxSize={4} />
+                        <Text fontSize="sm" color="gray.600">
+                          {feature}
+                        </Text>
+                      </HStack>
+                    ))}
+                  </VStack>
                 </MotionBox>
-
-                {/* Tokens x Entrada - Próximamente */}
-                <MotionBox
-                  variants={fadeInUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  p={6}
-                  borderRadius="xl"
-                  bg="gray.100"
-                  border="2px dashed"
-                  borderColor="gray.300"
-                  position="relative"
-                  opacity={0.7}
-                >
-                  <Box
-                    position="absolute"
-                    top={-3}
-                    right={4}
-                    bg="gray.500"
-                    color="white"
-                    px={3}
-                    py={1}
-                    borderRadius="full"
-                    fontSize="xs"
-                    fontWeight="600"
-                  >
-                    Próximamente
-                  </Box>
-                  <Flex align="center" gap={4}>
-                    <Flex
-                      w="50px"
-                      h="50px"
-                      bg="gray.300"
-                      borderRadius="lg"
-                      align="center"
-                      justify="center"
-                    >
-                      <Text fontSize="2xl">🎟️</Text>
-                    </Flex>
-                    <VStack align="start" spacing={1}>
-                      <Heading fontSize="lg" fontWeight="600" color="gray.600">
-                        Tokens x Entrada
-                      </Heading>
-                      <Text fontSize="sm" color="gray.500">
-                        Comprá tokens para vender entradas
-                      </Text>
-                    </VStack>
-                  </Flex>
-                </MotionBox>
+              ))}
               </SimpleGrid>
             </VStack>
           </VStack>

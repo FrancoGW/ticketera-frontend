@@ -41,11 +41,17 @@ const getApprovedPayments = () => {
   return api.get('/payment/admin/approved')
 }
 
+// Estadísticas del organizador (ventas, ganancias, devoluciones)
+const getSellerStats = () => {
+  return api.get('/payment/seller/stats')
+}
+
 export const paymentApi = {
   createCheckout,
   validateDiscountCode,
   previewCheckout,
   initiateMercadoPagoAuthorization,
   disconnectMercadoPago,
-  getApprovedPayments
+  getApprovedPayments,
+  getSellerStats
 }

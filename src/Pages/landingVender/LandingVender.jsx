@@ -61,7 +61,7 @@ const LandingVender = () => {
     if (user) {
       navigate('/seller/new-event');
     } else {
-      navigate('/register');
+      navigate('/register', { state: { organizer: true } });
     }
   };
 
@@ -199,7 +199,7 @@ const LandingVender = () => {
                           color={ACCENT}
                           fontWeight="600"
                           cursor="pointer"
-                          onClick={() => navigate('/register')}
+                          onClick={() => navigate('/register', { state: { organizer: true } })}
                           textDecoration="underline"
                           _hover={{ opacity: 0.9 }}
                         >

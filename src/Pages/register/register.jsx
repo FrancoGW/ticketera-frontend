@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import userApi from "../../Api/user";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -76,7 +76,13 @@ const validatePhoneNumber = (phone) => {
 };
 
 function Register() {
-  const [userData, setUserData] = useState(initialUserData);
+  const location = useLocation();
+  const isOrganizerSignup = location.state?.organizer === true;
+
+  const [userData, setUserData] = useState(() => ({
+    ...initialUserData,
+    roles: isOrganizerSignup ? ["seller"] : initialUserData.roles,
+  }));
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [show, setShow] = useState(false);
@@ -173,15 +179,22 @@ function Register() {
       const response = await userApi.createUser(userDataToSend);
 
       if (response?.status === 201 || response?.data) {
+        const isSeller = userData.roles?.includes("seller");
         toast({
           title: "¡Registro exitoso!",
-          description: "Tu cuenta ha sido creada. Por favor inicia sesión.",
+          description: isSeller
+            ? "Tu cuenta de organizador está lista. Iniciá sesión y elegí tu plan de venta."
+            : "Tu cuenta ha sido creada. Por favor inicia sesión.",
           status: "success",
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
         });
-        setUserData(initialUserData);
-        navigate("/login");
+        setUserData({ ...initialUserData, roles: initialUserData.roles });
+        if (isSeller) {
+          navigate("/vender", { replace: true });
+        } else {
+          navigate("/login");
+        }
       }
     } catch (error) {
       console.error("Error during registration:", error);
@@ -290,10 +303,12 @@ function Register() {
                       color="black"
                       letterSpacing="-0.01em"
                     >
-                      Crear Cuenta
+                      {isOrganizerSignup ? "Crear cuenta organizador" : "Crear Cuenta"}
                     </Heading>
                     <Text color="gray.600" fontSize="sm">
-                      Completa el formulario para registrarte
+                      {isOrganizerSignup
+                        ? "Completá el formulario. Después elegí tu plan de venta en la siguiente pantalla."
+                        : "Completa el formulario para registrarte"}
                     </Text>
                   </VStack>
 

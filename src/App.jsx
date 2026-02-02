@@ -34,8 +34,11 @@ import PdvSpecialTickets from "./Pages/pdv/PdvSpecialTickets";
 import MyEvents from "./Pages/myEvents/myEvents";
 import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
+import SellerDashboard from "./Pages/sellerDashboard/SellerDashboard";
+import SellerQRs from "./Pages/sellerQRs/SellerQRs";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
+import AdminPlanRequests from "./Pages/adminPlanRequests/AdminPlanRequests";
 import AdminSettings from "./Pages/adminSettings/AdminSettings";
 import AdminDashboard from "./Pages/adminDashboard/AdminDashboard";
 import MaintenanceMode from "./components/maintenanceMode/MaintenanceMode";
@@ -417,11 +420,31 @@ function AnimatedRoutes() {
               }
             />
             <Route
+              path="/seller/dashboard"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerDashboard />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/seller/tickets"
               element={
                 <ProtectedRoute roles={["seller", "admin"]}>
                   <LayoutWithSidebar>
                     <SellerTicketsPage />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/qrs"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerQRs />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }
@@ -435,6 +458,10 @@ function AnimatedRoutes() {
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/seller/settings"
+              element={<Navigate to="/profile" replace />}
             />
             <Route
               path="/profile/my-events/:id/edit"
@@ -487,6 +514,16 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["admin"]}>
                   <LayoutWithSidebar>
                     <AdminMails />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/plan-requests"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminPlanRequests />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

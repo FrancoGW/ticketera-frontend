@@ -191,7 +191,7 @@ const SellerScanner = () => {
               color="gray.600"
               fontSize="md"
             >
-              Comparte este enlace con tus validadores para que puedan escanear los códigos QR de los tickets
+              Scanner para escanear solo los QRs de tus eventos. Compartí el enlace con tus validadores.
             </Text>
           </Box>
 
@@ -248,7 +248,7 @@ const SellerScanner = () => {
                           fontSize={{ base: "md", md: "lg" }}
                           color="tertiary"
                         >
-                          Comparte este enlace con tus validadores
+                          Solo valida QRs de tus eventos
                         </Text>
                       </Box>
                       <Badge
@@ -388,9 +388,8 @@ const SellerScanner = () => {
                     ¿Cómo funciona?
                   </AlertTitle>
                   <AlertDescription fontFamily="secondary" fontSize="sm" color="gray.700">
-                    Comparte este enlace único con tus validadores o personal de entrada. 
-                    Ellos podrán escanear los códigos QR de los tickets directamente desde sus dispositivos móviles. 
-                    El enlace es privado y solo tú puedes acceder a él.
+                    Este scanner valida únicamente los códigos QR de los tickets de tus eventos. 
+                    Compartí el enlace con tus validadores o personal de entrada para que escaneen desde sus dispositivos.
                   </AlertDescription>
                 </Box>
               </Alert>

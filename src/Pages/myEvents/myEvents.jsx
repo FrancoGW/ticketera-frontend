@@ -175,7 +175,13 @@ function MyEvents() {
               <SetupChecklist
                 user={user}
                 userEvents={userEvents}
-                hasMercadoPago={user?.mercadoPagoConfigured || user?.hasMercadoPago || false}
+                hasMercadoPago={
+                  user?.mercadoPagoConfigured ||
+                  user?.hasMercadoPago === true ||
+                  user?.mercadoPago?.hasAuthorized === true ||
+                  user?.oauth?.mercadoPago?.hasAuthorized === true ||
+                  false
+                }
                 isAdmin={user?.roles?.includes?.("admin") || user?.rol === "admin"}
               />
             )}

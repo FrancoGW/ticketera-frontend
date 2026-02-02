@@ -8,14 +8,18 @@ const login = (email, password) => {
 };
 
 const createUser = (userData) => {
-  return api.post("/auth/registerForUser", {
+  const payload = {
     firstname: userData.firstname,
     lastname: userData.lastname,
     email: userData.email,
     password: userData.password,
     dni: userData.dni,
     phoneNumber: userData.phoneNumber,
-  });
+  };
+  if (userData.roles && userData.roles.length) {
+    payload.roles = userData.roles;
+  }
+  return api.post("/auth/registerForUser", payload);
 };
 
 const getProfile = () => {
@@ -112,6 +116,25 @@ const sendContactEmail = ({ email, name, message }) => {
   return api.post("/auth/send-contact-email", { email, name, message });
 };
 
+const sellerRequestChangePlan = (currentPlanName, requestedPlanName) => {
+  return api.post("/auth/seller-request-change-plan", { currentPlanName, requestedPlanName });
+};
+
+/**
+ * Admin - Solicitudes de cambio de plan
+ */
+const getPendingPlanChangeRequests = () => {
+  return api.get("/users/plan-change-requests");
+};
+
+const approvePlanChange = (userId) => {
+  return api.put(`/users/plan-change-requests/${userId}/approve`);
+};
+
+const rejectPlanChange = (userId) => {
+  return api.put(`/users/plan-change-requests/${userId}/reject`);
+};
+
 const userApi = {
   // Authentication
   login,
@@ -135,6 +158,12 @@ const userApi = {
 
   // Contact
   sendContactEmail,
+  sellerRequestChangePlan,
+
+  // Admin - Solicitudes de cambio de plan
+  getPendingPlanChangeRequests,
+  approvePlanChange,
+  rejectPlanChange,
 };
 
 export default userApi;

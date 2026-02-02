@@ -1,16 +1,18 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiPlus, FiUser, FiMaximize2 } from "react-icons/fi";
-import { RiTicket2Line, RiQrScanLine } from "react-icons/ri";
+import { FiHome, FiPlus, FiUser, FiBarChart2 } from "react-icons/fi";
+import { RiTicket2Line, RiQrScanLine, RiQrCodeLine } from "react-icons/ri";
 
 const SellerSidebar = () => {
   const location = useLocation();
   const menuItems = [
     { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
     { path: '/profile/my-events', icon: FiHome, label: 'Mis Eventos' },
+    { path: '/seller/dashboard', icon: FiBarChart2, label: 'Estadísticas' },
     { path: '/seller/new-event', icon: FiPlus, label: 'Crear Evento' },
     { path: '/seller/tickets', icon: RiTicket2Line, label: 'Gestionar Tickets' },
-    { path: '/seller/scanner', icon: RiQrScanLine, label: 'Scanner' }
+    { path: '/seller/qrs', icon: RiQrCodeLine, label: 'Ver QRs' },
+    { path: '/seller/scanner', icon: RiQrScanLine, label: 'Scanner' },
   ];
 
   const isActive = (path) => {

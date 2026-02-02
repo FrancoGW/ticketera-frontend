@@ -87,6 +87,8 @@ api.interceptors.response.use(
       const silent404Endpoints = [
         '/tickets/user',
         '/payment/preview-checkout', // Preview es opcional, no mostrar error si no existe
+        '/payment/seller/stats', // Estadísticas del organizador; si no existe aún, mostrar ceros
+        '/tickets/seller/sold', // Tickets vendidos del organizador
       ];
       
       const shouldSilence = silent404Endpoints.some(endpoint => url.includes(endpoint));

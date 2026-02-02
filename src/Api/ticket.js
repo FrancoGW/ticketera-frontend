@@ -45,6 +45,14 @@ const getTicketsByUser = () => {
   return api.get("/tickets/user");
 };
 
+const getSellerSoldTickets = () => {
+  return api.get("/tickets/seller/sold");
+};
+
+const cancelSellerQr = (qrId) => {
+  return api.put(`/tickets/seller/qr/${qrId}/cancel`);
+};
+
 // ticketsToSend = [ { ticketId, quantity, { date, timeStart, timeEnd } } ]
 const sendInvitations = (eventId, ticketsToSend, emails) => {
   return api.post("/tickets/send-invitations", {
@@ -194,6 +202,8 @@ const ticketApi = {
   getTickets,
   updateTicket,
   getTicketsByUser,
+  getSellerSoldTickets,
+  cancelSellerQr,
   sendInvitations,
   makeTransferable,
   makeNonTransferable,

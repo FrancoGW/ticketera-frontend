@@ -182,6 +182,10 @@ function MyEvents() {
                   user?.oauth?.mercadoPago?.hasAuthorized === true ||
                   false
                 }
+                hasCbuConfigured={
+                  !!(user?.cbuConfig?.cbu || user?.cbuConfig?.alias)
+                }
+                sellingPlan={user?.sellingPlan}
                 isAdmin={user?.roles?.includes?.("admin") || user?.rol === "admin"}
               />
             )}

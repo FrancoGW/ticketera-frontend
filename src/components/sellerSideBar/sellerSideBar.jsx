@@ -1,19 +1,29 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiPlus, FiUser, FiBarChart2 } from "react-icons/fi";
+import { FiHome, FiPlus, FiUser, FiBarChart2, FiFileText, FiDollarSign } from "react-icons/fi";
 import { RiTicket2Line, RiQrScanLine, RiQrCodeLine } from "react-icons/ri";
+import { useAuth } from "../../auth/context/AuthContext";
 
 const SellerSidebar = () => {
   const location = useLocation();
-  const menuItems = [
+  const { user } = useAuth();
+  const hasPlanSimple = user?.sellingPlan === "SIMPLE";
+  const hasPlanCustom = user?.sellingPlan === "CUSTOM";
+
+  const baseItems = [
     { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
     { path: '/profile/my-events', icon: FiHome, label: 'Mis Eventos' },
     { path: '/seller/dashboard', icon: FiBarChart2, label: 'Estadísticas' },
     { path: '/seller/new-event', icon: FiPlus, label: 'Crear Evento' },
     { path: '/seller/tickets', icon: RiTicket2Line, label: 'Gestionar Tickets' },
     { path: '/seller/qrs', icon: RiQrCodeLine, label: 'Ver QRs' },
-    { path: '/seller/scanner', icon: RiQrScanLine, label: 'Scanner' },
   ];
+  const comprobantesItem = { path: '/seller/comprobantes', icon: FiFileText, label: 'Comprobantes CBU' };
+  const gpCoinsItem = { path: '/seller/gp-coins', icon: FiDollarSign, label: 'GP-COINS' };
+  let menuItems = [...baseItems];
+  if (hasPlanSimple) menuItems = [...baseItems.slice(0, 6), comprobantesItem, { path: '/seller/scanner', icon: RiQrScanLine, label: 'Scanner' }];
+  else if (hasPlanCustom) menuItems = [...baseItems, gpCoinsItem, { path: '/seller/scanner', icon: RiQrScanLine, label: 'Scanner' }];
+  else menuItems = [...baseItems, { path: '/seller/scanner', icon: RiQrScanLine, label: 'Scanner' }];
 
   const isActive = (path) => {
     // Para /profile, solo coincidir exactamente

@@ -36,6 +36,8 @@ import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
 import SellerDashboard from "./Pages/sellerDashboard/SellerDashboard";
 import SellerQRs from "./Pages/sellerQRs/SellerQRs";
+import SellerComprobantes from "./Pages/sellerComprobantes/SellerComprobantes";
+import SellerGpCoins from "./Pages/sellerGpCoins/SellerGpCoins";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
 import AdminPlanRequests from "./Pages/adminPlanRequests/AdminPlanRequests";
@@ -445,6 +447,26 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["seller", "admin"]}>
                   <LayoutWithSidebar>
                     <SellerQRs />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/comprobantes"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerComprobantes />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/gp-coins"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerGpCoins />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

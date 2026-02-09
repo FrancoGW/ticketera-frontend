@@ -24,6 +24,7 @@ import {
 import { motion } from "framer-motion";
 import userApi from "../../Api/user";
 import { useNavigate, useLocation } from "react-router";
+import { useAuth } from "../../auth/context/AuthContext";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -89,6 +90,7 @@ function Register() {
   const [showRepeat, setShowRepeat] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { checkAuth } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -180,17 +182,20 @@ function Register() {
 
       if (response?.status === 201 || response?.data) {
         const isSeller = userData.roles?.includes("seller");
+        const data = response?.data || response;
         toast({
           title: "¡Registro exitoso!",
           description: isSeller
-            ? "Tu cuenta de organizador está lista. Iniciá sesión y elegí tu plan de venta."
+            ? "Tu cuenta de organizador está lista. Elegí tu plan de venta."
             : "Tu cuenta ha sido creada. Por favor inicia sesión.",
           status: "success",
           duration: 5000,
           isClosable: true,
         });
         setUserData({ ...initialUserData, roles: initialUserData.roles });
-        if (isSeller) {
+        if (isSeller && data?.token) {
+          localStorage.setItem("token", data.token);
+          await checkAuth();
           navigate("/vender", { replace: true });
         } else {
           navigate("/login");

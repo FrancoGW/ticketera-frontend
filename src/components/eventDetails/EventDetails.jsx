@@ -33,9 +33,18 @@ import {
   Center,
   Alert,
   AlertIcon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { RiCalendar2Line, RiMapPinLine, RiTicket2Line } from "react-icons/ri";
 import { paymentApi } from "../../Api/payment";
+import cbuApi from "../../Api/cbu";
 import { getObjDate, isDateIncluded } from "../../common/utils";
 import VenueMapSelector from "../venueMap/VenueMapSelector";
 
@@ -55,6 +64,11 @@ const EventDetails = () => {
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [cbuCheckoutData, setCbuCheckoutData] = useState(null);
+  const [proofFile, setProofFile] = useState(null);
+  const [proofPreview, setProofPreview] = useState(null);
+  const [isSubmittingProof, setIsSubmittingProof] = useState(false);
+  const { isOpen: isCbuModalOpen, onOpen: onCbuModalOpen, onClose: onCbuModalClose } = useDisclosure();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -313,7 +327,10 @@ const EventDetails = () => {
       const { data } = await paymentApi.createCheckout(checkoutData);
       console.log('Checkout created:', data);
       
-      if (data.checkoutUrl) {
+      if (data.useCbu) {
+        setCbuCheckoutData(data);
+        onCbuModalOpen();
+      } else if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
         throw new Error("No se recibió la URL de checkout del servidor");
@@ -332,6 +349,51 @@ const EventDetails = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmitCbuProof = async () => {
+    if (!cbuCheckoutData || !proofFile) {
+      toast({ title: "Subí el comprobante de pago", status: "warning", duration: 3000, isClosable: true });
+      return;
+    }
+    setIsSubmittingProof(true);
+    try {
+      const { data: uploadRes } = await cbuApi.uploadProofImage(proofFile);
+      const proofImageUrl = uploadRes?.url;
+      if (!proofImageUrl) throw new Error("No se pudo subir el comprobante");
+      await cbuApi.createProof({
+        eventId: cbuCheckoutData.eventId,
+        ticketItems: cbuCheckoutData.ticketsToBuy,
+        selectedDate: cbuCheckoutData.selectedDate,
+        proofImageUrl,
+        amount: cbuCheckoutData.totalAmount,
+      });
+      toast({
+        title: "Comprobante enviado",
+        description: "El organizador revisará tu pago y te enviará las entradas por email.",
+        status: "success",
+        duration: 6000,
+        isClosable: true,
+      });
+      onCbuModalClose();
+      setCbuCheckoutData(null);
+      setProofFile(null);
+      setProofPreview(null);
+    } catch (e) {
+      toast({ title: "Error", description: e.response?.data?.message || "No se pudo enviar", status: "error", duration: 4000, isClosable: true });
+    } finally {
+      setIsSubmittingProof(false);
+    }
+  };
+
+  const handleProofFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProofFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setProofPreview(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -869,6 +931,63 @@ const EventDetails = () => {
         </Container>
       </Box>
       <Footer />
+
+      {/* Modal CBU - Transferencia y comprobante */}
+      <Modal isOpen={isCbuModalOpen} onClose={onCbuModalClose} size="lg">
+        <ModalOverlay />
+        <ModalContent fontFamily="secondary" borderRadius="xl">
+          <ModalHeader>Pago por transferencia</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {cbuCheckoutData && (
+              <VStack align="stretch" spacing={4}>
+                <Text fontSize="sm" color="gray.600">
+                  Realizá la transferencia al siguiente CBU/Alias y subí el comprobante.
+                </Text>
+                <Box p={4} bg="gray.50" borderRadius="lg">
+                  {cbuCheckoutData.cbuInfo?.cbu && (
+                    <Box mb={2}>
+                      <Text fontSize="xs" color="gray.500">CBU</Text>
+                      <Text fontWeight="700" fontSize="lg" letterSpacing="1px">{cbuCheckoutData.cbuInfo.cbu}</Text>
+                    </Box>
+                  )}
+                  {cbuCheckoutData.cbuInfo?.alias && (
+                    <Box mb={2}>
+                      <Text fontSize="xs" color="gray.500">Alias</Text>
+                      <Text fontWeight="700" fontSize="lg">{cbuCheckoutData.cbuInfo.alias}</Text>
+                    </Box>
+                  )}
+                  {cbuCheckoutData.cbuInfo?.bankName && (
+                    <Box mb={2}>
+                      <Text fontSize="xs" color="gray.500">Banco</Text>
+                      <Text fontWeight="600">{cbuCheckoutData.cbuInfo.bankName}</Text>
+                    </Box>
+                  )}
+                  <Box>
+                    <Text fontSize="xs" color="gray.500">Monto a transferir</Text>
+                    <Text fontWeight="700" fontSize="xl" color="green.600">${cbuCheckoutData.totalAmount?.toLocaleString("es-AR")}</Text>
+                  </Box>
+                </Box>
+                <FormControl>
+                  <Text mb={2} fontSize="sm" fontWeight="500">Comprobante de pago (imagen)</Text>
+                  <Input type="file" accept="image/*" onChange={handleProofFileChange} p={1} />
+                  {proofPreview && (
+                    <Box mt={2}>
+                      <Image src={proofPreview} alt="Vista previa" maxH="120px" borderRadius="md" />
+                    </Box>
+                  )}
+                </FormControl>
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onCbuModalClose}>Cancelar</Button>
+            <Button colorScheme="green" onClick={handleSubmitCbuProof} isLoading={isSubmittingProof} isDisabled={!proofFile}>
+              Enviar comprobante
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

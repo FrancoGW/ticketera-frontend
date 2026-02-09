@@ -10,11 +10,11 @@ const getQueryValue = (key) => {
   return query.get(key);
 };
 
-const PaymentComponent = ({ paymentResult, errorMessage }) => {
+const PaymentComponent = ({ paymentResult, errorMessage, isMembership }) => {
   switch (paymentResult) {
     case 'success':
     case 'approved':
-      return <PaymentApproved />
+      return <PaymentApproved isMembership={isMembership} />
     case 'failure':
     case 'rejected':
       return <PaymentDeclined message={errorMessage} />
@@ -61,10 +61,12 @@ function PaymentFinished() {
     }
   }, [])
 
+  const isMembership = getQueryValue('membership') === '1';
+
   return (
     <>
       <Header />
-        <PaymentComponent paymentResult={paymentResult} errorMessage={errorMessage} />
+        <PaymentComponent paymentResult={paymentResult} errorMessage={errorMessage} isMembership={isMembership} />
       <Footer />
     </>
   );

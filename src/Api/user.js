@@ -89,6 +89,14 @@ const deleteUser = (id) => {
   return api.delete(`/users/${id}`);
 };
 
+const updateSellingPlan = (plan) => {
+  return api.put("/users/update-selling-plan", { plan });
+};
+
+const updateCbuConfig = (cbuConfig) => {
+  return api.put("/users/update-cbu-config", cbuConfig);
+};
+
 const updateTotal = (id, userData) => {
   const updatedData = {
     firstname: userData.firstname,
@@ -135,6 +143,10 @@ const rejectPlanChange = (userId) => {
   return api.put(`/users/plan-change-requests/${userId}/reject`);
 };
 
+const cancelPlanChangeRequest = () => {
+  return api.put("/users/cancel-plan-change-request");
+};
+
 const userApi = {
   // Authentication
   login,
@@ -148,6 +160,8 @@ const userApi = {
 
   // User Management
   update,
+  updateSellingPlan,
+  updateCbuConfig,
   requireResetEmail,
 
   // Admin CRUD Operations
@@ -164,6 +178,7 @@ const userApi = {
   getPendingPlanChangeRequests,
   approvePlanChange,
   rejectPlanChange,
+  cancelPlanChangeRequest,
 };
 
 export default userApi;

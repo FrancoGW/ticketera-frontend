@@ -46,8 +46,22 @@ const getSellerStats = () => {
   return api.get('/payment/seller/stats')
 }
 
+// Checkout de membresía plan CBU (mensualidad)
+const createMembershipCheckout = () => {
+  return api.post('/payment/create-membership-checkout')
+}
+
+// GP-Coins (plan A tu medida)
+const getGpCoinsBalance = () => api.get('/payment/gp-coins/balance')
+const getGpCoinsPurchases = () => api.get('/payment/gp-coins/purchases')
+const createGpCoinsCheckout = (quantity) => api.post('/payment/gp-coins/checkout', { quantity })
+
 export const paymentApi = {
   createCheckout,
+  createMembershipCheckout,
+  getGpCoinsBalance,
+  getGpCoinsPurchases,
+  createGpCoinsCheckout,
   validateDiscountCode,
   previewCheckout,
   initiateMercadoPagoAuthorization,

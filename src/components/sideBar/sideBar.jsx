@@ -1,6 +1,6 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser, FiMail, FiSettings, FiLayout, FiRepeat } from "react-icons/fi";
+import { FiHome, FiBarChart2, FiDollarSign, FiUsers, FiUser, FiMail, FiSettings, FiLayout, FiRepeat, FiHelpCircle } from "react-icons/fi";
 import { RiTicket2Line, RiQrScanLine } from "react-icons/ri";
 
 const Sidebar = () => {
@@ -15,6 +15,7 @@ const Sidebar = () => {
     { path: '/admin/scanner', icon: RiQrScanLine, label: 'Scanner' },
     { path: '/admin/mails', icon: FiMail, label: 'Mails' },
     { path: '/admin/plan-requests', icon: FiRepeat, label: 'Cambio de plan' },
+    { path: '/admin/soporte', icon: FiHelpCircle, label: 'Soporte' },
     { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
     { path: '/admin/settings', icon: FiSettings, label: 'Configuración' }
   ];
@@ -36,6 +37,9 @@ const Sidebar = () => {
     // Para /admin/scanner
     if (path === '/admin/scanner') {
       return location.pathname === '/admin/scanner';
+    }
+    if (path === '/admin/soporte') {
+      return location.pathname === '/admin/soporte' || location.pathname.startsWith('/admin/soporte/');
     }
     // Para otros paths de admin
     return location.pathname === path || location.pathname.startsWith(path + '/');

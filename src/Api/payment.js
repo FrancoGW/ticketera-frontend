@@ -41,6 +41,11 @@ const getApprovedPayments = () => {
   return api.get('/payment/admin/approved')
 }
 
+// Sincronizar un pago por ID de Mercado Pago (solo admin)
+const syncPayment = (paymentId) => {
+  return api.post('/payment/sync-payment', { paymentId })
+}
+
 // Estadísticas del organizador (ventas, ganancias, devoluciones)
 const getSellerStats = () => {
   return api.get('/payment/seller/stats')
@@ -67,5 +72,6 @@ export const paymentApi = {
   initiateMercadoPagoAuthorization,
   disconnectMercadoPago,
   getApprovedPayments,
-  getSellerStats
+  getSellerStats,
+  syncPayment,
 }

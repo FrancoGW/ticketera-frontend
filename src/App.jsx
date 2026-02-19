@@ -43,6 +43,7 @@ import AdminMails from "./Pages/adminMails/AdminMails";
 import AdminPlanRequests from "./Pages/adminPlanRequests/AdminPlanRequests";
 import AdminSettings from "./Pages/adminSettings/AdminSettings";
 import AdminDashboard from "./Pages/adminDashboard/AdminDashboard";
+import AdminSoporte from "./Pages/adminSoporte/AdminSoporte";
 import MaintenanceMode from "./components/maintenanceMode/MaintenanceMode";
 import { useMaintenanceMode } from "./hooks/useMaintenanceMode";
 import { PreviewRoute } from "./components/previewRoute/PreviewRoute";
@@ -546,6 +547,16 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["admin"]}>
                   <LayoutWithSidebar>
                     <AdminPlanRequests />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/soporte"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminSoporte />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

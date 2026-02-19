@@ -108,11 +108,20 @@ const updateCommissionPercentage = (eventId, commissionPercentage) => {
 
 const getEventStats = async () => {
   try {
-    // Obtener todos los eventos para calcular métricas
+    // Métricas consolidadas de backend (plataforma vs organizadores, GP-Coins, membresías)
+    let adminMetrics = null;
+    try {
+      const metricsRes = await paymentApi.getAdminMetrics();
+      adminMetrics = metricsRes.data;
+    } catch (e) {
+      console.warn('⚠️ No se pudieron obtener métricas admin:', e);
+    }
+
+    // Obtener todos los eventos para calcular métricas por evento/organizador
     const response = await getEventsbyAdmin({ page: 1, limit: 1000 });
     const events = response.data.events || [];
     
-    // Obtener payments aprobados para calcular métricas reales
+    // Obtener payments aprobados para calcular métricas reales por evento
     let payments = [];
     try {
       const paymentsResponse = await paymentApi.getApprovedPayments();
@@ -120,7 +129,6 @@ const getEventStats = async () => {
       console.log('💳 Payments aprobados obtenidos:', payments.length);
     } catch (error) {
       console.warn('⚠️ No se pudieron obtener payments, usando cálculo alternativo:', error);
-      // Si no hay endpoint de payments, usar cálculo alternativo
       payments = [];
     }
     
@@ -268,23 +276,28 @@ const getEventStats = async () => {
       .sort((a, b) => b.eventCount - a.eventCount)
       .slice(0, 10);
 
-    // Debug: Log de resultados finales
-    console.log('📈 Métricas calculadas:', {
-      totalTicketsSold,
-      totalRevenue,
-      totalCommissions,
-      activeEventsCount: activeEvents.length,
-      eventsStatsCount: eventsStats.length
-    });
+    // Usar totales del backend cuando existan (incluyen GP-Coins y membresías)
+    const platform = adminMetrics?.platform || {};
+    const organizer = adminMetrics?.organizer || {};
+    const totalTicketsFinal = adminMetrics?.totalTicketsSold ?? totalTicketsSold;
+    const totalRevenueTickets = adminMetrics?.totalRevenueFromTickets ?? totalRevenue;
 
     return {
       data: {
-        totalTicketsSold,
-        totalRevenue,
-        totalCommissions,
+        totalTicketsSold: totalTicketsFinal,
+        totalRevenue: totalRevenueTickets,
+        totalCommissions: platform.totalCommissions ?? totalCommissions,
         activeEventsCount: activeEvents.length,
         eventsStats: eventsStats.sort((a, b) => b.revenue - a.revenue),
-        topOrganizers
+        topOrganizers,
+        // Ingresos plataforma (comisiones + planes + GP-Coins) vs organizadores
+        platformRevenue: {
+          totalCommissions: platform.totalCommissions ?? 0,
+          membershipRevenue: platform.membershipRevenue ?? 0,
+          gpCoinsRevenue: platform.gpCoinsRevenue ?? 0,
+          total: platform.totalPlatformRevenue ?? 0,
+        },
+        organizerRevenue: organizer.totalRevenueFromTickets ?? Math.max(0, totalRevenueTickets - (platform.totalCommissions ?? totalCommissions)),
       }
     };
   } catch (error) {
@@ -296,7 +309,9 @@ const getEventStats = async () => {
         totalCommissions: 0,
         activeEventsCount: 0,
         eventsStats: [],
-        topOrganizers: []
+        topOrganizers: [],
+        platformRevenue: { totalCommissions: 0, membershipRevenue: 0, gpCoinsRevenue: 0, total: 0 },
+        organizerRevenue: 0,
       }
     };
   }

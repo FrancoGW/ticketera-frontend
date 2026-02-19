@@ -41,6 +41,11 @@ const getApprovedPayments = () => {
   return api.get('/payment/admin/approved')
 }
 
+// Métricas completas admin: plataforma (comisiones, planes, GP-Coins) vs organizadores
+const getAdminMetrics = () => {
+  return api.get('/payment/admin/metrics')
+}
+
 // Sincronizar un pago por ID de Mercado Pago (solo admin)
 const syncPayment = (paymentId) => {
   return api.post('/payment/sync-payment', { paymentId })
@@ -74,4 +79,5 @@ export const paymentApi = {
   getApprovedPayments,
   getSellerStats,
   syncPayment,
+  getAdminMetrics,
 }

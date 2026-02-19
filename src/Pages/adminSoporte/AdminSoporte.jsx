@@ -4,6 +4,7 @@ import {
   Container,
   Heading,
   VStack,
+  HStack,
   Button,
   useToast,
   Card,
@@ -73,29 +74,32 @@ export default function AdminSoporte() {
                 Pagos
               </Heading>
               <Text color="gray.600" fontSize="sm" mb={4}>
-                Sincronizar un pago ya aprobado en Mercado Pago que quedó en pendiente (por ejemplo, si el webhook no llegó). Ingresá el número de operación que aparece en Mercado Pago.
+                Sincronizar un pago ya aprobado en Mercado Pago que quedó en pendiente (por ejemplo, si el webhook no llegó). Siempre se usa el <strong>número de operación</strong> de Mercado Pago (ej. en el detalle del pago aparece como &quot;Operación #146886151026&quot;).
               </Text>
               <Divider my={4} />
               <FormControl>
                 <FormLabel>Número de operación (Mercado Pago)</FormLabel>
-                <Input
-                  placeholder="Ej: 146886151026"
-                  value={paymentId}
-                  onChange={(e) => setPaymentId(e.target.value)}
-                  type="text"
-                  maxW="xs"
-                />
+                <HStack align="flex-end" spacing={3} flexWrap="wrap" mt={2}>
+                  <Input
+                    placeholder="Ej: 146886151026"
+                    value={paymentId}
+                    onChange={(e) => setPaymentId(e.target.value)}
+                    type="text"
+                    maxW="xs"
+                    size="md"
+                  />
+                  <Button
+                    leftIcon={<FiRefreshCw />}
+                    colorScheme="primary"
+                    size="md"
+                    onClick={handleSyncPayment}
+                    isLoading={loading}
+                    loadingText="Sincronizando…"
+                  >
+                    Sincronizar pago
+                  </Button>
+                </HStack>
               </FormControl>
-              <Button
-                leftIcon={<FiRefreshCw />}
-                colorScheme="primary"
-                mt={4}
-                onClick={handleSyncPayment}
-                isLoading={loading}
-                loadingText="Sincronizando…"
-              >
-                Sincronizar pago
-              </Button>
             </CardBody>
           </Card>
         </VStack>

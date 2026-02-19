@@ -109,6 +109,11 @@ function Profile() {
     profileUser?.rol === "seller" ||
     profileUser?.rol === "admin" ||
     (profileUser?.roles && (profileUser.roles.includes("seller") || profileUser.roles.includes("admin")));
+  /** Solo organizadores eligen forma de venta; el admin no debe ver esta sección */
+  const isSellerOnly =
+    (profileUser?.rol === "seller" || (profileUser?.roles && profileUser.roles.includes("seller"))) &&
+    profileUser?.rol !== "admin" &&
+    !profileUser?.roles?.includes("admin");
   const hasMercadoPago =
     profileUser?.mercadoPago?.hasAuthorized === true ||
     profileUser?.oauth?.mercadoPago?.hasAuthorized === true;
@@ -287,10 +292,10 @@ function Profile() {
   }, [toast]);
 
   useEffect(() => {
-    if (isSellerOrAdmin) {
+    if (isSellerOnly) {
       cbuApi.getBanks().then((r) => setBanks(r?.data?.banks || [])).catch(() => {});
     }
-  }, [isSellerOrAdmin]);
+  }, [isSellerOnly]);
 
   useEffect(() => {
     if (profileUser?.cbuConfig) {
@@ -719,8 +724,8 @@ function Profile() {
                 </CardBody>
               </Card>
 
-              {/* Forma de venta (solo organizador/admin) */}
-              {isSellerOrAdmin && (
+              {/* Forma de venta (solo organizadores; el admin no elige método de pago) */}
+              {isSellerOnly && (
                 <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
                   <CardBody p={6}>
                     <HStack mb={6}>
@@ -911,7 +916,7 @@ function Profile() {
               )}
 
               {/* Configurar CBU (Depósito Directo) - solo si plan SIMPLE */}
-              {isSellerOrAdmin && sellingPlan === "SIMPLE" && (
+              {isSellerOnly && sellingPlan === "SIMPLE" && (
                 <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
                   <CardBody p={6}>
                     <HStack mb={4}>

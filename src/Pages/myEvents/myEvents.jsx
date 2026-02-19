@@ -67,8 +67,16 @@ function MyEvents() {
 
   useEffect(() => {
     const getScannerUrl = async () => {
-      const { data } = await qrApi.getScannerUrl();
-      setScannerUrl(data.validatorUrl);
+      setUrlLoading(true);
+      try {
+        const { data } = await qrApi.getScannerUrl();
+        setScannerUrl(data.validatorUrl || "");
+      } catch (err) {
+        // No bloquear la página: si falla (ej. sin validador), dejar scannerUrl vacío
+        setScannerUrl("");
+      } finally {
+        setUrlLoading(false);
+      }
     };
     getScannerUrl();
   }, []);

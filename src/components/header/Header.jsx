@@ -37,9 +37,12 @@ import {
   FiUsers,
   FiDollarSign,
   FiMail,
-  FiLayout
+  FiLayout,
+  FiRepeat,
+  FiHelpCircle,
+  FiFileText,
 } from "react-icons/fi";
-import { RiTicket2Line, RiQrScanLine } from "react-icons/ri";
+import { RiTicket2Line, RiQrScanLine, RiQrCodeLine } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
@@ -902,10 +905,101 @@ function Header() {
                             onClick={getButtonProps().onClick}
                           />
                           <MobileMenuItem
+                            href="/admin/plan-requests"
+                            icon={FiRepeat}
+                            label="Cambio de plan"
+                            delay={0.365}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/admin/soporte"
+                            icon={FiHelpCircle}
+                            label="Soporte"
+                            delay={0.37}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
                             href="/admin/settings"
                             icon={FiSettings}
                             label="Configuración"
-                            delay={0.37}
+                            delay={0.375}
+                            onClick={getButtonProps().onClick}
+                          />
+                        </>
+                      )}
+
+                      {hasRole("seller") && !hasRole("admin") && (
+                        <>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="bold"
+                            textTransform="uppercase"
+                            letterSpacing="wider"
+                            color="rgba(255, 255, 255, 0.5)"
+                            px={4}
+                            pt={2}
+                            pb={1}
+                          >
+                            Panel Organizador
+                          </Text>
+                          <MobileMenuItem
+                            href="/profile/my-events"
+                            icon={FiHome}
+                            label="Mis Eventos"
+                            delay={0.3}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/seller/dashboard"
+                            icon={FiBarChart2}
+                            label="Estadísticas"
+                            delay={0.31}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/seller/new-event"
+                            icon={FiPlus}
+                            label="Crear Evento"
+                            delay={0.32}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/seller/tickets"
+                            icon={RiTicket2Line}
+                            label="Gestionar Tickets"
+                            delay={0.33}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/seller/qrs"
+                            icon={RiQrCodeLine}
+                            label="Ver QRs"
+                            delay={0.34}
+                            onClick={getButtonProps().onClick}
+                          />
+                          {user?.sellingPlan === "SIMPLE" && (
+                            <MobileMenuItem
+                              href="/seller/comprobantes"
+                              icon={FiFileText}
+                              label="Comprobantes CBU"
+                              delay={0.345}
+                              onClick={getButtonProps().onClick}
+                            />
+                          )}
+                          {user?.sellingPlan === "CUSTOM" && (
+                            <MobileMenuItem
+                              href="/seller/gp-coins"
+                              icon={FiDollarSign}
+                              label="GP-COINS"
+                              delay={0.345}
+                              onClick={getButtonProps().onClick}
+                            />
+                          )}
+                          <MobileMenuItem
+                            href="/seller/scanner"
+                            icon={RiQrScanLine}
+                            label="Scanner"
+                            delay={0.35}
                             onClick={getButtonProps().onClick}
                           />
                         </>
@@ -937,7 +1031,7 @@ function Header() {
                         </>
                       )}
 
-                      {(hasRole("seller") || hasRole("admin")) && (
+                      {hasRole("admin") && (
                         <MobileMenuItem
                           href="/profile/my-events"
                           icon={FiHome}
@@ -973,40 +1067,42 @@ function Header() {
                       />
 
                       <Box h={4} />
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                      >
-                        <Button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleCreateEvent();
-                            getButtonProps().onClick();
-                          }}
-                          bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
-                          color="white"
-                          size="lg"
-                          w="100%"
-                          fontFamily="secondary"
-                          fontWeight="600"
-                          fontSize="md"
-                          py={6}
-                          borderRadius="xl"
-                          leftIcon={<FiPlus />}
-                          _hover={{
-                            bg: "linear-gradient(135deg, #9d6dd8 0%, #b78dea 100%)",
-                            transform: "translateY(-2px)",
-                            boxShadow: "0 10px 25px rgba(183, 141, 234, 0.3)",
-                          }}
-                          transition="all 0.3s"
-                          as={motion.button}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      {(hasRole("seller") || hasRole("admin")) && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
                         >
-                          Crear Evento
-                        </Button>
-                      </motion.div>
+                          <Button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleCreateEvent();
+                              getButtonProps().onClick();
+                            }}
+                            bg="linear-gradient(135deg, #b78dea 0%, #9d6dd8 100%)"
+                            color="white"
+                            size="lg"
+                            w="100%"
+                            fontFamily="secondary"
+                            fontWeight="600"
+                            fontSize="md"
+                            py={6}
+                            borderRadius="xl"
+                            leftIcon={<FiPlus />}
+                            _hover={{
+                              bg: "linear-gradient(135deg, #9d6dd8 0%, #b78dea 100%)",
+                              transform: "translateY(-2px)",
+                              boxShadow: "0 10px 25px rgba(183, 141, 234, 0.3)",
+                            }}
+                            transition="all 0.3s"
+                            as={motion.button}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            Crear Evento
+                          </Button>
+                        </motion.div>
+                      )}
 
                       <Box h={6} />
                       <Divider borderColor="rgba(255, 255, 255, 0.1)" />

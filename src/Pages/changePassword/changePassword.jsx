@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
+import userApi from "../../Api/user";
 
 const ChangePassword = () => {
   const [show, setShow] = useState(false);

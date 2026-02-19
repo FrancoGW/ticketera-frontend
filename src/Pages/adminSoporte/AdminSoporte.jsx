@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -14,18 +14,55 @@ import {
   Input,
   Text,
   Divider,
+  Select,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Spinner,
+  Center,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from '@chakra-ui/react';
-import { FiRefreshCw, FiSend } from 'react-icons/fi';
+import { FiRefreshCw, FiSend, FiSearch } from 'react-icons/fi';
 import { paymentApi } from '../../Api/payment';
 import ticketApi from '../../Api/ticket';
+import eventApi from '../../Api/event';
 
 export default function AdminSoporte() {
   const [paymentId, setPaymentId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [transferQrId, setTransferQrId] = useState('');
-  const [transferEmail, setTransferEmail] = useState('');
+  const [events, setEvents] = useState([]);
+  const [eventId, setEventId] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searchDni, setSearchDni] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [transferRow, setTransferRow] = useState(null);
+  const [newOwnerEmail, setNewOwnerEmail] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
+  const { isOpen: isTransferModalOpen, onOpen: onTransferModalOpen, onClose: onTransferModalClose } = useDisclosure();
   const toast = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await eventApi.getEventsbyAdmin({ page: 1, limit: 500 });
+        if (!cancelled && res?.data?.events) setEvents(res.data.events);
+      } catch (e) {
+        if (!cancelled) toast({ title: 'Error al cargar eventos', status: 'error', duration: 3000, isClosable: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [toast]);
 
   const handleSyncPayment = async () => {
     const id = paymentId?.trim();
@@ -64,22 +101,48 @@ export default function AdminSoporte() {
     }
   };
 
+  const handleSearchTickets = async () => {
+    const eid = eventId?.trim();
+    const email = searchEmail?.trim();
+    const dni = searchDni?.trim();
+    if (!eid) {
+      toast({ title: 'Seleccioná un evento', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    if (!email && !dni) {
+      toast({ title: 'Ingresá email o DNI del dueño del ticket', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    setSearchLoading(true);
+    setSearchResults([]);
+    try {
+      const { data } = await ticketApi.adminSearchTicketsByEvent(eid, email || undefined, dni || undefined);
+      setSearchResults(data?.items || []);
+      if (!(data?.items?.length)) {
+        toast({ title: 'Sin resultados', description: 'No se encontraron entradas con ese email o DNI en este evento.', status: 'info', duration: 4000, isClosable: true });
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Error al buscar.';
+      toast({ title: 'Error', description: msg, status: 'error', duration: 5000, isClosable: true });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const openTransferModal = (row) => {
+    setTransferRow(row);
+    setNewOwnerEmail('');
+    onTransferModalOpen();
+  };
+
   const handleAdminTransfer = async () => {
-    const qrId = transferQrId?.trim();
-    const email = transferEmail?.trim();
-    if (!qrId || !email) {
-      toast({
-        title: 'Datos requeridos',
-        description: 'Ingresá el ID del QR (Mongo ID del ticket/entrada) y el email del destinatario.',
-        status: 'warning',
-        duration: 5000,
-        isClosable: true,
-      });
+    if (!transferRow?.qrId || !newOwnerEmail?.trim()) {
+      toast({ title: 'Ingresá el email del nuevo destinatario', status: 'warning', duration: 3000, isClosable: true });
       return;
     }
     setTransferLoading(true);
     try {
-      const { data } = await ticketApi.adminTransferTicketByQr(qrId, email);
+      const { data } = await ticketApi.adminTransferTicketByQr(transferRow.qrId, newOwnerEmail.trim());
       toast({
         title: 'Ticket transferido',
         description: data?.message || 'El destinatario recibirá el QR por email.',
@@ -87,17 +150,13 @@ export default function AdminSoporte() {
         duration: 5000,
         isClosable: true,
       });
-      setTransferQrId('');
-      setTransferEmail('');
+      setSearchResults((prev) => prev.filter((r) => r.qrId !== transferRow.qrId));
+      onTransferModalClose();
+      setTransferRow(null);
+      setNewOwnerEmail('');
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Error al transferir.';
-      toast({
-        title: 'Error',
-        description: msg,
-        status: 'error',
-        duration: 6000,
-        isClosable: true,
-      });
+      toast({ title: 'Error', description: msg, status: 'error', duration: 6000, isClosable: true });
     } finally {
       setTransferLoading(false);
     }
@@ -152,39 +211,140 @@ export default function AdminSoporte() {
                 Transferir ticket (admin)
               </Heading>
               <Text color="gray.600" fontSize="sm" mb={4}>
-                Transferir cualquier entrada (QR) a otro email sin importar quién la compró. Se genera un nuevo QR para el destinatario y se invalida el anterior. El destinatario recibe el ticket por email (no necesita cuenta).
+                Elegí el evento y buscá la entrada por email o DNI del dueño actual (datos de la compra). Luego transferila al nuevo email. Se genera un nuevo QR y el destinatario lo recibe por correo (no necesita cuenta).
               </Text>
               <Divider my={4} />
               <FormControl mb={3}>
-                <FormLabel>ID del QR (Mongo ID de la entrada)</FormLabel>
-                <Input
-                  placeholder="Ej: 507f1f77bcf86cd799439011"
-                  value={transferQrId}
-                  onChange={(e) => setTransferQrId(e.target.value)}
+                <FormLabel>Evento</FormLabel>
+                <Select
+                  placeholder="Seleccionar evento"
+                  value={eventId}
+                  onChange={(e) => setEventId(e.target.value)}
                   maxW="md"
-                />
+                >
+                  {events.map((ev) => (
+                    <option key={ev._id} value={ev._id}>
+                      {ev.title}
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Email del destinatario</FormLabel>
-                <Input
-                  type="email"
-                  placeholder="destinatario@ejemplo.com"
-                  value={transferEmail}
-                  onChange={(e) => setTransferEmail(e.target.value)}
-                  maxW="md"
-                />
-              </FormControl>
-              <Button
-                leftIcon={<FiSend />}
-                colorScheme="teal"
-                onClick={handleAdminTransfer}
-                isLoading={transferLoading}
-                loadingText="Transferiendo…"
-              >
-                Transferir ticket
-              </Button>
+              <HStack align="flex-end" spacing={3} flexWrap="wrap" mb={4}>
+                <FormControl maxW="xs">
+                  <FormLabel>Email del dueño</FormLabel>
+                  <Input
+                    placeholder="ejemplo@mail.com"
+                    value={searchEmail}
+                    onChange={(e) => setSearchEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchTickets()}
+                  />
+                </FormControl>
+                <FormControl maxW="xs">
+                  <FormLabel>DNI del dueño</FormLabel>
+                  <Input
+                    placeholder="Ej: 12345678"
+                    value={searchDni}
+                    onChange={(e) => setSearchDni(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchTickets()}
+                  />
+                </FormControl>
+                <Button
+                  leftIcon={<FiSearch />}
+                  colorScheme="teal"
+                  variant="outline"
+                  onClick={handleSearchTickets}
+                  isLoading={searchLoading}
+                  loadingText="Buscando…"
+                >
+                  Buscar tickets
+                </Button>
+              </HStack>
+              {searchResults.length > 0 && (
+                <Box overflowX="auto" mt={4}>
+                  <Table size="sm">
+                    <Thead>
+                      <Tr>
+                        <Th>Evento</Th>
+                        <Th>Ticket</Th>
+                        <Th>Cliente</Th>
+                        <Th>Email</Th>
+                        <Th>DNI</Th>
+                        <Th>Acción</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {searchResults.map((row) => (
+                        <Tr key={row.qrId}>
+                          <Td>{row.eventTitle}</Td>
+                          <Td>{row.ticketTitle}</Td>
+                          <Td>{row.customerName || '—'}</Td>
+                          <Td>{row.customerEmail || '—'}</Td>
+                          <Td>{row.customerDni || '—'}</Td>
+                          <Td>
+                            <Button
+                              size="sm"
+                              colorScheme="teal"
+                              leftIcon={<FiSend />}
+                              onClick={() => openTransferModal(row)}
+                            >
+                              Transferir
+                            </Button>
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </Box>
+              )}
+              {searchLoading && (
+                <Center py={4}>
+                  <Spinner size="md" colorScheme="teal" />
+                </Center>
+              )}
             </CardBody>
           </Card>
+
+          <Modal isOpen={isTransferModalOpen} onClose={() => { onTransferModalClose(); setTransferRow(null); }} size="md">
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader fontFamily="secondary">Transferir entrada</ModalHeader>
+              <ModalBody>
+                {transferRow && (
+                  <>
+                    <Text mb={2}>
+                      <strong>{transferRow.ticketTitle}</strong> — {transferRow.eventTitle}
+                    </Text>
+                    <Text fontSize="sm" color="gray.600" mb={3}>
+                      Actual: {transferRow.customerEmail || transferRow.customerName || '—'}
+                    </Text>
+                    <FormControl>
+                      <FormLabel>Email del nuevo destinatario</FormLabel>
+                      <Input
+                        type="email"
+                        placeholder="nuevo@ejemplo.com"
+                        value={newOwnerEmail}
+                        onChange={(e) => setNewOwnerEmail(e.target.value)}
+                      />
+                    </FormControl>
+                  </>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="ghost" mr={2} onClick={() => { onTransferModalClose(); setTransferRow(null); }}>
+                  Cancelar
+                </Button>
+                <Button
+                  colorScheme="teal"
+                  leftIcon={<FiSend />}
+                  onClick={handleAdminTransfer}
+                  isLoading={transferLoading}
+                  isDisabled={!newOwnerEmail?.trim()}
+                >
+                  Transferir ticket
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </VStack>
       </Container>
     </Box>

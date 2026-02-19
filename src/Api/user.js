@@ -70,8 +70,11 @@ const update = (firstname, lastname, phoneNumber, dni) => {
   });
 };
 
-const requireResetEmail = () => {
-  return api.post("/auth/require-update-email");
+const requireResetEmail = (newEmail) => {
+  if (!newEmail || typeof newEmail !== 'string' || !newEmail.trim()) {
+    return Promise.reject(new Error('El nuevo email es requerido'));
+  }
+  return api.post("/auth/require-update-email", { newEmail: newEmail.trim() });
 };
 
 /**

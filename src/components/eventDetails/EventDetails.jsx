@@ -125,9 +125,22 @@ const EventDetails = () => {
   };
 
   const validateDiscountCode = async () => {
+    const eventId = event?._id || id;
+    const ticketsArray = Object.entries(ticketsToBuy)
+      .filter(([, v]) => v?.quantity > 0)
+      .map(([ticketId, v]) => ({ ticketId, quantity: v.quantity }));
+    if (!eventId || ticketsArray.length === 0) {
+      toast({
+        title: "Seleccioná tickets",
+        description: "Seleccioná al menos un ticket para validar el código",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
     setIsValidatingCode(true);
     try {
-      const { data } = await paymentApi.validateDiscountCode(discountCode);
+      const { data } = await paymentApi.validateDiscountCode(discountCode, eventId, ticketsArray);
       if (data.isValid) {
         const newDiscount = data.discountAmount;
         setDiscount(newDiscount);

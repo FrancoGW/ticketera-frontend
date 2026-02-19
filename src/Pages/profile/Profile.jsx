@@ -86,6 +86,7 @@ function Profile() {
   const { user: authUser, checkAuth } = useAuth();
   const [isRequiringPasswordUpdate, setIsRequiringPasswordUpdate] =
     useState(false);
+  const [newEmailForChange, setNewEmailForChange] = useState("");
   const [user, setUser] = useState(null);
   const [isSendingChangePlan, setIsSendingChangePlan] = useState(false);
   const [isSavingPlan, setIsSavingPlan] = useState(null);
@@ -370,13 +371,27 @@ function Profile() {
     }
   };
 
-  const handleRequireEmailChange = async () => {
+  const handleRequireEmailChange = async (newEmail) => {
+    const emailToUse = (typeof newEmail === "string" ? newEmail : newEmailForChange)?.trim();
+    if (!emailToUse) {
+      toast({
+        title: "Email requerido",
+        description: "Ingresá el nuevo email al que querés cambiar",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      return;
+    }
     try {
-      const data = await requireResetEmail();
-      if (data.data.ok) {
+      const { data } = await requireResetEmail(emailToUse);
+      if (data?.ok) {
+        setNewEmailForChange("");
+        onClose();
         toast({
           title: "Te hemos enviado un correo",
-          description: "Revisa tu bandeja de correo para cambiar tu email",
+          description: "Revisá la bandeja de " + emailToUse + " para confirmar el cambio de email",
           status: "success",
           duration: 6000,
           isClosable: true,
@@ -385,9 +400,10 @@ function Profile() {
       }
     } catch (error) {
       console.error("Error al solicitar cambio de email:", error);
+      const msg = error.response?.data?.message || "No se pudo procesar la solicitud de cambio de email";
       toast({
         title: "Error",
-        description: "No se pudo procesar la solicitud de cambio de email",
+        description: msg,
         status: "error",
         duration: 6000,
         isClosable: true,
@@ -1129,7 +1145,10 @@ function Profile() {
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
-        onClose={onClose}
+        onClose={() => {
+          setNewEmailForChange("");
+          onClose();
+        }}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -1139,12 +1158,33 @@ function Profile() {
             </AlertDialogHeader>
 
             <AlertDialogBody fontFamily="secondary">
-              Te enviaremos un correo electrónico para cambiar tu{" "}
-              {!isRequiringPasswordUpdate ? "email" : "contraseña"}
+              {!isRequiringPasswordUpdate ? (
+                <>
+                  <Text mb={2}>Te enviaremos un correo al nuevo email para confirmar el cambio.</Text>
+                  <FormControl isInvalid={!newEmailForChange.trim()}>
+                    <FormLabel>Nuevo email</FormLabel>
+                    <Input
+                      type="email"
+                      placeholder="nuevo@email.com"
+                      value={newEmailForChange}
+                      onChange={(e) => setNewEmailForChange(e.target.value)}
+                    />
+                  </FormControl>
+                </>
+              ) : (
+                <Text>Te enviaremos un correo electrónico para cambiar tu contraseña.</Text>
+              )}
             </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose} fontFamily="secondary">
+              <Button
+                ref={cancelRef}
+                onClick={() => {
+                  setNewEmailForChange("");
+                  onClose();
+                }}
+                fontFamily="secondary"
+              >
                 Cancelar
               </Button>
               <Button
@@ -1152,13 +1192,16 @@ function Profile() {
                 color="white"
                 _hover={{ bg: "buttonHover" }}
                 onClick={() => {
-                  !isRequiringPasswordUpdate
-                    ? handleRequireEmailChange()
-                    : handleRequirePasswordChange();
-                  onClose();
+                  if (!isRequiringPasswordUpdate) {
+                    handleRequireEmailChange(newEmailForChange);
+                  } else {
+                    handleRequirePasswordChange();
+                    onClose();
+                  }
                 }}
                 ml={3}
                 fontFamily="secondary"
+                isDisabled={!isRequiringPasswordUpdate && !newEmailForChange.trim()}
               >
                 Aceptar
               </Button>

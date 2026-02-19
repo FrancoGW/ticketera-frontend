@@ -11,8 +11,12 @@ const createCheckout = (data) => {
   })
 }
 
-const validateDiscountCode = (discountCode) => {
-  return api.post('/payment/validate-discount-code', { discountCode })
+const validateDiscountCode = (discountCode, eventId, ticketsToBuy) => {
+  return api.post('/payment/validate-discount-code', {
+    discountCode,
+    eventId: eventId || undefined,
+    ticketsToBuy: ticketsToBuy || undefined,
+  })
 }
 
 // Preview del checkout para mostrar total y cargo por servicio antes de crear el checkout

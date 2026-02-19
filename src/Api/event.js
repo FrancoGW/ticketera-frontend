@@ -45,7 +45,7 @@ const getEventsbyAdmin = (query) => {
 };
 
 const actualizeEventStatus = (id, status) => {
-  return api.put(`/events/${id}/status/`, { status: status });
+  return api.put(`/events/${id}/status`, { status: status });
 };
 
 const searchEvent = (page, limit, filter) => {
@@ -60,7 +60,7 @@ const searchEvent = (page, limit, filter) => {
   if (locality.length > 0) {
     query += `&locality=${locality}`;
   }
-  return api.get(`/event/search?${query}`);
+  return api.get(`/events/search?${query}`);
 };
 
 const updateEvent = (id, { event, address }) => {

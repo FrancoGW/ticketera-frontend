@@ -81,44 +81,53 @@ const EMAIL_TYPE_DESCRIPTIONS = {
 const VARIABLES_INFO = {
   [EMAIL_TYPES.WELCOME]: [
     { name: '{{verifyUrl}}', description: 'URL para verificar el email' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.PASSWORD_RESET]: [
     { name: '{{recoverUrl}}', description: 'URL para recuperar contraseña' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.QR]: [
     { name: '{{qrImage}}', description: 'Imagen QR (se envía como attachment con CID: cid:qr)' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.COURTESY_TICKET]: [
     { name: '{{eventTitle}}', description: 'Título del evento' },
     { name: '{{ticketTitle}}', description: 'Título del ticket' },
     { name: '{{qrImage}}', description: 'Imagen QR (se envía como attachment con CID: cid:qr)' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.INVITATION]: [
     { name: '{{eventTitle}}', description: 'Título del evento' },
     { name: '{{ticketTitle}}', description: 'Título del ticket' },
     { name: '{{qrImages}}', description: 'Array de imágenes QR (cid:0-qr, cid:1-qr, etc.)' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.TICKET_TRANSFER]: [
     { name: '{{eventTitle}}', description: 'Título del evento' },
     { name: '{{ticketTitle}}', description: 'Título del ticket' },
     { name: '{{transferType}}', description: 'Tipo: "sender" o "receiver"' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.UPDATE_EMAIL]: [
     { name: '{{updateUrl}}', description: 'URL para actualizar email' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.UPDATE_PASSWORD]: [
     { name: '{{updateUrl}}', description: 'URL para actualizar contraseña' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
   [EMAIL_TYPES.VERIFY_NEW_EMAIL]: [
     { name: '{{verifyUrl}}', description: 'URL para verificar el nuevo email' },
+    { name: '{{logoUrl}}', description: 'URL del logo GetPass (cabecera del email)' },
     { name: '{{currentYear}}', description: 'Año actual (automático)' },
   ],
 };
@@ -132,6 +141,7 @@ export default function AdminMails() {
   const [testEmailType, setTestEmailType] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [previewTabs, setPreviewTabs] = useState({}); // Estado para cada template
+  const [restoring, setRestoring] = useState({}); // Restaurar por defecto
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -234,6 +244,32 @@ export default function AdminMails() {
     }
   };
 
+  const handleRestoreDefault = async (type) => {
+    try {
+      setRestoring(prev => ({ ...prev, [type]: true }));
+      const { data } = await emailApi.restoreDefaultEmailTemplate(type);
+      setTemplates(prev => ({ ...prev, [type]: { subject: data.subject, body: data.body } }));
+      toast({
+        title: 'Plantilla restaurada',
+        description: `Se cargó la plantilla por defecto de ${EMAIL_TYPE_LABELS[type]} (con el logo actualizado).`,
+        status: 'success',
+        duration: 4000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error restaurando plantilla:', error);
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.message || 'No se pudo restaurar la plantilla',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setRestoring(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
   const handleChange = (type, field, value) => {
     setTemplates(prev => ({
       ...prev,
@@ -298,7 +334,9 @@ export default function AdminMails() {
   // Generar preview del HTML con variables reemplazadas
   const generatePreview = (type, html) => {
     if (!html) return '';
-    
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const logoUrl = `${origin}/assets/Logo/Get_Pass_logo_white.png`;
+
     // Datos de ejemplo para reemplazar variables
     const previewData = {
       verifyUrl: 'https://ticketera-frontend-swart.vercel.app/verify-email?token=preview-token-123',
@@ -311,6 +349,7 @@ export default function AdminMails() {
       userName: 'Usuario de Prueba',
       userEmail: 'usuario@ejemplo.com',
       qrImage: 'cid:qr', // Para preview, mostrar placeholder
+      logoUrl,
     };
 
     let previewHtml = html;
@@ -490,6 +529,17 @@ export default function AdminMails() {
                   isDisabled={loading}
                 >
                   Recargar
+                </Button>
+                <Button
+                  variant="outline"
+                  colorScheme="orange"
+                  leftIcon={<Icon as={FiRefreshCw} />}
+                  onClick={() => handleRestoreDefault(type)}
+                  isLoading={restoring[type]}
+                  loadingText="Restaurando..."
+                  title="Cargar la plantilla por defecto (incluye el logo GetPass actualizado)"
+                >
+                  Restaurar por defecto
                 </Button>
               </HStack>
             </VStack>

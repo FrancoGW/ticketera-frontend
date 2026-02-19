@@ -8,7 +8,6 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import { createStandaloneToast, Flex, Image, Heading } from '@chakra-ui/react';
 import { Provider } from 'react-redux';
 import store from './redux/stores/store';
-import imgRandom from "/assets/img/logo.png"
 
 
 

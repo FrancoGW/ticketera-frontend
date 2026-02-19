@@ -171,15 +171,15 @@ function Header() {
           whileTap={{ scale: 0.95 }}
           transition={{ duration: 0.2 }}
         >
-          <Heading
-            fontSize="25px"
-            textAlign="center"
-            fontWeight="300"
-            fontFamily="Monument Extended"
-          >
-            <Box as="span" color="#fff">Get</Box>
-            <Box as="span" color="#B78DEA">Pass</Box>
-          </Heading>
+          <Box
+            as="img"
+            src="/assets/Logo/Get_Pass_logo_white.svg"
+            alt="GetPass"
+            h="36px"
+            w="auto"
+            objectFit="contain"
+            display="block"
+          />
         </Link>
         <Flex
           gap="4"
@@ -810,15 +810,14 @@ function Header() {
                   mb={8}
                 >
                   <Link as={RouterLink} to="/" display="block" mb={6} onClick={getButtonProps().onClick}>
-                    <Heading
-                      fontSize="2xl"
-                      textAlign="left"
-                      fontWeight="300"
-                      fontFamily="'Monument Extended', sans-serif"
-                    >
-                      <Box as="span" color="#fff">Get</Box>
-                      <Box as="span" color="#B78DEA">Pass</Box>
-                    </Heading>
+                    <Box
+                      as="img"
+                      src="/assets/Logo/Get_Pass_logo_white.svg"
+                      alt="GetPass"
+                      h="32px"
+                      w="auto"
+                      objectFit="contain"
+                    />
                   </Link>
                   <Divider borderColor="rgba(255, 255, 255, 0.1)" />
                 </motion.div>

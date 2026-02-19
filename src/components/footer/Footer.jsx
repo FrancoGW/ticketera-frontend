@@ -58,17 +58,14 @@ function Footer() {
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <Heading
-              as="h3"
-              fontFamily="'Monument Extended', sans-serif"
-              fontWeight="300"
-              fontSize={{ base: "xl", md: "2xl" }}
-              letterSpacing="-0.01em"
-              translate="no"
-            >
-              <Box as="span" color="#fff">Get</Box>
-              <Box as="span" color="#B78DEA">Pass</Box>
-            </Heading>
+            <Box
+              as="img"
+              src="/assets/Logo/Get_Pass_logo_white.svg"
+              alt="GetPass"
+              h={{ base: "28px", md: "32px" }}
+              w="auto"
+              objectFit="contain"
+            />
           </Flex>
         </Flex>
 

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Container, Flex, Heading, Text, Spinner, Button } from "@chakra-ui/react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams, Link as RouterLink } from "react-router-dom";
+import { Container, Flex, Heading, Text, Spinner, Button, Link } from "@chakra-ui/react";
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
 import userApi from "../../Api/user";
@@ -10,15 +10,22 @@ const ConfirmUpdateEmail = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading"); // loading | success | error
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
+  const didRun = useRef(false);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    if (didRun.current) return;
+    // Token: primero de searchParams, luego de window.location (por si hay redirecciones)
+    let token = searchParams.get("token");
+    if (!token && typeof window !== "undefined" && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      token = params.get("token");
+    }
     if (!token) {
       setStatus("error");
-      setMessage("Enlace inválido. Falta el token.");
+      setMessage("Enlace inválido. Falta el token. Solicitá uno nuevo desde tu perfil.");
       return;
     }
+    didRun.current = true;
 
     const confirm = async () => {
       try {
@@ -27,8 +34,6 @@ const ConfirmUpdateEmail = () => {
           api.setToken(data.token);
         }
         setStatus("success");
-        setMessage("Email actualizado correctamente. Redirigiendo a tu perfil...");
-        setTimeout(() => navigate("/profile", { replace: true }), 2000);
       } catch (err) {
         setStatus("error");
         setMessage(
@@ -39,7 +44,7 @@ const ConfirmUpdateEmail = () => {
     };
 
     confirm();
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
   return (
     <>
@@ -57,7 +62,7 @@ const ConfirmUpdateEmail = () => {
           align="center"
           justify="center"
           w="100%"
-          py="8"
+          py="10"
           px="6"
           bg="gray.50"
           borderRadius="xl"
@@ -73,12 +78,31 @@ const ConfirmUpdateEmail = () => {
           )}
           {status === "success" && (
             <>
-              <Heading as="h2" size="md" fontFamily="secondary" color="green.600" mb="2">
-                ¡Listo!
+              <Heading as="h2" size="lg" fontFamily="secondary" color="green.600" mb="4">
+                Su mail se cambió con éxito
               </Heading>
-              <Text fontFamily="secondary" color="gray.600">
-                {message}
+              <Text fontFamily="secondary" color="gray.600" mb="8">
+                Tu dirección de correo fue actualizada correctamente.
               </Text>
+              <Link
+                as={RouterLink}
+                to="/profile"
+                replace
+                fontFamily="secondary"
+                fontWeight="600"
+                color="primary"
+                _hover={{ color: "buttonHover", textDecoration: "underline" }}
+                fontSize="md"
+                display="inline-block"
+                py="3"
+                px="6"
+                borderRadius="lg"
+                bg="white"
+                border="2px solid"
+                borderColor="primary"
+              >
+                Volver a mi perfil
+              </Link>
             </>
           )}
           {status === "error" && (
@@ -90,13 +114,15 @@ const ConfirmUpdateEmail = () => {
                 {message}
               </Text>
               <Button
+                as={RouterLink}
+                to="/profile"
                 bg="primary"
                 color="white"
                 _hover={{ bg: "buttonHover" }}
-                onClick={() => navigate("/profile", { replace: true })}
                 fontFamily="secondary"
+                replace
               >
-                Ir a mi perfil
+                Volver a mi perfil
               </Button>
             </>
           )}

@@ -20,6 +20,7 @@ import GeneralEvents from "./Pages/eventsAdmin/generalEvents";
 import TicketsPage from "./Pages/ticketsAdmin/ticketsPage";
 import MyTickets from "./Pages/myTickets/myTickets";
 import ChangePassword from "./Pages/changePassword/changePassword";
+import ConfirmUpdateEmail from "./Pages/confirmUpdateEmail/ConfirmUpdateEmail";
 import VerifyEmail from "./Pages/verifyEmail/verifyEmail";
 import PaymentFinished from "./Pages/PaymentFinished/PaymentFinished";
 import Main from "./Pages/main/Main";
@@ -154,6 +155,19 @@ function AnimatedRoutes() {
                   variants={pageVariants}
                 >
                   <ChangePassword />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/require-update-email"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ConfirmUpdateEmail />
                 </motion.div>
               }
             />

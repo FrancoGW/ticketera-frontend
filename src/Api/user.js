@@ -77,6 +77,11 @@ const requireResetEmail = (newEmail) => {
   return api.post("/auth/require-update-email", { newEmail: newEmail.trim() });
 };
 
+/** Confirma el cambio de email con el token del enlace (público) */
+const confirmUpdateEmail = (token) => {
+  return api.post("/auth/confirm-update-email", { token });
+};
+
 /**
  * Admin CRUD Operations
  */
@@ -166,6 +171,7 @@ const userApi = {
   updateSellingPlan,
   updateCbuConfig,
   requireResetEmail,
+  confirmUpdateEmail,
 
   // Admin CRUD Operations
   getAllUsers,

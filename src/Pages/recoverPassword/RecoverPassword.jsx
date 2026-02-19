@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import {
   Button,
   Container,
@@ -7,9 +6,6 @@ import {
   Heading,
   Input,
   useToast,
-  PinInput,
-  PinInputField,
-  HStack,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -22,22 +18,7 @@ const RecoverPassword = () => {
   const [countdown, setCountdown] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [isCodeComplete, setIsCodeComplete] = useState(false);
   const toast = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tokenFromUrl = params.get("token");
-
-    if (tokenFromUrl) {
-      setVerificationCode(tokenFromUrl);
-      setIsCodeComplete(true);
-      setStep(2);
-    }
-  }, [location]);
 
   useEffect(() => {
     let timer;
@@ -60,10 +41,10 @@ const RecoverPassword = () => {
       const res = await userApi.recoverPassword(email);
       if (res.status === 201) {
         toast({
-          title: "Enviamos un mail a tu correo",
-          description: "Por favor ingresa el código de verificación",
+          title: "Revisá tu correo",
+          description: "Si existe una cuenta con ese correo, te enviamos un enlace para restablecer la contraseña.",
           status: "success",
-          duration: 4000,
+          duration: 5000,
           isClosable: true,
         });
         setStep(2);
@@ -78,28 +59,6 @@ const RecoverPassword = () => {
       setIsSubmitting(false);
       setCountdown(0);
     }
-  };
-
-  const handleVerifyCode = async () => {
-    try {
-      const res = await userApi.verifyResetCode(email, verificationCode);
-      if (res.data.tempToken) {
-        navigate(`/change-password?token=${res.data.tempToken}`);
-      }
-    } catch (error) {
-      toast({
-        title: "Código inválido",
-        description: "Por favor verifica el código e intenta nuevamente",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handlePinChange = (value) => {
-    setVerificationCode(value);
-    setIsCodeComplete(value.length === 6);
   };
 
   return (
@@ -126,7 +85,7 @@ const RecoverPassword = () => {
           zIndex="10"
         >
           <Heading as="h2" fontFamily="secondary">
-            {step === 1 ? "Ingresa tu correo" : "Verifica tu código"}
+            {step === 1 ? "Ingresa tu correo" : "Revisá tu correo"}
           </Heading>
 
           {step === 1 ? (
@@ -161,36 +120,8 @@ const RecoverPassword = () => {
           ) : (
             <VStack spacing={4} w="100%" mt="4">
               <Text mb="4" textAlign="center" fontFamily="secondary">
-                Ingresa el código de 6 dígitos enviado a {email}
+                Si existe una cuenta con <strong>{email}</strong>, te enviamos un enlace. Abrí tu correo y hacé clic en el enlace para restablecer tu contraseña.
               </Text>
-              <HStack spacing="4" justify="center">
-                <PinInput
-                  otp
-                  size="lg"
-                  value={verificationCode}
-                  onChange={handlePinChange}
-                >
-                  {[...Array(6)].map((_, i) => (
-                    <PinInputField key={i} fontFamily="secondary" />
-                  ))}
-                </PinInput>
-              </HStack>
-
-              <Button
-                w="100%"
-                bg="primary"
-                borderRadius="5px"
-                color="#fff"
-                _hover={{ bg: "buttonHover" }}
-                _active={{ bg: "buttonHover" }}
-                fontFamily="secondary"
-                fontWeight="normal"
-                onClick={handleVerifyCode}
-                isDisabled={!isCodeComplete}
-                mt="4"
-              >
-                Enviar código
-              </Button>
 
               <Button
                 w="100%"
@@ -203,7 +134,7 @@ const RecoverPassword = () => {
               >
                 {countdown > 0
                   ? `Espera ${countdown} segundos...`
-                  : "Solicitar nuevo código"}
+                  : "Enviar otro enlace"}
               </Button>
             </VStack>
           )}

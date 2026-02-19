@@ -30,10 +30,11 @@ import {
   IconButton,
   Tooltip,
 } from "@chakra-ui/react";
-import { FiSearch, FiXCircle, FiFileText, FiShare2 } from "react-icons/fi";
+import { FiSearch, FiXCircle, FiFileText, FiShare2, FiSend } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import ticketApi from "../../Api/ticket";
 import eventApi from "../../Api/event";
+import TransferTicketModal from "../../components/TransferTicketModal/TransferTicketModal";
 
 const SellerQRs = () => {
   const [items, setItems] = useState([]);
@@ -42,7 +43,9 @@ const SellerQRs = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const [receiptItem, setReceiptItem] = useState(null);
+  const [transferItem, setTransferItem] = useState(null);
   const { isOpen: isReceiptOpen, onOpen: onReceiptOpen, onClose: onReceiptClose } = useDisclosure();
+  const { isOpen: isTransferOpen, onOpen: onTransferOpen, onClose: onTransferClose } = useDisclosure();
   const toast = useToast();
 
   const loadSoldTickets = async () => {
@@ -102,6 +105,17 @@ const SellerQRs = () => {
     const text = `Entrada: ${item.eventTitle} - ${item.ticketTitle}. Código QR: ${item.qrId}`;
     navigator.clipboard.writeText(text);
     toast({ title: "Texto copiado", description: "Podés pegarlo y enviarlo al comprador.", status: "success", duration: 3000, isClosable: true });
+  };
+
+  const handleTransferir = (item) => {
+    setTransferItem(item);
+    onTransferOpen();
+  };
+
+  const handleTransferSuccess = () => {
+    onTransferClose();
+    setTransferItem(null);
+    loadSoldTickets();
   };
 
   const formatMoney = (n) => {
@@ -243,6 +257,16 @@ const SellerQRs = () => {
                                         onClick={() => handleCompartirQr(item)}
                                       />
                                     </Tooltip>
+                                    <Tooltip label="Transferir a otro email">
+                                      <IconButton
+                                        icon={<FiSend />}
+                                        size="sm"
+                                        colorScheme="teal"
+                                        variant="ghost"
+                                        aria-label="Transferir ticket"
+                                        onClick={() => handleTransferir(item)}
+                                      />
+                                    </Tooltip>
                                   </>
                                 )}
                               </Flex>
@@ -298,6 +322,13 @@ const SellerQRs = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <TransferTicketModal
+        isOpen={isTransferOpen}
+        onClose={() => { onTransferClose(); setTransferItem(null); }}
+        ticket={transferItem ? { qrId: transferItem.qrId, title: transferItem.ticketTitle } : null}
+        onTransferSuccess={handleTransferSuccess}
+      />
     </Box>
   );
 };

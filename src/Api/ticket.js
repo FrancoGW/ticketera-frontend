@@ -86,6 +86,22 @@ const transferTicket = (ticketId, toUserEmail) => {
   });
 };
 
+/** Transfiere un ticket (por QR) a un email. Genera nuevo QR para el destinatario; no necesita cuenta. */
+const transferTicketByQr = (qrId, toEmail) => {
+  if (!qrId || !toEmail) {
+    throw new Error("El QR y el email del destinatario son requeridos");
+  }
+  return api.post("/tickets/transfer-by-qr", { qrId, toEmail });
+};
+
+/** Admin: transfiere cualquier ticket (QR) a cualquier email sin verificar propiedad. */
+const adminTransferTicketByQr = (qrId, toEmail) => {
+  if (!qrId || !toEmail) {
+    throw new Error("El ID del QR y el email del destinatario son requeridos");
+  }
+  return api.post("/tickets/admin/transfer-by-qr", { qrId, toEmail });
+};
+
 const checkEmailExists = (email) => {
   if (!email) {
     throw new Error("El email es requerido");
@@ -208,6 +224,8 @@ const ticketApi = {
   makeTransferable,
   makeNonTransferable,
   transferTicket,
+  transferTicketByQr,
+  adminTransferTicketByQr,
   checkEmailExists,
   createBatch,
   updateBatch,

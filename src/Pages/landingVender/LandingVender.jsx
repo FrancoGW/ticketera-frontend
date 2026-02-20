@@ -61,7 +61,7 @@ const LandingVender = () => {
     if (user) {
       navigate('/seller/new-event');
     } else {
-      navigate('/register', { state: { organizer: true } });
+      navigate('/producers');
     }
   };
 
@@ -109,7 +109,7 @@ const LandingVender = () => {
         'Soporte 24hs x WhatsApp',
       ],
       hasButton: true,
-      buttonText: 'Crear cuenta organizador',
+      buttonText: 'Ser organizador',
       buttonAction: handleCreateOrganizerAccount,
       isActive: true,
     },
@@ -199,7 +199,7 @@ const LandingVender = () => {
                           color={ACCENT}
                           fontWeight="600"
                           cursor="pointer"
-                          onClick={() => navigate('/register', { state: { organizer: true } })}
+                          onClick={() => navigate('/producers')}
                           textDecoration="underline"
                           _hover={{ opacity: 0.9 }}
                         >

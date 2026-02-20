@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import userApi from "../../Api/user";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../auth/context/AuthContext";
 
 const containerVariants = {
@@ -77,13 +77,7 @@ const validatePhoneNumber = (phone) => {
 };
 
 function Register() {
-  const location = useLocation();
-  const isOrganizerSignup = location.state?.organizer === true;
-
-  const [userData, setUserData] = useState(() => ({
-    ...initialUserData,
-    roles: isOrganizerSignup ? ["seller"] : initialUserData.roles,
-  }));
+  const [userData, setUserData] = useState(initialUserData);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [show, setShow] = useState(false);
@@ -308,12 +302,10 @@ function Register() {
                       color="black"
                       letterSpacing="-0.01em"
                     >
-                      {isOrganizerSignup ? "Crear cuenta organizador" : "Crear Cuenta"}
+                      Crear Cuenta
                     </Heading>
                     <Text color="gray.600" fontSize="sm">
-                      {isOrganizerSignup
-                        ? "Completá el formulario. Después elegí tu plan de venta en la siguiente pantalla."
-                        : "Completa el formulario para registrarte"}
+                      Completa el formulario para registrarte
                     </Text>
                   </VStack>
 

@@ -178,7 +178,7 @@ function Header() {
             as="img"
             src="/assets/Logo/Get_Pass_logo_white.svg"
             alt="GetPass"
-            h="36px"
+            h="50px"
             w="auto"
             objectFit="contain"
             display="block"
@@ -817,7 +817,7 @@ function Header() {
                       as="img"
                       src="/assets/Logo/Get_Pass_logo_white.svg"
                       alt="GetPass"
-                      h="32px"
+                      h="50px"
                       w="auto"
                       objectFit="contain"
                     />

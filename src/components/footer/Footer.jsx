@@ -62,7 +62,7 @@ function Footer() {
               as="img"
               src="/assets/Logo/Get_Pass_logo_white.svg"
               alt="GetPass"
-              h={{ base: "28px", md: "32px" }}
+              h="50px"
               w="auto"
               objectFit="contain"
             />

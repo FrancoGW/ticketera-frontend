@@ -50,6 +50,7 @@ import { useMaintenanceMode } from "./hooks/useMaintenanceMode";
 import { PreviewRoute } from "./components/previewRoute/PreviewRoute";
 import LandingVender from "./Pages/landingVender/LandingVender";
 import { ConditionalNewEvent } from "./components/conditionalNewEvent/ConditionalNewEvent";
+import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 
 import theme from "../theme";
 import "./main.css";
@@ -884,6 +885,7 @@ function App() {
     <Box h="100%">
       <ChakraProvider theme={theme}>
         <AuthProvider>
+          <ScrollToTop />
           <AnimatedRoutes />
         </AuthProvider>
       </ChakraProvider>

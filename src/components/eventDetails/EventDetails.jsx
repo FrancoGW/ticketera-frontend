@@ -955,7 +955,10 @@ const EventDetails = () => {
             {cbuCheckoutData && (
               <VStack align="stretch" spacing={4}>
                 <Text fontSize="sm" color="gray.600">
-                  Realizá la transferencia al siguiente CBU/Alias y subí el comprobante.
+                  Realizá la transferencia al siguiente CBU/Alias y subí el comprobante. Para enviar el comprobante tenés que tener cuenta en GetPass (ya estás logueado).
+                </Text>
+                <Text fontSize="xs" color="primary" fontWeight="500">
+                  Al enviar, te llegará un mail: &quot;Estamos validando tu pago&quot;. Cuando el organizador apruebe, recibirás las entradas por email.
                 </Text>
                 <Box p={4} bg="gray.50" borderRadius="lg">
                   {cbuCheckoutData.cbuInfo?.cbu && (

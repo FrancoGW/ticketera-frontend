@@ -12,15 +12,21 @@ import {
   useToast,
   InputGroup,
   InputRightElement,
+  FormControl,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
 import userApi from "../../Api/user";
+import { getPasswordError } from "../../utils/passwordValidation";
+import PasswordStrengthBar from "../../components/PasswordStrengthBar/PasswordStrengthBar";
 
 const ChangePassword = () => {
   const [show, setShow] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [repeatError, setRepeatError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,9 +41,18 @@ const ChangePassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newPassword !== repeatPassword) {
+    const pwdError = getPasswordError(newPassword);
+    const repError =
+      !repeatPassword
+        ? "Confirmá tu contraseña"
+        : newPassword !== repeatPassword
+          ? "Las contraseñas no coinciden"
+          : "";
+    setPasswordError(pwdError || "");
+    setRepeatError(repError || "");
+    if (pwdError || repError) {
       toast({
-        title: "Las contraseñas no coinciden",
+        title: pwdError || "Las contraseñas no coinciden",
         status: "error",
         duration: 4000,
         isClosable: true,
@@ -77,7 +92,9 @@ const ChangePassword = () => {
       <Container
         maxW="7xl"
         minH="70vh"
-        my="10"
+        pt={{ base: 24, md: 32 }}
+        pb={{ base: 16, md: 24 }}
+        px={{ base: 4, md: 6 }}
         display="flex"
         justifyContent="center"
         alignItems="center"
@@ -99,37 +116,50 @@ const ChangePassword = () => {
           </Heading>
 
           <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-            <InputGroup mb="4">
-              <Input
-                pr="4.5rem"
-                type={show ? "text" : "password"}
-                placeholder="Nueva contraseña"
-                fontFamily="secondary"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-              <InputRightElement width="4.5rem">
-                <Button h="1.75rem" size="sm" onClick={() => setShow(!show)}>
-                  {show ? "Ocultar" : "Mostrar"}
-                </Button>
-              </InputRightElement>
-            </InputGroup>
+            <FormControl isInvalid={!!passwordError} mb="4">
+              <InputGroup>
+                <Input
+                  pr="4.5rem"
+                  type={show ? "text" : "password"}
+                  placeholder="Nueva contraseña"
+                  fontFamily="secondary"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordError("");
+                  }}
+                />
+                <InputRightElement width="4.5rem">
+                  <Button h="1.75rem" size="sm" onClick={() => setShow(!show)}>
+                    {show ? "Ocultar" : "Mostrar"}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
+              <PasswordStrengthBar password={newPassword} />
+              <FormErrorMessage>{passwordError}</FormErrorMessage>
+            </FormControl>
 
-            <InputGroup mb="6">
-              <Input
-                pr="4.5rem"
-                type={show ? "text" : "password"}
-                placeholder="Confirmar contraseña"
-                fontFamily="secondary"
-                value={repeatPassword}
-                onChange={(e) => setRepeatPassword(e.target.value)}
-              />
-              <InputRightElement width="4.5rem">
-                <Button h="1.75rem" size="sm" onClick={() => setShow(!show)}>
-                  {show ? "Ocultar" : "Mostrar"}
-                </Button>
-              </InputRightElement>
-            </InputGroup>
+            <FormControl isInvalid={!!repeatError} mb="6">
+              <InputGroup>
+                <Input
+                  pr="4.5rem"
+                  type={show ? "text" : "password"}
+                  placeholder="Confirmar contraseña"
+                  fontFamily="secondary"
+                  value={repeatPassword}
+                  onChange={(e) => {
+                    setRepeatPassword(e.target.value);
+                    setRepeatError("");
+                  }}
+                />
+                <InputRightElement width="4.5rem">
+                  <Button h="1.75rem" size="sm" onClick={() => setShow(!show)}>
+                    {show ? "Ocultar" : "Mostrar"}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
+              <FormErrorMessage>{repeatError}</FormErrorMessage>
+            </FormControl>
 
             <Button
               w="100%"

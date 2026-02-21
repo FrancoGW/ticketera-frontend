@@ -140,7 +140,7 @@ const LandingVender = () => {
   return (
     <Box minH="100vh" bg="#000">
       <Header />
-      <Container maxW="container.xl" py={12} pt={{ base: 24, md: 28 }} px={{ base: 4, md: 8 }}>
+      <Container maxW="container.xl" pt={{ base: 28, md: 32 }} pb={{ base: 16, md: 24 }} px={{ base: 4, md: 8 }}>
         <MotionBox variants={containerVariants} initial="hidden" animate="visible">
           {/* Hero */}
           <VStack spacing={6} mb={16} textAlign="center">

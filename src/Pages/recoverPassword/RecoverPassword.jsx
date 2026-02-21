@@ -67,7 +67,9 @@ const RecoverPassword = () => {
       <Container
         maxW="7xl"
         minH="70vh"
-        my="10"
+        pt={{ base: 24, md: 32 }}
+        pb={{ base: 16, md: 24 }}
+        px={{ base: 4, md: 6 }}
         display="flex"
         justifyContent="center"
         alignItems="center"

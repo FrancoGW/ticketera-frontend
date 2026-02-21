@@ -18,6 +18,7 @@ import {
   ModalFooter,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   Input,
   Select,
   useToast,
@@ -26,11 +27,14 @@ import {
   Container,
   Flex,
   Heading,
+  Text,
 } from '@chakra-ui/react';
 import { FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
 import userService from '../../Api/user';
 import ConfirmDialog from '../confirmDialog/ConfirmDialog';
 import useConfirmDialog from '../../hooks/useConfirmDialog';
+import { getPasswordError } from '../../utils/passwordValidation';
+import PasswordStrengthBar from '../PasswordStrengthBar/PasswordStrengthBar';
 
 const validRoles = ['admin', 'seller', 'pdv', 'validator', 'user'];
 
@@ -47,6 +51,7 @@ const UsersManagement = () => {
     phoneNumber: '',
     isActive: true
   });
+  const [passwordError, setPasswordError] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const confirmDialog = useConfirmDialog();
@@ -88,6 +93,7 @@ const UsersManagement = () => {
   };
 
   const handleOpenModal = (user = null) => {
+    setPasswordError('');
     if (user) {
       setSelectedUser(user);
       setFormData({
@@ -117,6 +123,19 @@ const UsersManagement = () => {
   };
 
   const handleSubmit = async () => {
+    if (!selectedUser) {
+      const pwdError = getPasswordError(formData.password);
+      setPasswordError(pwdError || '');
+      if (pwdError) {
+        toast({
+          title: 'Contraseña inválida',
+          description: pwdError,
+          status: 'error',
+          duration: 4000,
+        });
+        return;
+      }
+    }
     try {
       // Preparamos los datos según si es creación o actualización
       const userData = {
@@ -384,17 +403,22 @@ const UsersManagement = () => {
                     />
                   </FormControl>
                   {!selectedUser && (
-                    <FormControl mb={4}>
+                    <FormControl mb={4} isInvalid={!!passwordError}>
                       <FormLabel fontFamily="secondary" fontWeight="500">Contraseña</FormLabel>
                       <Input
                         name="password"
                         value={formData.password}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          setPasswordError('');
+                        }}
                         type="password"
                         borderRadius="lg"
                         borderColor="gray.200"
                         _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
                       />
+                      <PasswordStrengthBar password={formData.password} />
+                      <FormErrorMessage>{passwordError}</FormErrorMessage>
                     </FormControl>
                   )}
                   <FormControl mb={4}>

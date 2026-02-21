@@ -222,7 +222,7 @@ function Profile() {
     try {
       setIsSavingPlan(planToConfirm.value);
 
-      if (planToConfirm.value === "SIMPLE") {
+      if (planToConfirm.value === "SIMPLE" && !profileUser?.isDemo) {
         const { data } = await paymentApi.createMembershipCheckout();
         if (data?.checkoutUrl) {
           onConfirmPlanClose();
@@ -499,6 +499,14 @@ function Profile() {
                 </Text>
               </Box>
 
+              {profileUser?.isDemo && (
+                <Box p={4} bg="purple.50" borderRadius="lg" borderWidth="1px" borderColor="purple.200">
+                  <Text fontFamily="secondary" fontSize="sm" color="purple.800" fontWeight="500">
+                    Cuenta demo: los datos personales, email y contraseña no se pueden modificar.
+                  </Text>
+                </Box>
+              )}
+
               {/* Información Personal Card */}
               <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
                 <CardBody p={6}>
@@ -523,6 +531,7 @@ function Profile() {
                         key={`firstname-${user?.firstname}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.firstname)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -553,6 +562,7 @@ function Profile() {
                         key={`lastname-${user?.lastname}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.lastname)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -583,6 +593,7 @@ function Profile() {
                         key={`phoneNumber-${user?.phoneNumber}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.phoneNumber)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -613,6 +624,7 @@ function Profile() {
                         key={`dni-${user?.dni}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.dni)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -693,6 +705,7 @@ function Profile() {
                         fontWeight="500"
                         _hover={{ bg: "buttonHover", transform: "translateY(-2px)", boxShadow: "lg" }}
                         _active={{ bg: "buttonHover" }}
+                        isDisabled={profileUser?.isDemo}
                         onClick={() => {
                           setIsRequiringPasswordUpdate(false);
                           onOpen();
@@ -711,6 +724,7 @@ function Profile() {
                         fontWeight="500"
                         _hover={{ bg: "gray.700", transform: "translateY(-2px)", boxShadow: "lg" }}
                         _active={{ bg: "gray.700" }}
+                        isDisabled={profileUser?.isDemo}
                         onClick={() => {
                           setIsRequiringPasswordUpdate(true);
                           onOpen();
@@ -741,7 +755,63 @@ function Profile() {
                       </Heading>
                     </HStack>
                     <VStack align="stretch" spacing={5}>
-                      {(currentPlanName || pendingPlanChange) ? (
+                      {profileUser?.isDemo ? (
+                        <>
+                          <Box p={3} bg="purple.50" borderRadius="lg" borderWidth="1px" borderColor="purple.200">
+                            <Text fontFamily="secondary" fontSize="sm" color="purple.800" fontWeight="500">
+                              Cuenta demo: podés cambiar el método de cobro para mostrar a clientes. No requiere aprobación del equipo.
+                            </Text>
+                          </Box>
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                            {PLAN_OPTIONS.map((plan) => (
+                              <GridItem key={plan.value}>
+                                <Box
+                                  p={5}
+                                  borderRadius="xl"
+                                  borderWidth="2px"
+                                  borderColor={getCurrentPlanValue() === plan.value ? "green.400" : "gray.200"}
+                                  bg={getCurrentPlanValue() === plan.value ? "green.50" : "gray.50"}
+                                  _hover={{ borderColor: "green.300", bg: "green.50" }}
+                                  transition="all 0.2s"
+                                  height="100%"
+                                  display="flex"
+                                  flexDirection="column"
+                                >
+                                  <Flex align="center" gap={3} mb={3}>
+                                    {plan.logoSrc ? (
+                                      <Image src={plan.logoSrc} alt={plan.label} h="32px" objectFit="contain" />
+                                    ) : (
+                                      <Text fontSize="2xl" lineHeight="1">{plan.emoji}</Text>
+                                    )}
+                                    <Text fontFamily="secondary" fontWeight="700" color="gray.800" fontSize="lg">
+                                      {plan.label}
+                                    </Text>
+                                  </Flex>
+                                  <Text fontFamily="secondary" fontSize="sm" color="gray.500" mb={4} flex="1">
+                                    {plan.description}
+                                  </Text>
+                                  <Button
+                                    size="sm"
+                                    colorScheme="green"
+                                    borderRadius="lg"
+                                    fontFamily="secondary"
+                                    fontWeight="500"
+                                    w="100%"
+                                    variant={getCurrentPlanValue() === plan.value ? "solid" : "outline"}
+                                    isDisabled={getCurrentPlanValue() === plan.value}
+                                    onClick={() => {
+                                      setPlanToConfirm(plan);
+                                      onConfirmPlanOpen();
+                                    }}
+                                  >
+                                    {getCurrentPlanValue() === plan.value ? "Plan actual" : "Usar este plan"}
+                                  </Button>
+                                </Box>
+                              </GridItem>
+                            ))}
+                          </SimpleGrid>
+                        </>
+                      ) : (currentPlanName || pendingPlanChange) ? (
                         <>
                           <Flex justify="space-between" align="center" flexWrap="wrap" gap={4} p={4} bg="gray.50" borderRadius="lg">
                             <Box>

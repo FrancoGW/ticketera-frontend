@@ -113,8 +113,9 @@ function Nosotros() {
         variants={fadeInUp}
         bgGradient="linear(to-br, #000, #1a1a1a)"
         color="white"
-        py={{ base: 20, md: 32 }}
-        px={4}
+        pt={{ base: 24, md: 32 }}
+        pb={{ base: 20, md: 32 }}
+        px={{ base: 4, md: 6 }}
         position="relative"
         overflow="hidden"
       >

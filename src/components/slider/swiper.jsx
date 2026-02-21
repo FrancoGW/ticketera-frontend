@@ -19,7 +19,7 @@ import "swiper/css/navigation";
 
 import "./style.css";
 
-import { Autoplay, Pagination, Navigation } from "swiper";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
 
 export default function App() {
   

@@ -32,6 +32,7 @@ import {
   ModalCloseButton,
   useDisclosure,
   Select,
+  Input,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiCheck, FiX, FiEye } from "react-icons/fi";
 import cbuApi from "../../Api/cbu";
@@ -82,8 +83,22 @@ const SellerComprobantes = () => {
     loadProofs();
   }, [selectedEventId]);
 
-  const handleApprove = async (proofId) => {
+  const isDemoProof = (id) => String(id || "").startsWith("demo-proof-");
+
+  const getProofQuantity = (p) => {
+    if (!p.ticketItems?.length) return 0;
+    return p.ticketItems.reduce((sum, it) => sum + (it.quantity || 0), 0);
+  };
+
+  const handleApprove = async (proof) => {
+    const proofId = proof._id;
     setActioningId(proofId);
+    if (isDemoProof(proofId)) {
+      setProofs((prev) => prev.filter((x) => x._id !== proofId));
+      toast({ title: "Comprobante aprobado (demo)", description: "En la cuenta demo las acciones son ilustrativas. Al aprobar, se generarían los QR y se enviarían por email.", status: "success", duration: 5000, isClosable: true, position: "bottom-right" });
+      setActioningId(null);
+      return;
+    }
     try {
       await cbuApi.approveProof(proofId);
       toast({ title: "Comprobante aprobado", description: "Las entradas fueron enviadas por email al comprador.", status: "success", duration: 5000, isClosable: true, position: "bottom-right" });
@@ -103,10 +118,19 @@ const SellerComprobantes = () => {
 
   const handleRejectConfirm = async () => {
     if (!proofToReject) return;
-    setActioningId(proofToReject._id);
+    const proofId = proofToReject._id;
+    setActioningId(proofId);
+    if (isDemoProof(proofId)) {
+      setProofs((prev) => prev.filter((x) => x._id !== proofId));
+      toast({ title: "Comprobante rechazado (demo)", description: "En la cuenta demo es ilustrativo. Al rechazar, al cliente le llegaría un mail: \"Su compra fue rechazada\".", status: "info", duration: 5000, isClosable: true, position: "bottom-right" });
+      onRejectClose();
+      setProofToReject(null);
+      setActioningId(null);
+      return;
+    }
     try {
-      await cbuApi.rejectProof(proofToReject._id, rejectReason);
-      toast({ title: "Comprobante rechazado", status: "success", duration: 4000, isClosable: true, position: "bottom-right" });
+      await cbuApi.rejectProof(proofId, rejectReason);
+      toast({ title: "Comprobante rechazado", description: "Se envió un mail al comprador informando el rechazo.", status: "success", duration: 4000, isClosable: true, position: "bottom-right" });
       onRejectClose();
       setProofToReject(null);
       await loadProofs();
@@ -164,31 +188,61 @@ const SellerComprobantes = () => {
                   <Text fontFamily="secondary" color="gray.500">No hay comprobantes pendientes.</Text>
                 </Center>
               ) : (
-                <TableContainer>
+                <TableContainer overflowX="auto">
                   <Table size="sm" variant="simple">
                     <Thead>
                       <Tr>
+                        <Th fontFamily="secondary">Fecha y hora</Th>
+                        <Th fontFamily="secondary">Nombre</Th>
+                        <Th fontFamily="secondary">Mail</Th>
+                        <Th fontFamily="secondary">DNI</Th>
                         <Th fontFamily="secondary">Evento</Th>
-                        <Th fontFamily="secondary">Comprador</Th>
-                        <Th fontFamily="secondary">Monto</Th>
-                        <Th fontFamily="secondary">Fecha</Th>
+                        <Th fontFamily="secondary">Cant. tickets</Th>
+                        <Th fontFamily="secondary">Comprobante</Th>
+                        <Th fontFamily="secondary">Estado</Th>
                         <Th fontFamily="secondary" textAlign="right">Acciones</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
                       {pendingProofs.map((p) => (
                         <Tr key={p._id}>
-                          <Td fontFamily="secondary">{p.eventRef?.title || "-"}</Td>
-                          <Td fontFamily="secondary">{p.buyerName}<br /><Text fontSize="xs" color="gray.500">{p.buyerEmail}</Text></Td>
-                          <Td fontFamily="secondary" fontWeight="600">${p.amount?.toLocaleString("es-AR")}</Td>
-                          <Td fontFamily="secondary" fontSize="xs" color="gray.600">{formatDate(p.createdAt)}</Td>
+                          <Td fontFamily="secondary" fontSize="xs" color="gray.600" whiteSpace="nowrap">{formatDate(p.createdAt)}</Td>
+                          <Td fontFamily="secondary">{p.buyerName || "-"}</Td>
+                          <Td fontFamily="secondary" fontSize="sm">{p.buyerEmail || "-"}</Td>
+                          <Td fontFamily="secondary" fontSize="sm">{p.buyerDni || "-"}</Td>
+                          <Td fontFamily="secondary" fontSize="sm">{p.eventRef?.title || "-"}</Td>
+                          <Td fontFamily="secondary" fontWeight="600">{getProofQuantity(p)}</Td>
+                          <Td>
+                            {p.proofImageUrl ? (
+                              <Box
+                                as="button"
+                                type="button"
+                                onClick={() => { setSelectedProof(p); onViewOpen(); }}
+                                display="block"
+                                w="56px"
+                                h="40px"
+                                borderRadius="md"
+                                overflow="hidden"
+                                border="1px solid"
+                                borderColor="gray.200"
+                                _hover={{ borderColor: "primary", opacity: 0.9 }}
+                              >
+                                <Image src={p.proofImageUrl} alt="Comprobante" w="100%" h="100%" objectFit="cover" />
+                              </Box>
+                            ) : (
+                              <Text fontSize="xs" color="gray.400">-</Text>
+                            )}
+                          </Td>
+                          <Td>
+                            <Badge colorScheme="orange" fontFamily="secondary" fontSize="xs">Pendiente</Badge>
+                          </Td>
                           <Td textAlign="right">
                             <HStack justify="flex-end" spacing={2}>
                               <Tooltip label="Ver comprobante">
                                 <IconButton icon={<FiEye />} size="sm" aria-label="Ver" onClick={() => { setSelectedProof(p); onViewOpen(); }} />
                               </Tooltip>
-                              <Tooltip label="Aprobar">
-                                <IconButton icon={<FiCheck />} colorScheme="green" size="sm" aria-label="Aprobar" isLoading={actioningId === p._id} onClick={() => handleApprove(p._id)} />
+                              <Tooltip label="Aceptar">
+                                <IconButton icon={<FiCheck />} colorScheme="green" size="sm" aria-label="Aceptar" isLoading={actioningId === p._id} onClick={() => handleApprove(p)} />
                               </Tooltip>
                               <Tooltip label="Rechazar">
                                 <IconButton icon={<FiX />} colorScheme="red" size="sm" aria-label="Rechazar" onClick={() => handleRejectClick(p)} />
@@ -214,11 +268,18 @@ const SellerComprobantes = () => {
           <ModalBody>
             {selectedProof && (
               <VStack align="stretch" spacing={4}>
-                <Text><strong>Comprador:</strong> {selectedProof.buyerName} ({selectedProof.buyerEmail})</Text>
-                <Text><strong>Monto:</strong> ${selectedProof.amount?.toLocaleString("es-AR")}</Text>
-                <Text><strong>Fecha:</strong> {formatDate(selectedProof.createdAt)}</Text>
+                <Text fontFamily="secondary"><strong>Nombre:</strong> {selectedProof.buyerName}</Text>
+                <Text fontFamily="secondary"><strong>Mail:</strong> {selectedProof.buyerEmail}</Text>
+                <Text fontFamily="secondary"><strong>DNI:</strong> {selectedProof.buyerDni || "-"}</Text>
+                <Text fontFamily="secondary"><strong>Evento:</strong> {selectedProof.eventRef?.title || "-"}</Text>
+                <Text fontFamily="secondary"><strong>Cantidad de tickets:</strong> {getProofQuantity(selectedProof)}</Text>
+                <Text fontFamily="secondary"><strong>Monto:</strong> ${selectedProof.amount?.toLocaleString("es-AR")}</Text>
+                <Text fontFamily="secondary"><strong>Fecha y hora:</strong> {formatDate(selectedProof.createdAt)}</Text>
                 {selectedProof.proofImageUrl && (
-                  <Image src={selectedProof.proofImageUrl} alt="Comprobante" maxH="400px" borderRadius="md" />
+                  <Box>
+                    <Text fontFamily="secondary" fontWeight="600" mb={2}>Comprobante:</Text>
+                    <Image src={selectedProof.proofImageUrl} alt="Comprobante" maxH="400px" borderRadius="md" w="100%" objectFit="contain" />
+                  </Box>
                 )}
               </VStack>
             )}
@@ -233,12 +294,19 @@ const SellerComprobantes = () => {
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4} fontFamily="secondary" fontSize="sm">¿Motivo del rechazo? (opcional)</Text>
-            <Select placeholder="Motivo" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} fontFamily="secondary">
+            <Select placeholder="Elegir motivo" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} fontFamily="secondary" mb={3}>
               <option value="Comprobante ilegible">Comprobante ilegible</option>
               <option value="Monto incorrecto">Monto incorrecto</option>
               <option value="Transferencia no recibida">Transferencia no recibida</option>
               <option value="Otro">Otro</option>
             </Select>
+            <Input
+              placeholder="Escribir motivo (opcional)"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              fontFamily="secondary"
+              size="sm"
+            />
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={onRejectClose}>Cancelar</Button>

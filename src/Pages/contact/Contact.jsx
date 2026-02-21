@@ -188,7 +188,9 @@ function Contact() {
         bgGradient="linear(to-br, #000, #1a1a1a)"
         position="relative"
         overflow="hidden"
-        py={{ base: 12, md: 20 }}
+        pt={{ base: 24, md: 32 }}
+        pb={{ base: 16, md: 24 }}
+        px={{ base: 2, md: 0 }}
       >
         {/* Background Pattern */}
         <Box
@@ -202,7 +204,7 @@ function Contact() {
           backgroundSize="40px 40px"
         />
 
-        <Container maxW="container.xl" px={4} position="relative" zIndex={1}>
+        <Container maxW="container.xl" px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
           <VStack spacing={12} align="stretch">
             {/* Header Section */}
             <motion.div

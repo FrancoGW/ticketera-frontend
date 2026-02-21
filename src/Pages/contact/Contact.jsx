@@ -164,7 +164,7 @@ function Contact() {
       icon: FiMail,
       title: "Email",
       description: "Escribinos a nuestro correo",
-      value: "soporte@getpass.com",
+      value: "contacto@getpass.com.ar",
     },
     {
       icon: FiHeadphones,

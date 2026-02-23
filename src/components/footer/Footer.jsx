@@ -2,15 +2,15 @@ import React from 'react'
 import { 
   Box, 
   Flex, 
-  Heading, 
   Link, 
   Text,
   Container,
-  HStack,
-  Divider
+  Divider,
+  Icon,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router'
+import { FaInstagram } from 'react-icons/fa'
 
 const footerVariants = {
   hidden: {
@@ -170,6 +170,36 @@ function Footer() {
             whileHover={{ y: -2 }}
           >
             Soporte
+          </Link>
+
+          <Text
+            display={{ base: "none", md: "block" }}
+            color="rgba(255, 255, 255, 0.3)"
+            fontSize="md"
+          >
+            •
+          </Text>
+
+          <Link
+            href="https://www.instagram.com/getpass.ar"
+            isExternal
+            fontFamily="secondary"
+            fontSize={{ base: "sm", md: "md" }}
+            fontWeight="400"
+            color="rgba(255, 255, 255, 0.8)"
+            _hover={{
+              color: "#fff",
+              textDecoration: "none",
+            }}
+            transition="color 0.2s"
+            as={motion.a}
+            whileHover={{ y: -2 }}
+            display="inline-flex"
+            alignItems="center"
+            gap={2}
+          >
+            <Icon as={FaInstagram} boxSize={5} />
+            Instagram
           </Link>
         </Flex>
 

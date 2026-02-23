@@ -155,6 +155,14 @@ const getBatches = (ticketId) => {
   return api.get(`/tickets/batch/${ticketId}`);
 };
 
+/** Aumentar capacidad de un ticket (GP-Coins). 1 GP-Coin = 1 entrada. */
+const addCapacityToTicket = (ticketId, quantity) => {
+  if (!ticketId || quantity == null || quantity < 1) {
+    throw new Error("Ticket y cantidad (≥1) son requeridos");
+  }
+  return api.put(`/tickets/${ticketId}/add-capacity`, { quantity: Number(quantity) });
+};
+
 // Endpoints para tickets de cortesía
 const generateCourtesyTicket = (data) => {
   if (!data.eventId || !data.ticketId || !data.email || !data.date) {
@@ -244,6 +252,7 @@ const ticketApi = {
   deactivateBatch,
   getActiveBatch,
   getBatches,
+  addCapacityToTicket,
   generateCourtesyTicket,
   getCourtesyTicketsCount,
   getCourtesyTicketsHistory,

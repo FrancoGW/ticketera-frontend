@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
+import { useSelector } from "react-redux";
 import {
   Flex,
   Button,
@@ -72,6 +73,8 @@ function EditEvent() {
   const cancelRef = useRef();
   const navigate = useNavigate();
   const toast = useToast();
+  const { data: reduxUser } = useSelector((state) => state.user);
+  const isDemoMode = reduxUser?.isDemo === true;
 
   useEffect(() => {
     const getEvent = () => {
@@ -101,7 +104,7 @@ function EditEvent() {
     getEvent();
   }, []);
 
-  useState(() => {
+  useEffect(() => {
     const tokenDecoded =
       localStorage.getItem("token") &&
       jwt_decode(localStorage.getItem("token"));
@@ -149,6 +152,7 @@ function EditEvent() {
     };
 
     delete updatedEvent.addressRef;
+    if (updatedEvent.sellingMethod === "FAST") delete updatedEvent.serviceFeePercentage;
 
     const updatedAddress = {
       ...event.addressRef,
@@ -255,6 +259,10 @@ function EditEvent() {
         }
         setNewPicture(e.target.files[0]);
         break;
+      case "serviceFeePercentage":
+        const pct = Math.min(100, Math.max(0, Number(value) || 0));
+        setEvent({ ...event, serviceFeePercentage: pct / 100 });
+        break;
       case "province":
         setSelectedProvince(value);
         break;
@@ -323,6 +331,15 @@ function EditEvent() {
           </Flex>
         ) : (
           <>
+            {isDemoMode && (
+              <Alert status="info" mb={4} borderRadius="md">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Cuenta demo</AlertTitle>
+                  <AlertDescription>No podés modificar los datos del evento. Solo podés ver la información.</AlertDescription>
+                </Box>
+              </Alert>
+            )}
             <Flex justify="space-between">
               <Heading fontFamily="secondary" color="tertiary" fontSize="2xl">
                 Detalles del evento
@@ -359,7 +376,7 @@ function EditEvent() {
                       px="2"
                       fontSize="sm"
                       onClick={() => setIsEditing(true)}
-                      disabled={true}
+                      disabled={isDemoMode}
                     >
                       <Icon fontSize="md" mb="0.5" as={AiOutlineEdit} />
                       <Text display={{ base: "none", md: "block" }} ml="2">
@@ -372,7 +389,7 @@ function EditEvent() {
                       fontWeight="400"
                       px="2"
                       onClick={() => setIsAlertOpen(true)}
-                      disabled={isLoading}
+                      disabled={isLoading || isDemoMode}
                     >
                       <Icon fontSize="md" as={DeleteIcon} />
                     </Button>
@@ -392,7 +409,7 @@ function EditEvent() {
                     name="title"
                     value={event?.title}
                     onChange={handleInputChange}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                   />
                 </FormControl>
                 <FormControl id="adultsOnly" isRequired>
@@ -402,12 +419,39 @@ function EditEvent() {
                     name="adultsOnly"
                     value={event?.adultsOnly}
                     onChange={handleInputChange}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                   >
                     <option value="true">Si</option>
                     <option value="false">No</option>
                   </Select>
                 </FormControl>
+
+                {(event?.sellingMethod === "SIMPLE" || event?.sellingMethod === "CUSTOM") && (
+                  <FormControl id="serviceFeePercentage">
+                    <FormLabel>Cargo por servicio para clientes (%)</FormLabel>
+                    <Input
+                      name="serviceFeePercentage"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      value={event?.serviceFeePercentage != null ? Math.round(Number(event.serviceFeePercentage) * 100) : ""}
+                      onChange={handleInputChange}
+                      placeholder="0"
+                      style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
+                    />
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      Solo para CBU y Tokens. Por defecto 0%. Si querés cobrar un cargo a los compradores, configurá el porcentaje acá.
+                    </Text>
+                  </FormControl>
+                )}
+
+                {event?.sellingMethod === "FAST" && (
+                  <Box p={3} bg="gray.50" borderRadius="md" mb={4}>
+                    <Text fontSize="sm" fontWeight="500">Cargo por servicio (Mercado Pago)</Text>
+                    <Text fontSize="xs" color="gray.600">Lo configura GetPass desde el panel de administración. Por defecto 10%.</Text>
+                  </Box>
+                )}
 
                 <FormControl id="description" isRequired>
                   <FormLabel>Descripción del Evento</FormLabel>
@@ -415,7 +459,7 @@ function EditEvent() {
                     name="description"
                     value={event?.description}
                     onChange={handleInputChange}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                   />
                 </FormControl>
                 <FormControl id="start-date">
@@ -424,7 +468,7 @@ function EditEvent() {
                     <span style={{ color: "#E53E3E" }}>*</span>
                   </FormLabel>
                   <Flex flexDir="column" gap="2rem">
-                    {isEditing && (
+                    {isEditing && !isDemoMode && (
                       <AddDates dates={eventDates} setDates={setEventDates} />
                     )}
                     <Box>
@@ -472,7 +516,7 @@ function EditEvent() {
                                       .toString()
                                       .padStart(2, "0")}
                                   </Text>
-                                  {isEditing && (
+                                  {isEditing && !isDemoMode && (
                                     <DeleteIcon
                                       color="red.400"
                                       onClick={() =>
@@ -499,7 +543,7 @@ function EditEvent() {
                     name="province"
                     onChange={handleInputChange}
                     value={selectedProvince || event?.addressRef?.province}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                   >
                     <option value="Buenos Aires">Buenos Aires</option>
                     <option value="Ciudad Autónoma de Buenos Aires">
@@ -547,7 +591,7 @@ function EditEvent() {
                     styles={{
                       container: (baseStyles, state) => ({
                         ...baseStyles,
-                        pointerEvents: isEditing ? "auto" : "none",
+                        pointerEvents: isEditing && !isDemoMode ? "auto" : "none",
                       }),
                     }}
                     getOptionLabel={(e) => e.localidad_censal_nombre}
@@ -559,7 +603,7 @@ function EditEvent() {
                   <Input
                     name="addressRef.direction"
                     value={event?.addressRef?.direction}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                     onChange={handleInputChange}
                   />
                 </FormControl>
@@ -568,7 +612,7 @@ function EditEvent() {
                   <Input
                     name="addressRef.place"
                     value={event?.addressRef?.place}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                     onChange={handleInputChange}
                   />
                 </FormControl>
@@ -578,11 +622,11 @@ function EditEvent() {
                     name="addressRef.postalCode"
                     type="number"
                     value={event?.addressRef?.postalCode}
-                    style={{ pointerEvents: isEditing ? "auto" : "none" }}
+                    style={{ pointerEvents: isEditing && !isDemoMode ? "auto" : "none" }}
                     onChange={handleInputChange}
                   />
                 </FormControl>
-                {isEditing && (
+                {isEditing && !isDemoMode && (
                   <>
                     <Button
                       color="white"
@@ -637,7 +681,7 @@ function EditEvent() {
                     event?.pictures ? loadImage() : "/assets/img/loading.svg"
                   }
                 />
-                {isEditing && (
+                {isEditing && !isDemoMode && (
                   <Flex flexDir="column" px="4" bg="white">
                     <FormControl id="pictures" isRequired>
                       <Input

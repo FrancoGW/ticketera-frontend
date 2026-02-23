@@ -11,6 +11,7 @@ import Register from "./Pages/register/register";
 import RecoverPassword from "./Pages/recoverPassword/RecoverPassword";
 import Politics from "./Pages/politics/Politics";
 import EventDetails from "./components/eventDetails/EventDetails";
+import EventoDemoLanding from "./Pages/eventoDemo/EventoDemoLanding";
 import NewEvent from "./Pages/new-event/NewEvent";
 import Profile from "./Pages/profile/Profile";
 import Productores from "./Pages/productores/Productores";
@@ -39,6 +40,8 @@ import SellerDashboard from "./Pages/sellerDashboard/SellerDashboard";
 import SellerQRs from "./Pages/sellerQRs/SellerQRs";
 import SellerComprobantes from "./Pages/sellerComprobantes/SellerComprobantes";
 import SellerGpCoins from "./Pages/sellerGpCoins/SellerGpCoins";
+import SellerRRPP from "./Pages/sellerRRPP/SellerRRPP";
+import SellerConsumiciones from "./Pages/sellerConsumiciones/SellerConsumiciones";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
 import AdminPlanRequests from "./Pages/adminPlanRequests/AdminPlanRequests";
@@ -221,6 +224,19 @@ function AnimatedRoutes() {
                   variants={pageVariants}
                 >
                   <EventDetails />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/evento-demo"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <EventoDemoLanding />
                 </motion.div>
               }
             />
@@ -453,6 +469,26 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["seller", "admin"]}>
                   <LayoutWithSidebar>
                     <SellerTicketsPage />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/rrpp"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerRRPP />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/consumiciones"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerConsumiciones />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

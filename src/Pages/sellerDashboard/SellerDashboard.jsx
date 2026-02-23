@@ -23,7 +23,10 @@ import {
   Badge,
   Flex,
   useBreakpointValue,
+  Button,
 } from "@chakra-ui/react";
+import { useSelector } from "react-redux";
+import { Link as RouterLink } from "react-router-dom";
 import {
   FiTrendingUp,
   FiDollarSign,
@@ -31,6 +34,7 @@ import {
   FiCalendar,
   FiCreditCard,
   FiPieChart,
+  FiExternalLink,
 } from "react-icons/fi";
 import {
   BarChart,
@@ -96,6 +100,8 @@ const SellerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { data: user } = useSelector((state) => state.user);
+  const isDemoOrganizer = user?.isDemo === true;
 
   useEffect(() => {
     const load = async () => {
@@ -206,6 +212,39 @@ const SellerDashboard = () => {
               Resumen de ventas, ganancias, medios de pago y registro de compradores
             </Text>
           </Box>
+
+          {isDemoOrganizer && (
+            <Card
+              borderRadius="xl"
+              boxShadow="md"
+              border="2px solid"
+              borderColor="blue.200"
+              bg="blue.50"
+              overflow="hidden"
+            >
+              <CardBody p={5}>
+                <Flex align="center" justify="space-between" flexWrap="wrap" gap={4}>
+                  <Box>
+                    <Text fontWeight="700" fontSize="lg" color="gray.800" fontFamily="secondary">
+                      Vista previa de tu evento demo
+                    </Text>
+                    <Text fontSize="sm" color="gray.600" mt={1}>
+                      Mostrá a clientes cómo se vería un evento publicado con tu método de pago, consumiciones y RRPPs.
+                    </Text>
+                  </Box>
+                  <Button
+                    as={RouterLink}
+                    to="/evento-demo"
+                    colorScheme="blue"
+                    rightIcon={<FiExternalLink />}
+                    size="md"
+                  >
+                    Ver landing del evento demo
+                  </Button>
+                </Flex>
+              </CardBody>
+            </Card>
+          )}
 
           <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
             <StatCard

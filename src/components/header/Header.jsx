@@ -41,6 +41,7 @@ import {
   FiRepeat,
   FiHelpCircle,
   FiFileText,
+  FiPackage,
 } from "react-icons/fi";
 import { RiTicket2Line, RiQrScanLine, RiQrCodeLine } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
@@ -968,6 +969,20 @@ function Header() {
                             icon={RiTicket2Line}
                             label="Gestionar Tickets"
                             delay={0.33}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/seller/rrpp"
+                            icon={FiUsers}
+                            label="RRPP"
+                            delay={0.335}
+                            onClick={getButtonProps().onClick}
+                          />
+                          <MobileMenuItem
+                            href="/seller/consumiciones"
+                            icon={FiPackage}
+                            label="Consumiciones"
+                            delay={0.337}
                             onClick={getButtonProps().onClick}
                           />
                           <MobileMenuItem

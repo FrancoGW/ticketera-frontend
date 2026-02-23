@@ -63,6 +63,7 @@ const EventDetails = () => {
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [selectedRrppId, setSelectedRrppId] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [cbuCheckoutData, setCbuCheckoutData] = useState(null);
   const [proofFile, setProofFile] = useState(null);
@@ -255,8 +256,9 @@ const EventDetails = () => {
     setSubtotal(newSubtotal);
 
     // Calcular el cargo por servicio usando serviceFeePercentage del evento
-    // serviceFeePercentage viene como decimal (0.2 = 20%, 0.1 = 10%)
-    const serviceFeePercentage = event?.serviceFeePercentage || 0;
+    // CBU (SIMPLE) y Tokens (CUSTOM): sin cargo por defecto. Mercado Pago (FAST): 10% por defecto.
+    const defaultServiceFee = (event?.sellingMethod === 'SIMPLE' || event?.sellingMethod === 'CUSTOM') ? 0 : 0.10;
+    const serviceFeePercentage = event?.serviceFeePercentage ?? defaultServiceFee;
     const newServiceCharge = newSubtotal * serviceFeePercentage;
     setServiceCharge(newServiceCharge);
 
@@ -331,6 +333,7 @@ const EventDetails = () => {
       selectedDate: event.dates && event.dates.length > 0 ? event.dates[selectedDate] : null,
       discountCode: discountCode || undefined,
       discountAmount: discount || undefined,
+      selectedRrpp: selectedRrppId && selectedRrppId.trim() ? selectedRrppId.trim() : undefined,
     };
 
     console.log('Checkout data:', checkoutData);
@@ -819,6 +822,41 @@ const EventDetails = () => {
                       )}
                     </Box>
 
+                    {event?.rrpp?.length > 0 && (
+                      <>
+                        <Divider />
+                        <Box>
+                          <Text
+                            fontSize={{ base: "md", md: "sm" }}
+                            fontWeight="600"
+                            mb={2}
+                            fontFamily="secondary"
+                            color="gray.700"
+                          >
+                            ¿Comprás a través de un revendedor?
+                          </Text>
+                          <Select
+                            value={selectedRrppId}
+                            onChange={(e) => setSelectedRrppId(e.target.value)}
+                            placeholder="Ninguno"
+                            borderColor="gray.300"
+                            borderWidth="2px"
+                            _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
+                            fontFamily="secondary"
+                            size={{ base: "md", md: "sm" }}
+                            borderRadius="lg"
+                          >
+                            <option value="">Ninguno</option>
+                            {event.rrpp.map((r) => (
+                              <option key={r._id} value={r._id}>
+                                {r.fullname}{r.code ? ` (${r.code})` : ""}
+                              </option>
+                            ))}
+                          </Select>
+                        </Box>
+                      </>
+                    )}
+
                     <Divider />
 
                     {/* Resumen de Compra */}
@@ -984,13 +1022,16 @@ const EventDetails = () => {
                     <Text fontWeight="700" fontSize="xl" color="green.600">${cbuCheckoutData.totalAmount?.toLocaleString("es-AR")}</Text>
                   </Box>
                 </Box>
-                <FormControl>
-                  <Text mb={2} fontSize="sm" fontWeight="500">Comprobante de pago (imagen)</Text>
-                  <Input type="file" accept="image/*" onChange={handleProofFileChange} p={1} />
+                <FormControl isRequired>
+                  <Text mb={2} fontSize="sm" fontWeight="500">Comprobante de transferencia (obligatorio)</Text>
+                  <Input type="file" accept="image/*" onChange={handleProofFileChange} p={1} required />
                   {proofPreview && (
                     <Box mt={2}>
                       <Image src={proofPreview} alt="Vista previa" maxH="120px" borderRadius="md" />
                     </Box>
+                  )}
+                  {!proofFile && (
+                    <Text fontSize="xs" color="orange.600" mt={1}>Debés subir la captura del comprobante para completar la compra.</Text>
                   )}
                 </FormControl>
               </VStack>

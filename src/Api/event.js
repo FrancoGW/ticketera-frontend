@@ -13,6 +13,10 @@ const getEventById = (id) => {
   return api.get(`/events/getEvent/${id}`);
 };
 
+const getDemoEvent = () => {
+  return api.get("/events/demo");
+};
+
 const getEvents = (query) => {
   try {
     const { page = 1, limit = 10, status = 'approved', hasMercadoPago } = query;
@@ -99,9 +103,46 @@ const updateRrppName = (eventId, rrppId, name) => {
   return api.put(`/events/${eventId}/rrpp/${rrppId}`, { name });
 };
 
-const createRrpp = (eventId, rrppName) => {
-  return api.post(`/events/${eventId}/rrpp`, { name: rrppName });
+const updateRrpp = (eventId, rrppId, { name, code } = {}) => {
+  return api.put(`/events/${eventId}/rrpp/${rrppId}`, { name, code });
 };
+
+const createRrpp = (eventId, { name, code } = {}) => {
+  return api.post(`/events/${eventId}/rrpp`, { name: name || '', code: code || undefined });
+};
+
+const uploadConsumicionImage = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post("/events/upload-consumicion-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+const createConsumicion = (eventId, { name, price, description, imageUrl, stock } = {}) => {
+  return api.post(`/events/${eventId}/consumiciones`, {
+    name: name || '',
+    price: Number(price) || 0,
+    description: description || undefined,
+    imageUrl: imageUrl || undefined,
+    stock: stock !== undefined && stock !== '' ? Number(stock) : undefined,
+  });
+};
+
+const updateConsumicion = (eventId, consumicionId, { name, price, description, imageUrl, stock } = {}) => {
+  return api.put(`/events/${eventId}/consumiciones/${consumicionId}`, {
+    name,
+    price: price !== undefined ? Number(price) : undefined,
+    description,
+    imageUrl,
+    stock: stock !== undefined ? (stock === '' ? undefined : Number(stock)) : undefined,
+  });
+};
+
+const deleteConsumicion = (eventId, consumicionId) => {
+  return api.delete(`/events/${eventId}/consumiciones/${consumicionId}`);
+};
+
 const updateCommissionPercentage = (eventId, commissionPercentage) => {
   return api.patch(`/events/${eventId}/commission`, { commissionPercentage });
 };
@@ -323,6 +364,7 @@ const eventApi = {
   createEvent,
   getEvents,
   getEventById,
+  getDemoEvent,
   updateEvent,
   updateVenueMap,
   deleteEventById,
@@ -337,6 +379,11 @@ const eventApi = {
   getLocalitiesByProvince,
   updateRrppName,
   createRrpp,
+  updateRrpp,
+  uploadConsumicionImage,
+  createConsumicion,
+  updateConsumicion,
+  deleteConsumicion,
   updateCommissionPercentage,
   getEventStats
 };

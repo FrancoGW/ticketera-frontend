@@ -1,4 +1,4 @@
-import { Td, Tr, Button, useDisclosure, Stack, Box } from "@chakra-ui/react";
+import { Td, Tr, Button, useDisclosure, Stack, Box, Text } from "@chakra-ui/react";
 import { Document, Page, View, Text as PdfText, PDFDownloadLink, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
 import { QRCodeCanvas } from 'qrcode.react';
 import { useEffect, useRef, useState } from "react";
@@ -160,12 +160,14 @@ const QrPDF = ({ ticket, eventTitle, qrCodeDataUri }) => {
 };
 
 const TicketInfo = ({ ticket, index, ticketsData }) => {
+  const isPendiente = ticket.status === 'pendiente';
   const qrCodeCanvasRef = useRef(null)
   const [qrCodeDataUri, setQrCodeDataUri] = useState(null)
   const [isQrReady, setIsQrReady] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   useEffect(() => {
+    if (isPendiente) return;
     // Esperar a que el QR se renderice completamente
     const timer = setTimeout(() => {
       if (qrCodeCanvasRef.current) {
@@ -183,7 +185,7 @@ const TicketInfo = ({ ticket, index, ticketsData }) => {
     }, 100); // Pequeño delay para asegurar que el canvas esté renderizado
 
     return () => clearTimeout(timer);
-  }, [ticket.qrId]) // Depender del qrId en lugar del ref
+  }, [ticket.qrId, isPendiente])
 
   const handleTransferSuccess = () => {
     window.location.reload()
@@ -192,7 +194,37 @@ const TicketInfo = ({ ticket, index, ticketsData }) => {
   const placeAndDate = ticket.date?.timestampStart
     ? new Date(ticket.date.timestampStart).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : '—';
-  const valorStr = typeof ticket.value === 'number' ? `$${ticket.value.toLocaleString('es-AR')}` : ticket.value ?? '—';
+  const valorStr = typeof ticket.value === 'number' ? `$${ticket.value?.toLocaleString?.('es-AR') ?? ticket.value}` : ticket.value ?? '—';
+
+  if (isPendiente) {
+    return (
+      <Tr key={`pendiente-${index}`}>
+        <Td>{ticket.title}</Td>
+        <Td fontSize="sm" color="gray.700">{placeAndDate}</Td>
+        <Td fontWeight="600">{valorStr}</Td>
+        <Td>
+          <Stack direction="column" spacing={1} align="flex-start">
+            <Box
+              px={3}
+              py={2}
+              borderRadius="md"
+              bg="orange.50"
+              borderWidth="1px"
+              borderColor="orange.200"
+              fontSize="sm"
+              color="orange.800"
+              fontFamily="secondary"
+            >
+              Pendiente de aprobación
+            </Box>
+            <Text fontSize="xs" color="gray.600" fontFamily="secondary">
+              El organizador debe aprobar tu comprobante. Cuando lo apruebe, recibirás las entradas por email y podrás descargar el QR acá.
+            </Text>
+          </Stack>
+        </Td>
+      </Tr>
+    );
+  }
 
   return (
     <Tr key={index}>

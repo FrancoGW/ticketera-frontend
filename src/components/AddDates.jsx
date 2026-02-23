@@ -42,7 +42,7 @@ const generateMinutes = () => {
   }));
 };
 
-export default function AddDates({ dates, setDates }) {
+export default function AddDates({ dates, setDates, isReadOnly }) {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [objDate, setObjDate] = useState(initialObjDate);
   const toast = useToast();
@@ -171,7 +171,7 @@ export default function AddDates({ dates, setDates }) {
   };
 
   return (
-    <Box>
+    <Box pointerEvents={isReadOnly ? "none" : "auto"} opacity={isReadOnly ? 0.85 : 1}>
       <Flex flexDir={{base:'column',xl:'row'}} gap={4} align={{base: 'stretch', xl: 'flex-start'}}>
         {/* Calendario */}
         <Box maxW={{base: '100%', xl: '320px'}}>
@@ -375,6 +375,7 @@ export default function AddDates({ dates, setDates }) {
           </Flex>
 
           {/* Botón Agregar */}
+          {!isReadOnly && (
           <Button
             onClick={addDate}
             bg="primary"
@@ -395,6 +396,7 @@ export default function AddDates({ dates, setDates }) {
           >
             Agregar fecha
           </Button>
+          )}
         </Flex>
       </Flex>
     </Box>

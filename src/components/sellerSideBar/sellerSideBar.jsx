@@ -1,6 +1,6 @@
 import { Box, VStack, Icon, Text, Flex, Heading, Divider } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiPlus, FiUser, FiBarChart2, FiFileText, FiDollarSign } from "react-icons/fi";
+import { FiHome, FiPlus, FiUser, FiBarChart2, FiFileText, FiDollarSign, FiUsers, FiPackage } from "react-icons/fi";
 import { RiTicket2Line, RiQrScanLine, RiQrCodeLine } from "react-icons/ri";
 import { useAuth } from "../../auth/context/AuthContext";
 
@@ -13,6 +13,8 @@ const SellerSidebar = () => {
   const baseItems = [
     { path: '/profile', icon: FiUser, label: 'Mi Perfil' },
     { path: '/profile/my-events', icon: FiHome, label: 'Mis Eventos' },
+    { path: '/seller/rrpp', icon: FiUsers, label: 'RRPP' },
+    { path: '/seller/consumiciones', icon: FiPackage, label: 'Consumiciones' },
     { path: '/seller/dashboard', icon: FiBarChart2, label: 'Estadísticas' },
     { path: '/seller/new-event', icon: FiPlus, label: 'Crear Evento' },
     { path: '/seller/tickets', icon: RiTicket2Line, label: 'Gestionar Tickets' },

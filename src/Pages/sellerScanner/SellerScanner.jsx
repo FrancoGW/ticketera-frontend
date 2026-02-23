@@ -31,9 +31,9 @@ const SellerScanner = () => {
   const [scannerUrl, setScannerUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
-  
-  // URL base del frontend
-  const FRONTEND_BASE_URL = 'https://ticketera-frontend-swart.vercel.app';
+
+  // Usar siempre la URL del frontend configurada en el backend (FRONTEND_URL). Fallback: env del build o origen actual.
+  const frontendBaseUrl = import.meta.env.VITE_FRONTEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
   useEffect(() => {
     loadScannerUrl();
@@ -42,40 +42,26 @@ const SellerScanner = () => {
   const loadScannerUrl = async () => {
     try {
       setIsLoading(true);
-      
-      // Función para validar si una URL es válida
+
       const isValidUrl = (url) => {
         if (!url || typeof url !== 'string') return false;
-        // Rechazar URLs que contengan "undefined"
         if (url.includes('undefined')) return false;
-        // Aceptar URLs completas (http/https)
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-          return true;
-        }
-        // Aceptar paths que empiecen con /
-        if (url.startsWith('/')) {
-          return true;
-        }
+        if (url.startsWith('http://') || url.startsWith('https://')) return true;
+        if (url.startsWith('/')) return true;
         return false;
       };
-      
-      // PRIORIDAD 1: Generar token de validador (requiere autenticación)
-      // El endpoint /qr/generate-validator requiere Authorization: Bearer ${userToken}
-      // y devuelve { token: "...", expiresIn: 7200 }
+
+      // PRIORIDAD 1: Obtener la URL del scanner desde el backend (usa FRONTEND_URL del servidor)
       try {
         const validatorResponse = await qrApi.generateValidatorUrl();
-        console.log('Respuesta de generateValidatorUrl:', validatorResponse);
-        
-        // El backend devuelve { token: "...", expiresIn: 7200 }
+        if (validatorResponse?.data?.validatorUrl && isValidUrl(validatorResponse.data.validatorUrl)) {
+          setScannerUrl(validatorResponse.data.validatorUrl);
+          return;
+        }
         if (validatorResponse?.data?.token) {
-          const validatorToken = validatorResponse.data.token;
-          const expiresIn = validatorResponse.data.expiresIn || 7200; // 2 horas por defecto
           const scannerPath = '/validator/qr-scanner';
-          const finalUrl = `${FRONTEND_BASE_URL}${scannerPath}?token=${encodeURIComponent(validatorToken)}`;
-          setScannerUrl(finalUrl);
-          
-          // Guardar información del token para referencia
-          console.log(`✅ Token de validador generado. Expira en ${expiresIn} segundos (${expiresIn / 3600} horas)`);
+          const url = `${frontendBaseUrl.replace(/\/$/, '')}${scannerPath}?token=${encodeURIComponent(validatorResponse.data.token)}`;
+          setScannerUrl(url);
           return;
         }
       } catch (validatorError) {
@@ -88,8 +74,8 @@ const SellerScanner = () => {
           isClosable: true,
         });
       }
-      
-      // FALLBACK: Intentar obtener la URL desde otro endpoint (si existe)
+
+      // FALLBACK: GET /qr/validator-url (también devuelve URL construida con FRONTEND_URL en el backend)
       try {
         const { data } = await qrApi.getScannerUrl();
         if (data?.validatorUrl && isValidUrl(data.validatorUrl)) {
@@ -98,7 +84,7 @@ const SellerScanner = () => {
             return;
           }
           if (data.validatorUrl.startsWith('/')) {
-            setScannerUrl(`${FRONTEND_BASE_URL}${data.validatorUrl}`);
+            setScannerUrl(`${frontendBaseUrl.replace(/\/$/, '')}${data.validatorUrl}`);
             return;
           }
         }
@@ -119,10 +105,7 @@ const SellerScanner = () => {
       
     } catch (error) {
       console.error('Error cargando URL del scanner:', error);
-      
-      // Fallback: construir URL básica
-      const finalUrl = buildScannerUrl();
-      setScannerUrl(finalUrl);
+      setScannerUrl('');
     } finally {
       setIsLoading(false);
     }

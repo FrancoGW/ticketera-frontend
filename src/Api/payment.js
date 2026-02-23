@@ -1,13 +1,14 @@
 import api from "../config/axios.config"
 
 const createCheckout = (data) => {
-  const { ticketsToBuy, description, selectedDate, discountCode, discountAmount } = data
+  const { ticketsToBuy, description, selectedDate, discountCode, discountAmount, selectedRrpp } = data
   return api.post('/payment/create-checkout', { 
     ticketsToBuy, 
     description, 
     selectedDate,
     discountCode,
-    discountAmount
+    discountAmount,
+    selectedRrpp: selectedRrpp || undefined
   })
 }
 
@@ -21,13 +22,14 @@ const validateDiscountCode = (discountCode, eventId, ticketsToBuy) => {
 
 // Preview del checkout para mostrar total y cargo por servicio antes de crear el checkout
 const previewCheckout = (data) => {
-  const { ticketsToBuy, description, selectedDate, discountCode, discountAmount } = data
+  const { ticketsToBuy, description, selectedDate, discountCode, discountAmount, selectedRrpp } = data
   return api.post('/payment/preview-checkout', { 
     ticketsToBuy, 
     description, 
     selectedDate,
     discountCode,
-    discountAmount
+    discountAmount,
+    selectedRrpp: selectedRrpp || undefined
   })
 }
 

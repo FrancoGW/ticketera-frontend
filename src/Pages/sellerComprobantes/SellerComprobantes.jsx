@@ -94,14 +94,14 @@ const SellerComprobantes = () => {
     const proofId = proof._id;
     setActioningId(proofId);
     if (isDemoProof(proofId)) {
-      setProofs((prev) => prev.filter((x) => x._id !== proofId));
-      toast({ title: "Comprobante aprobado (demo)", description: "En la cuenta demo las acciones son ilustrativas. Al aprobar, se generarían los QR y se enviarían por email.", status: "success", duration: 5000, isClosable: true, position: "bottom-right" });
+      setProofs((prev) => prev.map((x) => (x._id === proofId ? { ...x, status: "approved" } : x)));
+      toast({ title: "Comprobante aprobado (demo)", description: "En la cuenta demo las acciones son ilustrativas. El registro se mantiene con estado Aprobado.", status: "success", duration: 5000, isClosable: true, position: "bottom-right" });
       setActioningId(null);
       return;
     }
     try {
       await cbuApi.approveProof(proofId);
-      toast({ title: "Comprobante aprobado", description: "Las entradas fueron enviadas por email al comprador.", status: "success", duration: 5000, isClosable: true, position: "bottom-right" });
+      toast({ title: "Comprobante aprobado", description: "Las entradas fueron enviadas por email al comprador. El registro se mantiene.", status: "success", duration: 5000, isClosable: true, position: "bottom-right" });
       await loadProofs();
     } catch (e) {
       toast({ title: "Error", description: e.response?.data?.message || "Intentá de nuevo.", status: "error", duration: 4000, isClosable: true, position: "bottom-right" });
@@ -121,8 +121,8 @@ const SellerComprobantes = () => {
     const proofId = proofToReject._id;
     setActioningId(proofId);
     if (isDemoProof(proofId)) {
-      setProofs((prev) => prev.filter((x) => x._id !== proofId));
-      toast({ title: "Comprobante rechazado (demo)", description: "En la cuenta demo es ilustrativo. Al rechazar, al cliente le llegaría un mail: \"Su compra fue rechazada\".", status: "info", duration: 5000, isClosable: true, position: "bottom-right" });
+      setProofs((prev) => prev.map((x) => (x._id === proofId ? { ...x, status: "rejected" } : x)));
+      toast({ title: "Comprobante rechazado (demo)", description: "En la cuenta demo es ilustrativo. El registro se mantiene con estado Rechazado.", status: "info", duration: 5000, isClosable: true, position: "bottom-right" });
       onRejectClose();
       setProofToReject(null);
       setActioningId(null);
@@ -130,7 +130,7 @@ const SellerComprobantes = () => {
     }
     try {
       await cbuApi.rejectProof(proofId, rejectReason);
-      toast({ title: "Comprobante rechazado", description: "Se envió un mail al comprador informando el rechazo.", status: "success", duration: 4000, isClosable: true, position: "bottom-right" });
+      toast({ title: "Comprobante rechazado", description: "Se envió un mail al comprador. El registro se mantiene.", status: "success", duration: 4000, isClosable: true, position: "bottom-right" });
       onRejectClose();
       setProofToReject(null);
       await loadProofs();
@@ -146,7 +146,13 @@ const SellerComprobantes = () => {
     return new Date(dateStr).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
   };
 
-  const pendingProofs = proofs.filter((p) => p.status === "pending");
+  const allProofs = proofs;
+
+  const getStatusBadge = (status) => {
+    if (status === "approved") return <Badge colorScheme="green" fontFamily="secondary" fontSize="xs">Aprobado</Badge>;
+    if (status === "rejected") return <Badge colorScheme="red" fontFamily="secondary" fontSize="xs">Rechazado</Badge>;
+    return <Badge colorScheme="orange" fontFamily="secondary" fontSize="xs">Pendiente</Badge>;
+  };
 
   return (
     <Box py={6} px={{ base: 4, md: 8 }}>
@@ -183,9 +189,9 @@ const SellerComprobantes = () => {
             <CardBody>
               {loading ? (
                 <Center py={10}><Spinner size="lg" colorScheme="primary" /></Center>
-              ) : pendingProofs.length === 0 ? (
+              ) : allProofs.length === 0 ? (
                 <Center py={10}>
-                  <Text fontFamily="secondary" color="gray.500">No hay comprobantes pendientes.</Text>
+                  <Text fontFamily="secondary" color="gray.500">No hay comprobantes.</Text>
                 </Center>
               ) : (
                 <TableContainer overflowX="auto">
@@ -204,7 +210,7 @@ const SellerComprobantes = () => {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {pendingProofs.map((p) => (
+                      {allProofs.map((p) => (
                         <Tr key={p._id}>
                           <Td fontFamily="secondary" fontSize="xs" color="gray.600" whiteSpace="nowrap">{formatDate(p.createdAt)}</Td>
                           <Td fontFamily="secondary">{p.buyerName || "-"}</Td>
@@ -233,20 +239,22 @@ const SellerComprobantes = () => {
                               <Text fontSize="xs" color="gray.400">-</Text>
                             )}
                           </Td>
-                          <Td>
-                            <Badge colorScheme="orange" fontFamily="secondary" fontSize="xs">Pendiente</Badge>
-                          </Td>
+                          <Td>{getStatusBadge(p.status)}</Td>
                           <Td textAlign="right">
                             <HStack justify="flex-end" spacing={2}>
                               <Tooltip label="Ver comprobante">
                                 <IconButton icon={<FiEye />} size="sm" aria-label="Ver" onClick={() => { setSelectedProof(p); onViewOpen(); }} />
                               </Tooltip>
-                              <Tooltip label="Aceptar">
-                                <IconButton icon={<FiCheck />} colorScheme="green" size="sm" aria-label="Aceptar" isLoading={actioningId === p._id} onClick={() => handleApprove(p)} />
-                              </Tooltip>
-                              <Tooltip label="Rechazar">
-                                <IconButton icon={<FiX />} colorScheme="red" size="sm" aria-label="Rechazar" onClick={() => handleRejectClick(p)} />
-                              </Tooltip>
+                              {p.status === "pending" && (
+                                <>
+                                  <Tooltip label="Aceptar">
+                                    <IconButton icon={<FiCheck />} colorScheme="green" size="sm" aria-label="Aceptar" isLoading={actioningId === p._id} onClick={() => handleApprove(p)} />
+                                  </Tooltip>
+                                  <Tooltip label="Rechazar">
+                                    <IconButton icon={<FiX />} colorScheme="red" size="sm" aria-label="Rechazar" onClick={() => handleRejectClick(p)} />
+                                  </Tooltip>
+                                </>
+                              )}
                             </HStack>
                           </Td>
                         </Tr>

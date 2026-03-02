@@ -86,6 +86,32 @@ const transferTicket = (ticketId, toUserEmail) => {
   });
 };
 
+/** Transfiere un ticket (por QR) a un email. Genera nuevo QR para el destinatario; no necesita cuenta. */
+const transferTicketByQr = (qrId, toEmail) => {
+  if (!qrId || !toEmail) {
+    throw new Error("El QR y el email del destinatario son requeridos");
+  }
+  return api.post("/tickets/transfer-by-qr", { qrId, toEmail });
+};
+
+/** Admin: busca entradas de un evento por email o DNI del dueño. */
+const adminSearchTicketsByEvent = (eventId, email, dni) => {
+  if (!eventId) throw new Error("El evento es requerido");
+  if (!email?.trim() && !dni?.trim()) throw new Error("Ingresá email o DNI para buscar");
+  const params = new URLSearchParams({ eventId });
+  if (email?.trim()) params.set("email", email.trim());
+  if (dni?.trim()) params.set("dni", dni.trim());
+  return api.get(`/tickets/admin/search-by-event?${params.toString()}`);
+};
+
+/** Admin: transfiere cualquier ticket (QR) a cualquier email sin verificar propiedad. */
+const adminTransferTicketByQr = (qrId, toEmail) => {
+  if (!qrId || !toEmail) {
+    throw new Error("El ID del QR y el email del destinatario son requeridos");
+  }
+  return api.post("/tickets/admin/transfer-by-qr", { qrId, toEmail });
+};
+
 const checkEmailExists = (email) => {
   if (!email) {
     throw new Error("El email es requerido");
@@ -127,6 +153,14 @@ const getActiveBatch = (ticketId) => {
 
 const getBatches = (ticketId) => {
   return api.get(`/tickets/batch/${ticketId}`);
+};
+
+/** Aumentar capacidad de un ticket (GP-Coins). 1 GP-Coin = 1 entrada. */
+const addCapacityToTicket = (ticketId, quantity) => {
+  if (!ticketId || quantity == null || quantity < 1) {
+    throw new Error("Ticket y cantidad (≥1) son requeridos");
+  }
+  return api.put(`/tickets/${ticketId}/add-capacity`, { quantity: Number(quantity) });
 };
 
 // Endpoints para tickets de cortesía
@@ -208,6 +242,9 @@ const ticketApi = {
   makeTransferable,
   makeNonTransferable,
   transferTicket,
+  transferTicketByQr,
+  adminSearchTicketsByEvent,
+  adminTransferTicketByQr,
   checkEmailExists,
   createBatch,
   updateBatch,
@@ -215,6 +252,7 @@ const ticketApi = {
   deactivateBatch,
   getActiveBatch,
   getBatches,
+  addCapacityToTicket,
   generateCourtesyTicket,
   getCourtesyTicketsCount,
   getCourtesyTicketsHistory,

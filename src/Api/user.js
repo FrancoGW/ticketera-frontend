@@ -70,8 +70,16 @@ const update = (firstname, lastname, phoneNumber, dni) => {
   });
 };
 
-const requireResetEmail = () => {
-  return api.post("/auth/require-update-email");
+const requireResetEmail = (newEmail) => {
+  if (!newEmail || typeof newEmail !== 'string' || !newEmail.trim()) {
+    return Promise.reject(new Error('El nuevo email es requerido'));
+  }
+  return api.post("/auth/require-update-email", { newEmail: newEmail.trim() });
+};
+
+/** Confirma el cambio de email con el token del enlace (público) */
+const confirmUpdateEmail = (token) => {
+  return api.post("/auth/confirm-update-email", { token });
 };
 
 /**
@@ -87,6 +95,14 @@ const getUserById = (id) => {
 
 const deleteUser = (id) => {
   return api.delete(`/users/${id}`);
+};
+
+const updateSellingPlan = (plan) => {
+  return api.put("/users/update-selling-plan", { plan });
+};
+
+const updateCbuConfig = (cbuConfig) => {
+  return api.put("/users/update-cbu-config", cbuConfig);
 };
 
 const updateTotal = (id, userData) => {
@@ -135,6 +151,10 @@ const rejectPlanChange = (userId) => {
   return api.put(`/users/plan-change-requests/${userId}/reject`);
 };
 
+const cancelPlanChangeRequest = () => {
+  return api.put("/users/cancel-plan-change-request");
+};
+
 const userApi = {
   // Authentication
   login,
@@ -148,7 +168,10 @@ const userApi = {
 
   // User Management
   update,
+  updateSellingPlan,
+  updateCbuConfig,
   requireResetEmail,
+  confirmUpdateEmail,
 
   // Admin CRUD Operations
   getAllUsers,
@@ -164,6 +187,7 @@ const userApi = {
   getPendingPlanChangeRequests,
   approvePlanChange,
   rejectPlanChange,
+  cancelPlanChangeRequest,
 };
 
 export default userApi;

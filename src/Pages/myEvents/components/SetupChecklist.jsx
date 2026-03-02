@@ -4,27 +4,23 @@ import {
   VStack,
   HStack,
   Text,
-  Checkbox,
   Button,
   Card,
   CardBody,
   Heading,
   Icon,
-  Link,
   Badge,
   useToast,
 } from "@chakra-ui/react";
-import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import { FiCheckCircle, FiCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { paymentApi } from "../../../Api/payment";
 
-const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false, isAdmin = false }) => {
+const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false, hasCbuConfigured = false, sellingPlan = null, isAdmin = false }) => {
   const navigate = useNavigate();
   const toast = useToast();
 
   // Calcular estados de forma optimizada, sin esperar a que carguen todos los eventos
-  // Usar memoización para evitar recálculos innecesarios
   const hasEvents = React.useMemo(() => {
     return Array.isArray(userEvents) && userEvents.length > 0;
   }, [userEvents]);
@@ -36,7 +32,7 @@ const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false, isAdmin
     );
   }, [userEvents, hasEvents]);
 
-  // Admin no necesita configurar Mercado Pago (se gestiona desde variables de entorno)
+  // Pasos base: siempre para todos
   const baseChecklistItems = [
     {
       id: "create-event",
@@ -53,44 +49,62 @@ const SetupChecklist = ({ user, userEvents = [], hasMercadoPago = false, isAdmin
       actionLabel: "Gestionar tickets",
       disabled: !hasEvents,
     },
-    {
-      id: "configure-mercadopago",
-      label: "Configura tu cuenta de Mercado Pago",
-      completed: hasMercadoPago,
-      action: async () => {
-        try {
-          // Intentar iniciar el flujo OAuth de Mercado Pago
-          const response = await paymentApi.initiateMercadoPagoAuthorization();
-          
-          if (response.data?.authorizationUrl) {
-            // Redirigir al usuario a la URL de autorización de Mercado Pago
-            window.location.href = response.data.authorizationUrl;
-          } else {
-            throw new Error("No se recibió la URL de autorización");
-          }
-        } catch (error) {
-          console.error("Error iniciando autorización de Mercado Pago:", error);
-          
-          // Si el endpoint no existe aún, mostrar mensaje y redirigir a página de desarrolladores
-          toast({
-            title: "Configuración de Mercado Pago",
-            description: "Por favor, contacta al soporte para configurar tu cuenta de Mercado Pago o visita el panel de desarrolladores.",
-            status: "info",
-            duration: 5000,
-            isClosable: true,
-          });
-          
-          // Fallback: redirigir a la página de desarrolladores de Mercado Pago
-          window.open("https://www.mercadopago.com.ar/developers/panel/app/", "_blank");
-        }
-      },
-      actionLabel: "Configurar Mercado Pago",
-    },
   ];
 
-  const checklistItems = isAdmin
-    ? baseChecklistItems.filter((item) => item.id !== "configure-mercadopago")
-    : baseChecklistItems;
+  // Paso elegir método: SOLO si aún no seleccionó plan
+  const selectMethodItem = !sellingPlan && !isAdmin && {
+    id: "select-method",
+    label: "Selecciona cómo cobrar tus entradas",
+    completed: false,
+    action: () => navigate("/profile"),
+    actionLabel: "Elegir método",
+  };
+
+  // Paso Mercado Pago: SOLO si el plan elegido es FAST (Mercado Pago)
+  const mercadopagoItem = sellingPlan === "FAST" && !isAdmin && {
+    id: "configure-mercadopago",
+    label: "Configura tu cuenta de Mercado Pago",
+    completed: hasMercadoPago,
+    action: async () => {
+      try {
+        const response = await paymentApi.initiateMercadoPagoAuthorization();
+        if (response.data?.authorizationUrl) {
+          window.location.href = response.data.authorizationUrl;
+        } else {
+          throw new Error("No se recibió la URL de autorización");
+        }
+      } catch (error) {
+        console.error("Error iniciando autorización de Mercado Pago:", error);
+        toast({
+          title: "Configuración de Mercado Pago",
+          description: "Por favor, contacta al soporte para configurar tu cuenta de Mercado Pago o visita el panel de desarrolladores.",
+          status: "info",
+          duration: 5000,
+          isClosable: true,
+        });
+        window.open("https://www.mercadopago.com.ar/developers/panel/app/", "_blank");
+      }
+    },
+    actionLabel: "Configurar Mercado Pago",
+  };
+
+  // Paso CBU: SOLO si el plan elegido es SIMPLE (Depósito Directo)
+  const cbuItem = sellingPlan === "SIMPLE" && !isAdmin && {
+    id: "configure-cbu",
+    label: "Debes configurar tu CBU o Alias para recibir transferencias",
+    completed: hasCbuConfigured,
+    action: () => navigate("/profile"),
+    actionLabel: "Configurar CBU",
+  };
+
+  // Armar lista final: base + (elegir método si no hay plan) + Mercado Pago (si FAST) + CBU (si SIMPLE)
+  const checklistItems = React.useMemo(() => {
+    const items = [...baseChecklistItems];
+    if (selectMethodItem) items.push(selectMethodItem);
+    if (mercadopagoItem) items.push(mercadopagoItem);
+    if (cbuItem) items.push(cbuItem);
+    return items;
+  }, [baseChecklistItems, selectMethodItem, mercadopagoItem, cbuItem]);
 
   const allCompleted = checklistItems.every((item) => item.completed);
   const completedCount = checklistItems.filter((item) => item.completed).length;

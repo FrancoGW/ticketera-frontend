@@ -13,7 +13,8 @@ import {
   Flex,
   Text,
   Spinner,
-  Center
+  Center,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import {
   BarChart,
@@ -41,7 +42,9 @@ const MetricsPage = () => {
     totalCommissions: 0,
     activeEventsCount: 0,
     eventsStats: [],
-    topOrganizers: []
+    topOrganizers: [],
+    platformRevenue: { totalCommissions: 0, membershipRevenue: 0, gpCoinsRevenue: 0, total: 0 },
+    organizerRevenue: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -79,9 +82,16 @@ const MetricsPage = () => {
       revenue: org.totalRevenue || 0
     }));
 
+  const platformTotal = stats.platformRevenue?.total ?? stats.totalCommissions;
+  const organizerTotal = stats.organizerRevenue ?? Math.max(0, stats.totalRevenue - stats.totalCommissions);
   const commissionData = [
-    { name: 'Comisiones', value: stats.totalCommissions },
-    { name: 'Resto', value: Math.max(0, stats.totalRevenue - stats.totalCommissions) }
+    { name: 'Plataforma (comisiones + planes + GP-Coins)', value: platformTotal },
+    { name: 'Organizadores', value: organizerTotal }
+  ];
+  const platformBreakdown = [
+    ...(stats.platformRevenue?.totalCommissions ? [{ name: 'Comisiones (entradas)', value: stats.platformRevenue.totalCommissions }] : []),
+    ...(stats.platformRevenue?.membershipRevenue ? [{ name: 'Planes / Membresías', value: stats.platformRevenue.membershipRevenue }] : []),
+    ...(stats.platformRevenue?.gpCoinsRevenue ? [{ name: 'GP-Coins', value: stats.platformRevenue.gpCoinsRevenue }] : []),
   ];
 
   if (isLoading) {
@@ -103,117 +113,63 @@ const MetricsPage = () => {
               as="h1" 
               fontFamily="secondary" 
               color="tertiary" 
-              mb={8}
+              mb={6}
               fontSize={{ base: "xl", md: "2xl" }}
               fontWeight="bold"
             >
               Métricas y Estadísticas
             </Heading>
 
-            {/* Stats Cards */}
-            <Grid 
-              templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} 
-              gap={6} 
-              mb={8}
-            >
-              <Stat 
-                bg="white" 
-                p={6} 
-                borderRadius="lg" 
-                boxShadow="md"
-                border="1px solid"
-                borderColor="gray.100"
-              >
-                <StatLabel 
-                  fontSize="sm" 
-                  fontWeight="500" 
-                  color="gray.600"
-                  mb={2}
-                >
-                  Eventos Activos
-                </StatLabel>
-                <StatNumber 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="primary"
-                >
-                  {stats.activeEventsCount}
-                </StatNumber>
+            {/* Ingresos de la plataforma */}
+            <Heading size="sm" fontFamily="secondary" color="gray.600" mb={3}>
+              Ingresos de la plataforma (comisiones, planes, GP-Coins)
+            </Heading>
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} gap={4} mb={6}>
+              <Stat bg="white" p={5} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={1}>Comisiones (entradas)</StatLabel>
+                <StatNumber fontSize="2xl" fontWeight="bold" color="green.600">${(stats.platformRevenue?.totalCommissions ?? 0).toLocaleString()}</StatNumber>
               </Stat>
-              
-              <Stat 
-                bg="white" 
-                p={6} 
-                borderRadius="lg" 
-                boxShadow="md"
-                border="1px solid"
-                borderColor="gray.100"
-              >
-                <StatLabel 
-                  fontSize="sm" 
-                  fontWeight="500" 
-                  color="gray.600"
-                  mb={2}
-                >
-                  Total Entradas Vendidas
-                </StatLabel>
-                <StatNumber 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="primary"
-                >
-                  {stats.totalTicketsSold.toLocaleString()}
-                </StatNumber>
+              <Stat bg="white" p={5} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={1}>Planes / Membresías</StatLabel>
+                <StatNumber fontSize="2xl" fontWeight="bold" color="green.600">${(stats.platformRevenue?.membershipRevenue ?? 0).toLocaleString()}</StatNumber>
               </Stat>
+              <Stat bg="white" p={5} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={1}>GP-Coins</StatLabel>
+                <StatNumber fontSize="2xl" fontWeight="bold" color="green.600">${(stats.platformRevenue?.gpCoinsRevenue ?? 0).toLocaleString()}</StatNumber>
+              </Stat>
+              <Stat bg="white" p={5} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="green.200">
+                <StatLabel fontSize="sm" fontWeight="600" color="gray.700" mb={1}>Total plataforma</StatLabel>
+                <StatNumber fontSize="2xl" fontWeight="bold" color="green.700">${platformTotal.toLocaleString()}</StatNumber>
+              </Stat>
+            </SimpleGrid>
 
-              <Stat 
-                bg="white" 
-                p={6} 
-                borderRadius="lg" 
-                boxShadow="md"
-                border="1px solid"
-                borderColor="gray.100"
-              >
-                <StatLabel 
-                  fontSize="sm" 
-                  fontWeight="500" 
-                  color="gray.600"
-                  mb={2}
-                >
-                  Ingresos Totales
-                </StatLabel>
-                <StatNumber 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="primary"
-                >
-                  ${stats.totalRevenue.toLocaleString()}
-                </StatNumber>
+            {/* Ingresos de organizadores */}
+            <Heading size="sm" fontFamily="secondary" color="gray.600" mb={3}>
+              Ingresos de organizadores (ventas de entradas)
+            </Heading>
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} mb={8}>
+              <Stat bg="white" p={5} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={1}>Total organizadores</StatLabel>
+                <StatNumber fontSize="2xl" fontWeight="bold" color="primary">${organizerTotal.toLocaleString()}</StatNumber>
               </Stat>
+            </SimpleGrid>
 
-              <Stat 
-                bg="white" 
-                p={6} 
-                borderRadius="lg" 
-                boxShadow="md"
-                border="1px solid"
-                borderColor="gray.100"
-              >
-                <StatLabel 
-                  fontSize="sm" 
-                  fontWeight="500" 
-                  color="gray.600"
-                  mb={2}
-                >
-                  Ganancias en Comisiones
-                </StatLabel>
-                <StatNumber 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="green.600"
-                >
-                  ${stats.totalCommissions.toLocaleString()}
-                </StatNumber>
+            {/* Resumen general */}
+            <Heading size="sm" fontFamily="secondary" color="gray.600" mb={3}>
+              Resumen general
+            </Heading>
+            <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6} mb={8}>
+              <Stat bg="white" p={6} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={2}>Eventos Activos</StatLabel>
+                <StatNumber fontSize="3xl" fontWeight="bold" color="primary">{stats.activeEventsCount}</StatNumber>
+              </Stat>
+              <Stat bg="white" p={6} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={2}>Total Entradas Vendidas</StatLabel>
+                <StatNumber fontSize="3xl" fontWeight="bold" color="primary">{stats.totalTicketsSold.toLocaleString()}</StatNumber>
+              </Stat>
+              <Stat bg="white" p={6} borderRadius="lg" boxShadow="md" border="1px solid" borderColor="gray.100">
+                <StatLabel fontSize="sm" fontWeight="500" color="gray.600" mb={2}>Ingresos Totales (entradas)</StatLabel>
+                <StatNumber fontSize="3xl" fontWeight="bold" color="primary">${stats.totalRevenue.toLocaleString()}</StatNumber>
               </Stat>
             </Grid>
 
@@ -301,7 +257,7 @@ const MetricsPage = () => {
                   </Heading>
                 </CardHeader>
                 <CardBody>
-                  {commissionData[0].value > 0 ? (
+                  {(commissionData[0].value + commissionData[1].value) > 0 ? (
                     <ResponsiveContainer width="100%" height={350}>
                       <PieChart>
                         <Pie
@@ -315,7 +271,7 @@ const MetricsPage = () => {
                           dataKey="value"
                         >
                           {commissionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === 0 ? '#22C55E' : '#E2E8F0'} />
+                            <Cell key={`cell-${index}`} fill={index === 0 ? '#22C55E' : '#7253c9'} />
                           ))}
                         </Pie>
                         <Tooltip 

@@ -307,6 +307,27 @@ function NewEvent() {
                         </Text>
                       </FormControl>
 
+                      <FormControl id="sellingMethod">
+                        <FormLabel fontFamily="secondary" fontWeight="500">
+                          Forma de venta
+                        </FormLabel>
+                        <Select 
+                          name="sellingMethod"
+                          defaultValue="FAST"
+                          size="lg"
+                          borderRadius="lg"
+                          borderColor="gray.200"
+                          _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
+                        >
+                          <option value="FAST">Mercado Pago (pagos instantáneos)</option>
+                          <option value="SIMPLE">Depósito Directo / CBU (hasta 400 tickets)</option>
+                          <option value="CUSTOM">A tu medida / GP-COINS (próximamente)</option>
+                        </Select>
+                        <Text fontSize="sm" color="gray.500" mt={1}>
+                          SIMPLE requiere tener CBU configurado en tu perfil. CUSTOM próximamente.
+                        </Text>
+                      </FormControl>
+
                       <FormControl id="adultsOnly" isRequired>
                         <FormLabel fontFamily="secondary" fontWeight="500">
                           Evento para mayores de 18 años

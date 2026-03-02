@@ -33,9 +33,18 @@ import {
   Center,
   Alert,
   AlertIcon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { RiCalendar2Line, RiMapPinLine, RiTicket2Line } from "react-icons/ri";
 import { paymentApi } from "../../Api/payment";
+import cbuApi from "../../Api/cbu";
 import { getObjDate, isDateIncluded } from "../../common/utils";
 import VenueMapSelector from "../venueMap/VenueMapSelector";
 
@@ -54,7 +63,13 @@ const EventDetails = () => {
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [selectedRrppId, setSelectedRrppId] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [cbuCheckoutData, setCbuCheckoutData] = useState(null);
+  const [proofFile, setProofFile] = useState(null);
+  const [proofPreview, setProofPreview] = useState(null);
+  const [isSubmittingProof, setIsSubmittingProof] = useState(false);
+  const { isOpen: isCbuModalOpen, onOpen: onCbuModalOpen, onClose: onCbuModalClose } = useDisclosure();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -111,9 +126,22 @@ const EventDetails = () => {
   };
 
   const validateDiscountCode = async () => {
+    const eventId = event?._id || id;
+    const ticketsArray = Object.entries(ticketsToBuy)
+      .filter(([, v]) => v?.quantity > 0)
+      .map(([ticketId, v]) => ({ ticketId, quantity: v.quantity }));
+    if (!eventId || ticketsArray.length === 0) {
+      toast({
+        title: "Seleccioná tickets",
+        description: "Seleccioná al menos un ticket para validar el código",
+        status: "warning",
+        duration: 3000,
+      });
+      return;
+    }
     setIsValidatingCode(true);
     try {
-      const { data } = await paymentApi.validateDiscountCode(discountCode);
+      const { data } = await paymentApi.validateDiscountCode(discountCode, eventId, ticketsArray);
       if (data.isValid) {
         const newDiscount = data.discountAmount;
         setDiscount(newDiscount);
@@ -228,8 +256,9 @@ const EventDetails = () => {
     setSubtotal(newSubtotal);
 
     // Calcular el cargo por servicio usando serviceFeePercentage del evento
-    // serviceFeePercentage viene como decimal (0.2 = 20%, 0.1 = 10%)
-    const serviceFeePercentage = event?.serviceFeePercentage || 0;
+    // CBU (SIMPLE) y Tokens (CUSTOM): sin cargo por defecto. Mercado Pago (FAST): 10% por defecto.
+    const defaultServiceFee = (event?.sellingMethod === 'SIMPLE' || event?.sellingMethod === 'CUSTOM') ? 0 : 0.10;
+    const serviceFeePercentage = event?.serviceFeePercentage ?? defaultServiceFee;
     const newServiceCharge = newSubtotal * serviceFeePercentage;
     setServiceCharge(newServiceCharge);
 
@@ -304,6 +333,7 @@ const EventDetails = () => {
       selectedDate: event.dates && event.dates.length > 0 ? event.dates[selectedDate] : null,
       discountCode: discountCode || undefined,
       discountAmount: discount || undefined,
+      selectedRrpp: selectedRrppId && selectedRrppId.trim() ? selectedRrppId.trim() : undefined,
     };
 
     console.log('Checkout data:', checkoutData);
@@ -313,7 +343,10 @@ const EventDetails = () => {
       const { data } = await paymentApi.createCheckout(checkoutData);
       console.log('Checkout created:', data);
       
-      if (data.checkoutUrl) {
+      if (data.useCbu) {
+        setCbuCheckoutData(data);
+        onCbuModalOpen();
+      } else if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
         throw new Error("No se recibió la URL de checkout del servidor");
@@ -332,6 +365,51 @@ const EventDetails = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmitCbuProof = async () => {
+    if (!cbuCheckoutData || !proofFile) {
+      toast({ title: "Subí el comprobante de pago", status: "warning", duration: 3000, isClosable: true });
+      return;
+    }
+    setIsSubmittingProof(true);
+    try {
+      const { data: uploadRes } = await cbuApi.uploadProofImage(proofFile);
+      const proofImageUrl = uploadRes?.url;
+      if (!proofImageUrl) throw new Error("No se pudo subir el comprobante");
+      await cbuApi.createProof({
+        eventId: cbuCheckoutData.eventId,
+        ticketItems: cbuCheckoutData.ticketsToBuy,
+        selectedDate: cbuCheckoutData.selectedDate,
+        proofImageUrl,
+        amount: cbuCheckoutData.totalAmount,
+      });
+      toast({
+        title: "Comprobante enviado",
+        description: "El organizador revisará tu pago y te enviará las entradas por email.",
+        status: "success",
+        duration: 6000,
+        isClosable: true,
+      });
+      onCbuModalClose();
+      setCbuCheckoutData(null);
+      setProofFile(null);
+      setProofPreview(null);
+    } catch (e) {
+      toast({ title: "Error", description: e.response?.data?.message || "No se pudo enviar", status: "error", duration: 4000, isClosable: true });
+    } finally {
+      setIsSubmittingProof(false);
+    }
+  };
+
+  const handleProofFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProofFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setProofPreview(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -744,6 +822,41 @@ const EventDetails = () => {
                       )}
                     </Box>
 
+                    {event?.rrpp?.length > 0 && (
+                      <>
+                        <Divider />
+                        <Box>
+                          <Text
+                            fontSize={{ base: "md", md: "sm" }}
+                            fontWeight="600"
+                            mb={2}
+                            fontFamily="secondary"
+                            color="gray.700"
+                          >
+                            ¿Comprás a través de un revendedor?
+                          </Text>
+                          <Select
+                            value={selectedRrppId}
+                            onChange={(e) => setSelectedRrppId(e.target.value)}
+                            placeholder="Ninguno"
+                            borderColor="gray.300"
+                            borderWidth="2px"
+                            _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
+                            fontFamily="secondary"
+                            size={{ base: "md", md: "sm" }}
+                            borderRadius="lg"
+                          >
+                            <option value="">Ninguno</option>
+                            {event.rrpp.map((r) => (
+                              <option key={r._id} value={r._id}>
+                                {r.fullname}{r.code ? ` (${r.code})` : ""}
+                              </option>
+                            ))}
+                          </Select>
+                        </Box>
+                      </>
+                    )}
+
                     <Divider />
 
                     {/* Resumen de Compra */}
@@ -869,6 +982,69 @@ const EventDetails = () => {
         </Container>
       </Box>
       <Footer />
+
+      {/* Modal CBU - Transferencia y comprobante */}
+      <Modal isOpen={isCbuModalOpen} onClose={onCbuModalClose} size="lg">
+        <ModalOverlay />
+        <ModalContent fontFamily="secondary" borderRadius="xl">
+          <ModalHeader>Pago por transferencia</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {cbuCheckoutData && (
+              <VStack align="stretch" spacing={4}>
+                <Text fontSize="sm" color="gray.600">
+                  Realizá la transferencia al siguiente CBU/Alias y subí el comprobante. Para enviar el comprobante tenés que tener cuenta en GetPass (ya estás logueado).
+                </Text>
+                <Text fontSize="xs" color="primary" fontWeight="500">
+                  Al enviar, te llegará un mail: &quot;Estamos validando tu pago&quot;. Cuando el organizador apruebe, recibirás las entradas por email.
+                </Text>
+                <Box p={4} bg="gray.50" borderRadius="lg">
+                  {cbuCheckoutData.cbuInfo?.cbu && (
+                    <Box mb={2}>
+                      <Text fontSize="xs" color="gray.500">CBU</Text>
+                      <Text fontWeight="700" fontSize="lg" letterSpacing="1px">{cbuCheckoutData.cbuInfo.cbu}</Text>
+                    </Box>
+                  )}
+                  {cbuCheckoutData.cbuInfo?.alias && (
+                    <Box mb={2}>
+                      <Text fontSize="xs" color="gray.500">Alias</Text>
+                      <Text fontWeight="700" fontSize="lg">{cbuCheckoutData.cbuInfo.alias}</Text>
+                    </Box>
+                  )}
+                  {cbuCheckoutData.cbuInfo?.bankName && (
+                    <Box mb={2}>
+                      <Text fontSize="xs" color="gray.500">Banco</Text>
+                      <Text fontWeight="600">{cbuCheckoutData.cbuInfo.bankName}</Text>
+                    </Box>
+                  )}
+                  <Box>
+                    <Text fontSize="xs" color="gray.500">Monto a transferir</Text>
+                    <Text fontWeight="700" fontSize="xl" color="green.600">${cbuCheckoutData.totalAmount?.toLocaleString("es-AR")}</Text>
+                  </Box>
+                </Box>
+                <FormControl isRequired>
+                  <Text mb={2} fontSize="sm" fontWeight="500">Comprobante de transferencia (obligatorio)</Text>
+                  <Input type="file" accept="image/*" onChange={handleProofFileChange} p={1} required />
+                  {proofPreview && (
+                    <Box mt={2}>
+                      <Image src={proofPreview} alt="Vista previa" maxH="120px" borderRadius="md" />
+                    </Box>
+                  )}
+                  {!proofFile && (
+                    <Text fontSize="xs" color="orange.600" mt={1}>Debés subir la captura del comprobante para completar la compra.</Text>
+                  )}
+                </FormControl>
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onCbuModalClose}>Cancelar</Button>
+            <Button colorScheme="green" onClick={handleSubmitCbuProof} isLoading={isSubmittingProof} isDisabled={!proofFile}>
+              Enviar comprobante
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

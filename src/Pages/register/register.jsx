@@ -23,7 +23,10 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import userApi from "../../Api/user";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../auth/context/AuthContext";
+import { getPasswordError } from "../../utils/passwordValidation";
+import PasswordStrengthBar from "../../components/PasswordStrengthBar/PasswordStrengthBar";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -63,10 +66,6 @@ const validateEmail = (email) => {
     .match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 };
 
-const validatePassword = (password) => {
-  return password.length >= 6;
-};
-
 const validateDNI = (dni) => {
   return dni.length >= 7 && dni.length <= 10 && /^\d+$/.test(dni);
 };
@@ -76,19 +75,14 @@ const validatePhoneNumber = (phone) => {
 };
 
 function Register() {
-  const location = useLocation();
-  const isOrganizerSignup = location.state?.organizer === true;
-
-  const [userData, setUserData] = useState(() => ({
-    ...initialUserData,
-    roles: isOrganizerSignup ? ["seller"] : initialUserData.roles,
-  }));
+  const [userData, setUserData] = useState(initialUserData);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [show, setShow] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { checkAuth } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -103,11 +97,11 @@ function Register() {
         if (!value) return "El correo es requerido";
         if (!validateEmail(value)) return "Email inválido";
         return "";
-      case "password":
+      case "password": {
         if (!value) return "La contraseña es requerida";
-        if (!validatePassword(value))
-          return "La contraseña debe tener al menos 6 caracteres";
-        return "";
+        const pwdError = getPasswordError(value);
+        return pwdError || "";
+      }
       case "repeatPassword":
         if (!value) return "Confirma tu contraseña";
         if (value !== userData.password) return "Las contraseñas no coinciden";
@@ -180,17 +174,20 @@ function Register() {
 
       if (response?.status === 201 || response?.data) {
         const isSeller = userData.roles?.includes("seller");
+        const data = response?.data || response;
         toast({
           title: "¡Registro exitoso!",
           description: isSeller
-            ? "Tu cuenta de organizador está lista. Iniciá sesión y elegí tu plan de venta."
+            ? "Tu cuenta de organizador está lista. Elegí tu plan de venta."
             : "Tu cuenta ha sido creada. Por favor inicia sesión.",
           status: "success",
           duration: 5000,
           isClosable: true,
         });
         setUserData({ ...initialUserData, roles: initialUserData.roles });
-        if (isSeller) {
+        if (isSeller && data?.token) {
+          localStorage.setItem("token", data.token);
+          await checkAuth();
           navigate("/vender", { replace: true });
         } else {
           navigate("/login");
@@ -219,7 +216,9 @@ function Register() {
         bgGradient="linear(to-br, #000, #1a1a1a)"
         position="relative"
         overflow="hidden"
-        py={{ base: 12, md: 20 }}
+        pt={{ base: 24, md: 32 }}
+        pb={{ base: 16, md: 24 }}
+        px={{ base: 2, md: 0 }}
       >
         {/* Background Pattern */}
         <Box
@@ -233,13 +232,13 @@ function Register() {
           backgroundSize="40px 40px"
         />
 
-        <Container maxW="container.md" px={4} position="relative" zIndex={1}>
+        <Container maxW="container.md" px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
           <Flex
             direction={{ base: "column", lg: "row" }}
             align="center"
             justify="center"
-            gap={{ base: 8, lg: 16 }}
-            minH="60vh"
+            gap={{ base: 10, lg: 16 }}
+            minH={{ base: "auto", lg: "60vh" }}
           >
             {/* Left Side - Welcome Text */}
             <motion.div
@@ -303,12 +302,10 @@ function Register() {
                       color="black"
                       letterSpacing="-0.01em"
                     >
-                      {isOrganizerSignup ? "Crear cuenta organizador" : "Crear Cuenta"}
+                      Crear Cuenta
                     </Heading>
                     <Text color="gray.600" fontSize="sm">
-                      {isOrganizerSignup
-                        ? "Completá el formulario. Después elegí tu plan de venta en la siguiente pantalla."
-                        : "Completa el formulario para registrarte"}
+                      Completa el formulario para registrarte
                     </Text>
                   </VStack>
 
@@ -475,6 +472,7 @@ function Register() {
                             </Button>
                           </InputRightElement>
                         </InputGroup>
+                        <PasswordStrengthBar password={userData.password} />
                         <FormErrorMessage>{errors.password}</FormErrorMessage>
                       </FormControl>
 

@@ -30,6 +30,8 @@ import {
 } from "react-icons/fi";
 import userApi from "../../Api/user";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { getPasswordError } from "../../utils/passwordValidation";
+import PasswordStrengthBar from "../../components/PasswordStrengthBar/PasswordStrengthBar";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -67,10 +69,6 @@ const validateEmail = (email) => {
   return String(email)
     .toLowerCase()
     .match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-};
-
-const validatePassword = (password) => {
-  return password.length >= 6;
 };
 
 const validateCUIT = (cuit) => {
@@ -117,11 +115,11 @@ function Productores() {
         if (!validatePhoneNumber(value))
           return "Número de teléfono inválido";
         return "";
-      case "password":
+      case "password": {
         if (!value) return "La contraseña es requerida";
-        if (!validatePassword(value))
-          return "La contraseña debe tener al menos 6 caracteres";
-        return "";
+        const pwdError = getPasswordError(value);
+        return pwdError || "";
+      }
       case "repeatPassword":
         if (!value) return "Confirma tu contraseña";
         if (value !== sellerData.password) return "Las contraseñas no coinciden";
@@ -283,7 +281,9 @@ function Productores() {
         bgGradient="linear(to-br, #000, #1a1a1a)"
         position="relative"
         overflow="hidden"
-        py={{ base: 12, md: 20 }}
+        pt={{ base: 24, md: 32 }}
+        pb={{ base: 16, md: 24 }}
+        px={{ base: 2, md: 0 }}
       >
         {/* Background Pattern */}
         <Box
@@ -297,13 +297,13 @@ function Productores() {
           backgroundSize="40px 40px"
         />
 
-        <Container maxW="container.xl" px={4} position="relative" zIndex={1}>
+        <Container maxW="container.xl" px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
           <Flex
             direction={{ base: "column", lg: "row" }}
             align="center"
             justify="center"
-            gap={{ base: 8, lg: 16 }}
-            minH="60vh"
+            gap={{ base: 10, lg: 16 }}
+            minH={{ base: "auto", lg: "60vh" }}
           >
             {/* Left Side - Text Content */}
             <motion.div
@@ -568,6 +568,7 @@ function Productores() {
                             </Button>
                           </InputRightElement>
                         </InputGroup>
+                        <PasswordStrengthBar password={sellerData.password} />
                         <FormErrorMessage>{errors.password}</FormErrorMessage>
                       </FormControl>
 

@@ -40,12 +40,20 @@ import {
   Radio,
   Stack,
   Image,
+  SimpleGrid,
+  GridItem,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Select,
 } from "@chakra-ui/react";
 import { FiUser, FiMail, FiPhone, FiCreditCard, FiLock, FiEdit2, FiSettings } from "react-icons/fi";
 import { RiQrCodeLine } from "react-icons/ri";
 import { Link as RouterLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import userApi from "../../Api/user";
+import cbuApi from "../../Api/cbu";
+import { paymentApi } from "../../Api/payment";
 import { EditIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import jwt_decode from "jwt-decode";
 import "./Style.css";
@@ -66,22 +74,34 @@ const PLAN_OPTIONS = [
 function Profile() {
   const {
     update,
+    updateSellingPlan,
+    updateCbuConfig,
     requireResetEmail,
     verifyResetCode,
     getProfile,
     recoverPassword,
     sellerRequestChangePlan,
+    cancelPlanChangeRequest,
   } = userApi;
-  const { user: authUser } = useAuth();
+  const { user: authUser, checkAuth } = useAuth();
   const [isRequiringPasswordUpdate, setIsRequiringPasswordUpdate] =
     useState(false);
+  const [newEmailForChange, setNewEmailForChange] = useState("");
   const [user, setUser] = useState(null);
   const [isSendingChangePlan, setIsSendingChangePlan] = useState(false);
+  const [isSavingPlan, setIsSavingPlan] = useState(null);
   const reduxUser = useSelector((state) => state.user?.data);
   const profileUser = user || reduxUser;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isPlanModalOpen, onOpen: onPlanModalOpen, onClose: onPlanModalClose } = useDisclosure();
+  const { isOpen: isConfirmPlanOpen, onOpen: onConfirmPlanOpen, onClose: onConfirmPlanClose } = useDisclosure();
   const [selectedRequestedPlan, setSelectedRequestedPlan] = useState(null);
+  const [planToConfirm, setPlanToConfirm] = useState(null);
+  const [banks, setBanks] = useState([]);
+  const [cbuForm, setCbuForm] = useState({ cbu: "", alias: "", bankId: "", bankName: "" });
+  const [isSavingCbu, setIsSavingCbu] = useState(false);
+  const [isPayingMembership, setIsPayingMembership] = useState(false);
+  const [isCancellingPlanRequest, setIsCancellingPlanRequest] = useState(false);
   const toast = useToast();
   const cancelRef = useRef();
 
@@ -89,11 +109,27 @@ function Profile() {
     profileUser?.rol === "seller" ||
     profileUser?.rol === "admin" ||
     (profileUser?.roles && (profileUser.roles.includes("seller") || profileUser.roles.includes("admin")));
+  /** Solo organizadores eligen forma de venta; el admin no debe ver esta sección */
+  const isSellerOnly =
+    (profileUser?.rol === "seller" || (profileUser?.roles && profileUser.roles.includes("seller"))) &&
+    profileUser?.rol !== "admin" &&
+    !profileUser?.roles?.includes("admin");
   const hasMercadoPago =
     profileUser?.mercadoPago?.hasAuthorized === true ||
     profileUser?.oauth?.mercadoPago?.hasAuthorized === true;
-  const currentPlanName = hasMercadoPago ? "FAST (Mercado Pago)" : null;
+  const sellingPlan = profileUser?.sellingPlan;
+  const currentPlanName = sellingPlan === "SIMPLE"
+    ? "SIMPLE (Depósito Directo)"
+    : sellingPlan === "FAST" || hasMercadoPago
+      ? "FAST (Mercado Pago)"
+      : sellingPlan === "CUSTOM"
+        ? "CUSTOM (A tu medida)"
+        : null;
   const pendingPlanChange = profileUser?.pendingPlanChange;
+  const isPendingMembershipPayment =
+    pendingPlanChange &&
+    (String(pendingPlanChange.requestedPlanName || "").includes("SIMPLE") ||
+     String(pendingPlanChange.requestedPlanName || "").includes("Depósito"));
 
   const getCurrentPlanValue = () => {
     if (!currentPlanName) return null;
@@ -153,6 +189,63 @@ function Profile() {
     onPlanModalOpen();
   };
 
+  const handleCancelPlanRequest = async () => {
+    try {
+      setIsCancellingPlanRequest(true);
+      await cancelPlanChangeRequest();
+      toast({
+        title: "Solicitud cancelada",
+        description: "Podés elegir otro plan cuando quieras.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      await loadUserData();
+      await checkAuth();
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: e.response?.data?.message || "No se pudo cancelar",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+    } finally {
+      setIsCancellingPlanRequest(false);
+    }
+  };
+
+  const handleConfirmPlan = async () => {
+    if (!planToConfirm) return;
+    try {
+      setIsSavingPlan(planToConfirm.value);
+
+      if (planToConfirm.value === "SIMPLE" && !profileUser?.isDemo) {
+        const { data } = await paymentApi.createMembershipCheckout();
+        if (data?.checkoutUrl) {
+          onConfirmPlanClose();
+          setPlanToConfirm(null);
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+        throw new Error("No se recibió la URL de pago");
+      }
+
+      await updateSellingPlan(planToConfirm.value);
+      toast({ title: "Plan guardado", description: `Elegiste ${planToConfirm.label}.`, status: "success", duration: 3000, isClosable: true, position: "bottom-right" });
+      await loadUserData();
+      await checkAuth();
+      onConfirmPlanClose();
+      setPlanToConfirm(null);
+    } catch (e) {
+      toast({ title: "Error", description: e.response?.data?.message || e.message || "No se pudo guardar", status: "error", duration: 4000, isClosable: true, position: "bottom-right" });
+    } finally {
+      setIsSavingPlan(null);
+    }
+  };
+
   // Función para cargar los datos del usuario
   const loadUserData = async () => {
     try {
@@ -179,6 +272,64 @@ function Profile() {
   useEffect(() => {
     loadUserData();
   }, []);
+
+  // Mensaje al volver sin completar el pago de la membresía
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const membership = params.get("membership");
+    const status = params.get("status");
+    if (membership === "0" || status === "rejected") {
+      toast({
+        title: "Pago no completado",
+        description: "El pago de la membresía no se realizó. Podés intentar de nuevo con el botón «Pagar ahora».",
+        status: "warning",
+        duration: 6000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (isSellerOnly) {
+      cbuApi.getBanks().then((r) => setBanks(r?.data?.banks || [])).catch(() => {});
+    }
+  }, [isSellerOnly]);
+
+  useEffect(() => {
+    if (profileUser?.cbuConfig) {
+      setCbuForm({
+        cbu: profileUser.cbuConfig.cbu || "",
+        alias: profileUser.cbuConfig.alias || "",
+        bankId: profileUser.cbuConfig.bankId || "",
+        bankName: profileUser.cbuConfig.bankName || "",
+      });
+    }
+  }, [profileUser?.cbuConfig]);
+
+  const handleSaveCbu = async () => {
+    if (!cbuForm.cbu && !cbuForm.alias) {
+      toast({ title: "Ingresá CBU o Alias", status: "warning", duration: 3000, isClosable: true, position: "bottom-right" });
+      return;
+    }
+    const bank = banks.find((b) => b.id === cbuForm.bankId);
+    setIsSavingCbu(true);
+    try {
+      await updateCbuConfig({
+        cbu: cbuForm.cbu || undefined,
+        alias: cbuForm.alias || undefined,
+        bankId: cbuForm.bankId === "otro" ? undefined : cbuForm.bankId,
+        bankName: cbuForm.bankId === "otro" ? cbuForm.bankName : bank?.name,
+      });
+      toast({ title: "CBU configurado", status: "success", duration: 3000, isClosable: true, position: "bottom-right" });
+      await loadUserData();
+    } catch (e) {
+      toast({ title: "Error", description: e.response?.data?.message || "No se pudo guardar", status: "error", duration: 4000, isClosable: true, position: "bottom-right" });
+    } finally {
+      setIsSavingCbu(false);
+    }
+  };
 
   const updateUser = async (value, field) => {
     try {
@@ -225,13 +376,27 @@ function Profile() {
     }
   };
 
-  const handleRequireEmailChange = async () => {
+  const handleRequireEmailChange = async (newEmail) => {
+    const emailToUse = (typeof newEmail === "string" ? newEmail : newEmailForChange)?.trim();
+    if (!emailToUse) {
+      toast({
+        title: "Email requerido",
+        description: "Ingresá el nuevo email al que querés cambiar",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      return;
+    }
     try {
-      const data = await requireResetEmail();
-      if (data.data.ok) {
+      const { data } = await requireResetEmail(emailToUse);
+      if (data?.ok) {
+        setNewEmailForChange("");
+        onClose();
         toast({
           title: "Te hemos enviado un correo",
-          description: "Revisa tu bandeja de correo para cambiar tu email",
+          description: "Revisá la bandeja de " + emailToUse + " para confirmar el cambio de email",
           status: "success",
           duration: 6000,
           isClosable: true,
@@ -240,9 +405,10 @@ function Profile() {
       }
     } catch (error) {
       console.error("Error al solicitar cambio de email:", error);
+      const msg = error.response?.data?.message || "No se pudo procesar la solicitud de cambio de email";
       toast({
         title: "Error",
-        description: "No se pudo procesar la solicitud de cambio de email",
+        description: msg,
         status: "error",
         duration: 6000,
         isClosable: true,
@@ -333,6 +499,14 @@ function Profile() {
                 </Text>
               </Box>
 
+              {profileUser?.isDemo && (
+                <Box p={4} bg="purple.50" borderRadius="lg" borderWidth="1px" borderColor="purple.200">
+                  <Text fontFamily="secondary" fontSize="sm" color="purple.800" fontWeight="500">
+                    Cuenta demo: los datos personales, email y contraseña no se pueden modificar.
+                  </Text>
+                </Box>
+              )}
+
               {/* Información Personal Card */}
               <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
                 <CardBody p={6}>
@@ -357,6 +531,7 @@ function Profile() {
                         key={`firstname-${user?.firstname}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.firstname)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -387,6 +562,7 @@ function Profile() {
                         key={`lastname-${user?.lastname}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.lastname)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -417,6 +593,7 @@ function Profile() {
                         key={`phoneNumber-${user?.phoneNumber}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.phoneNumber)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -447,6 +624,7 @@ function Profile() {
                         key={`dni-${user?.dni}`}
                         fontFamily="secondary"
                         isPreviewFocusable={false}
+                        isDisabled={profileUser?.isDemo}
                         onSubmit={(value) => updateUser(value, userFields.dni)}
                       >
                         <Flex justify="space-between" align="center" p={3} bg="gray.50" borderRadius="lg" _hover={{ bg: "gray.100" }} transition="all 0.2s">
@@ -527,6 +705,7 @@ function Profile() {
                         fontWeight="500"
                         _hover={{ bg: "buttonHover", transform: "translateY(-2px)", boxShadow: "lg" }}
                         _active={{ bg: "buttonHover" }}
+                        isDisabled={profileUser?.isDemo}
                         onClick={() => {
                           setIsRequiringPasswordUpdate(false);
                           onOpen();
@@ -545,6 +724,7 @@ function Profile() {
                         fontWeight="500"
                         _hover={{ bg: "gray.700", transform: "translateY(-2px)", boxShadow: "lg" }}
                         _active={{ bg: "gray.700" }}
+                        isDisabled={profileUser?.isDemo}
                         onClick={() => {
                           setIsRequiringPasswordUpdate(true);
                           onOpen();
@@ -558,8 +738,8 @@ function Profile() {
                 </CardBody>
               </Card>
 
-              {/* Forma de venta (solo organizador/admin) */}
-              {isSellerOrAdmin && (
+              {/* Forma de venta (solo organizadores; el admin no elige método de pago) */}
+              {isSellerOnly && (
                 <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
                   <CardBody p={6}>
                     <HStack mb={6}>
@@ -574,56 +754,317 @@ function Profile() {
                         Forma de venta
                       </Heading>
                     </HStack>
-                    <VStack align="stretch" spacing={4}>
-                      <Flex justify="space-between" align="center" flexWrap="wrap" gap={4} p={4} bg="gray.50" borderRadius="lg">
-                        <Box>
-                          <Text fontFamily="secondary" fontWeight="600" color="gray.800">
-                            {pendingPlanChange ? "Estado" : "Plan actual"}
+                    <VStack align="stretch" spacing={5}>
+                      {profileUser?.isDemo ? (
+                        <>
+                          <Box p={3} bg="purple.50" borderRadius="lg" borderWidth="1px" borderColor="purple.200">
+                            <Text fontFamily="secondary" fontSize="sm" color="purple.800" fontWeight="500">
+                              Cuenta demo: podés cambiar el método de cobro para mostrar a clientes. No requiere aprobación del equipo.
+                            </Text>
+                          </Box>
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                            {PLAN_OPTIONS.map((plan) => (
+                              <GridItem key={plan.value}>
+                                <Box
+                                  p={5}
+                                  borderRadius="xl"
+                                  borderWidth="2px"
+                                  borderColor={getCurrentPlanValue() === plan.value ? "green.400" : "gray.200"}
+                                  bg={getCurrentPlanValue() === plan.value ? "green.50" : "gray.50"}
+                                  _hover={{ borderColor: "green.300", bg: "green.50" }}
+                                  transition="all 0.2s"
+                                  height="100%"
+                                  display="flex"
+                                  flexDirection="column"
+                                >
+                                  <Flex align="center" gap={3} mb={3}>
+                                    {plan.logoSrc ? (
+                                      <Image src={plan.logoSrc} alt={plan.label} h="32px" objectFit="contain" />
+                                    ) : (
+                                      <Text fontSize="2xl" lineHeight="1">{plan.emoji}</Text>
+                                    )}
+                                    <Text fontFamily="secondary" fontWeight="700" color="gray.800" fontSize="lg">
+                                      {plan.label}
+                                    </Text>
+                                  </Flex>
+                                  <Text fontFamily="secondary" fontSize="sm" color="gray.500" mb={4} flex="1">
+                                    {plan.description}
+                                  </Text>
+                                  <Button
+                                    size="sm"
+                                    colorScheme="green"
+                                    borderRadius="lg"
+                                    fontFamily="secondary"
+                                    fontWeight="500"
+                                    w="100%"
+                                    variant={getCurrentPlanValue() === plan.value ? "solid" : "outline"}
+                                    isDisabled={getCurrentPlanValue() === plan.value}
+                                    onClick={() => {
+                                      setPlanToConfirm(plan);
+                                      onConfirmPlanOpen();
+                                    }}
+                                  >
+                                    {getCurrentPlanValue() === plan.value ? "Plan actual" : "Usar este plan"}
+                                  </Button>
+                                </Box>
+                              </GridItem>
+                            ))}
+                          </SimpleGrid>
+                        </>
+                      ) : (currentPlanName || pendingPlanChange) ? (
+                        <>
+                          <Flex justify="space-between" align="center" flexWrap="wrap" gap={4} p={4} bg="gray.50" borderRadius="lg">
+                            <Box>
+                              <Text fontFamily="secondary" fontWeight="600" color="gray.800">
+                                {pendingPlanChange ? "Estado" : "Plan actual"}
+                              </Text>
+                              <Text fontSize="sm" color="gray.500">
+                                {pendingPlanChange
+                                  ? (isPendingMembershipPayment
+                                      ? "Pago de membresía pendiente → "
+                                      : "Cambio de plan pendiente → ") +
+                                    (pendingPlanChange.requestedPlanName || "Nuevo plan")
+                                  : currentPlanName}
+                              </Text>
+                            </Box>
+                            {pendingPlanChange ? (
+                              <Badge colorScheme="orange" px={3} py={1} borderRadius="full">
+                                Pendiente
+                              </Badge>
+                            ) : (
+                              <Badge colorScheme="green" px={3} py={1} borderRadius="full">
+                                Activo
+                              </Badge>
+                            )}
+                          </Flex>
+                          {pendingPlanChange && isPendingMembershipPayment && (
+                            <HStack spacing={3} flexWrap="wrap">
+                              <Button
+                                colorScheme="green"
+                                borderRadius="lg"
+                                fontFamily="secondary"
+                                fontWeight="500"
+                                leftIcon={<FiCreditCard />}
+                                onClick={async () => {
+                                  try {
+                                    setIsPayingMembership(true);
+                                    const { data } = await paymentApi.createMembershipCheckout();
+                                    if (data?.checkoutUrl) {
+                                      window.location.href = data.checkoutUrl;
+                                      return;
+                                    }
+                                    throw new Error("No se recibió la URL de pago");
+                                  } catch (e) {
+                                    toast({
+                                      title: "Error",
+                                      description: e.response?.data?.message || e.message || "No se pudo crear el pago",
+                                      status: "error",
+                                      duration: 4000,
+                                      isClosable: true,
+                                      position: "bottom-right",
+                                    });
+                                  } finally {
+                                    setIsPayingMembership(false);
+                                  }
+                                }}
+                                isLoading={isPayingMembership}
+                              >
+                                Pagar ahora
+                              </Button>
+                              <Button
+                                variant="outline"
+                                borderColor="gray.400"
+                                color="gray.600"
+                                borderRadius="lg"
+                                fontFamily="secondary"
+                                fontWeight="500"
+                                isDisabled={isPayingMembership}
+                                onClick={handleCancelPlanRequest}
+                                isLoading={isCancellingPlanRequest}
+                              >
+                                Cancelar
+                              </Button>
+                            </HStack>
+                          )}
+                          {pendingPlanChange && !isPendingMembershipPayment && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              borderColor="gray.400"
+                              color="gray.600"
+                              fontFamily="secondary"
+                              onClick={handleCancelPlanRequest}
+                              isLoading={isCancellingPlanRequest}
+                            >
+                              Cancelar solicitud
+                            </Button>
+                          )}
+                          {!pendingPlanChange && (
+                            <Button
+                              variant="outline"
+                              borderColor="primary"
+                              color="primary"
+                              borderRadius="lg"
+                              fontFamily="secondary"
+                              fontWeight="500"
+                              leftIcon={<FiSettings />}
+                              onClick={openPlanModal}
+                            >
+                              Cambiar plan
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Text fontFamily="secondary" color="gray.600" fontSize="sm">
+                            Elegí una de las formas de venta para empezar a vender entradas. Podés solicitar el que prefieras y te contactamos para activarlo.
                           </Text>
-                          <Text fontSize="sm" color="gray.500">
-                            {pendingPlanChange
-                              ? `Cambio de plan pendiente → ${pendingPlanChange.requestedPlanName || "Nuevo plan"}`
-                              : currentPlanName || "Aún no elegiste un plan. Configuralo en la sección de venta."}
-                          </Text>
-                        </Box>
-                        {pendingPlanChange ? (
-                          <Badge colorScheme="orange" px={3} py={1} borderRadius="full">
-                            Pendiente
-                          </Badge>
-                        ) : currentPlanName ? (
-                          <Badge colorScheme="green" px={3} py={1} borderRadius="full">
-                            Activo
-                          </Badge>
-                        ) : null}
-                      </Flex>
-                      <Flex gap={3} flexDir={{ base: "column", sm: "row" }}>
-                        {!currentPlanName && (
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                            {PLAN_OPTIONS.map((plan) => (
+                              <GridItem key={plan.value}>
+                                <Box
+                                  p={5}
+                                  borderRadius="xl"
+                                  borderWidth="2px"
+                                  borderColor="gray.200"
+                                  bg="gray.50"
+                                  _hover={{ borderColor: "green.300", bg: "green.50" }}
+                                  transition="all 0.2s"
+                                  height="100%"
+                                  display="flex"
+                                  flexDirection="column"
+                                >
+                                  <Flex align="center" gap={3} mb={3}>
+                                    {plan.logoSrc ? (
+                                      <Image src={plan.logoSrc} alt={plan.label} h="32px" objectFit="contain" />
+                                    ) : (
+                                      <Text fontSize="2xl" lineHeight="1">{plan.emoji}</Text>
+                                    )}
+                                    <Text fontFamily="secondary" fontWeight="700" color="gray.800" fontSize="lg">
+                                      {plan.label}
+                                    </Text>
+                                  </Flex>
+                                  <Text fontFamily="secondary" fontSize="sm" color="gray.500" mb={4} flex="1">
+                                    {plan.description}
+                                  </Text>
+                                  <Button
+                                    size="sm"
+                                    colorScheme="green"
+                                    borderRadius="lg"
+                                    fontFamily="secondary"
+                                    fontWeight="500"
+                                    w="100%"
+                                    onClick={() => {
+                                      setPlanToConfirm(plan);
+                                      onConfirmPlanOpen();
+                                    }}
+                                  >
+                                    Elegir este plan
+                                  </Button>
+                                </Box>
+                              </GridItem>
+                            ))}
+                          </SimpleGrid>
                           <Button
                             as={RouterLink}
                             to="/vender"
-                            colorScheme="primary"
-                            borderRadius="lg"
-                            fontFamily="secondary"
-                            fontWeight="500"
-                          >
-                            Elegir plan
-                          </Button>
-                        )}
-                        {!pendingPlanChange && (
-                          <Button
                             variant="outline"
+                            size="sm"
                             borderColor="primary"
                             color="primary"
                             borderRadius="lg"
                             fontFamily="secondary"
-                            fontWeight="500"
-                            leftIcon={<FiSettings />}
-                            onClick={openPlanModal}
+                            alignSelf="flex-start"
                           >
-                            Cambiar plan
+                            Ver más en la sección de venta
                           </Button>
-                        )}
-                      </Flex>
+                        </>
+                      )}
+                    </VStack>
+                  </CardBody>
+                </Card>
+              )}
+
+              {/* Configurar CBU (Depósito Directo) - solo si plan SIMPLE */}
+              {isSellerOnly && sellingPlan === "SIMPLE" && (
+                <Card boxShadow="lg" borderRadius="xl" border="1px solid" borderColor="gray.200" bg="white">
+                  <CardBody p={6}>
+                    <HStack mb={4}>
+                      <Text fontSize="2xl">🏦</Text>
+                      <Heading as="h3" fontSize="xl" fontFamily="secondary" color="tertiary" fontWeight="600">
+                        Configurar CBU (Depósito Directo)
+                      </Heading>
+                    </HStack>
+                    <Text fontFamily="secondary" fontSize="sm" color="gray.500" mb={4}>
+                      Para eventos con pago por transferencia (hasta 400 tickets). Ingresá tu CBU o Alias y banco para que los clientes te transfieran.
+                    </Text>
+                    <VStack align="stretch" spacing={4}>
+                      <FormControl>
+                        <FormLabel fontFamily="secondary" fontSize="sm">CBU (22 dígitos)</FormLabel>
+                        <Input
+                          placeholder="Ej: 0000000000000000000000"
+                          value={cbuForm.cbu}
+                          onChange={(e) => setCbuForm((p) => ({ ...p, cbu: e.target.value }))}
+                          maxLength={22}
+                          fontFamily="secondary"
+                          borderRadius="lg"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel fontFamily="secondary" fontSize="sm">Alias (alternativa al CBU)</FormLabel>
+                        <Input
+                          placeholder="Ej: mi.alias.cbu"
+                          value={cbuForm.alias}
+                          onChange={(e) => setCbuForm((p) => ({ ...p, alias: e.target.value }))}
+                          fontFamily="secondary"
+                          borderRadius="lg"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel fontFamily="secondary" fontSize="sm">Banco</FormLabel>
+                        <Select
+                          placeholder="Seleccionar banco"
+                          value={cbuForm.bankId}
+                          onChange={(e) => setCbuForm((p) => ({ ...p, bankId: e.target.value }))}
+                          fontFamily="secondary"
+                          borderRadius="lg"
+                        >
+                          {banks.map((b) => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      {cbuForm.bankId === "otro" && (
+                        <FormControl>
+                          <FormLabel fontFamily="secondary" fontSize="sm">Nombre del banco (otro)</FormLabel>
+                          <Input
+                            placeholder="Escribí el nombre"
+                            value={cbuForm.bankName}
+                            onChange={(e) => setCbuForm((p) => ({ ...p, bankName: e.target.value }))}
+                            fontFamily="secondary"
+                            borderRadius="lg"
+                          />
+                        </FormControl>
+                      )}
+                      <Button
+                        colorScheme="green"
+                        onClick={handleSaveCbu}
+                        isLoading={isSavingCbu}
+                        fontFamily="secondary"
+                        borderRadius="lg"
+                      >
+                        Guardar CBU
+                      </Button>
+                      {profileUser?.cbuConfig?.cbu && (
+                        <Text fontSize="xs" color="gray.500" fontFamily="secondary">
+                          CBU configurado: {profileUser.cbuConfig.cbu}
+                        </Text>
+                      )}
+                      {profileUser?.cbuConfig?.alias && !profileUser?.cbuConfig?.cbu && (
+                        <Text fontSize="xs" color="gray.500" fontFamily="secondary">
+                          Alias configurado: {profileUser.cbuConfig.alias}
+                        </Text>
+                      )}
                     </VStack>
                   </CardBody>
                 </Card>
@@ -703,11 +1144,86 @@ function Profile() {
         </ModalContent>
       </Modal>
 
+      {/* Confirmar elección de plan */}
+      <AlertDialog
+        isOpen={isConfirmPlanOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => {
+          onConfirmPlanClose();
+          setPlanToConfirm(null);
+        }}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" fontFamily="secondary">
+              Confirmar plan
+            </AlertDialogHeader>
+            <AlertDialogBody fontFamily="secondary">
+              <VStack align="stretch" spacing={4}>
+                <Text>
+                  ¿Estás seguro que {planToConfirm ? planToConfirm.label : "este plan"} es para tu evento?
+                </Text>
+                {planToConfirm?.value === "SIMPLE" && (
+                  <Box
+                    p={4}
+                    borderRadius="lg"
+                    bg="green.50"
+                    borderWidth="1px"
+                    borderColor="green.200"
+                  >
+                    <Text fontWeight="600" color="gray.800" mb={2}>
+                      Esta opción de venta tiene una mensualidad
+                    </Text>
+                    <HStack spacing={2} flexWrap="wrap" mb={2}>
+                      <Text as="span" fontSize="xl" fontWeight="700" color="green.700">
+                        $159.999
+                      </Text>
+                      <Badge colorScheme="green" fontSize="sm">En oferta</Badge>
+                      <Text as="span" fontSize="sm" color="gray.600" textDecoration="line-through">
+                        Precio normal $210.000
+                      </Text>
+                    </HStack>
+                    <Text fontSize="sm" color="gray.600">
+                      Límite: 4 eventos mensuales con 350 tickets QR por evento.
+                    </Text>
+                  </Box>
+                )}
+              </VStack>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                ref={cancelRef}
+                onClick={() => {
+                  onConfirmPlanClose();
+                  setPlanToConfirm(null);
+                }}
+                fontFamily="secondary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="green"
+                onClick={handleConfirmPlan}
+                isLoading={!!isSavingPlan}
+                loadingText="Guardando..."
+                ml={3}
+                fontFamily="secondary"
+              >
+                Sí, elegir este plan
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
       {/* Alert Dialog */}
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
-        onClose={onClose}
+        onClose={() => {
+          setNewEmailForChange("");
+          onClose();
+        }}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -717,12 +1233,33 @@ function Profile() {
             </AlertDialogHeader>
 
             <AlertDialogBody fontFamily="secondary">
-              Te enviaremos un correo electrónico para cambiar tu{" "}
-              {!isRequiringPasswordUpdate ? "email" : "contraseña"}
+              {!isRequiringPasswordUpdate ? (
+                <>
+                  <Text mb={2}>Te enviaremos un correo al nuevo email para confirmar el cambio.</Text>
+                  <FormControl isInvalid={!newEmailForChange.trim()}>
+                    <FormLabel>Nuevo email</FormLabel>
+                    <Input
+                      type="email"
+                      placeholder="nuevo@email.com"
+                      value={newEmailForChange}
+                      onChange={(e) => setNewEmailForChange(e.target.value)}
+                    />
+                  </FormControl>
+                </>
+              ) : (
+                <Text>Te enviaremos un correo electrónico para cambiar tu contraseña.</Text>
+              )}
             </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose} fontFamily="secondary">
+              <Button
+                ref={cancelRef}
+                onClick={() => {
+                  setNewEmailForChange("");
+                  onClose();
+                }}
+                fontFamily="secondary"
+              >
                 Cancelar
               </Button>
               <Button
@@ -730,13 +1267,16 @@ function Profile() {
                 color="white"
                 _hover={{ bg: "buttonHover" }}
                 onClick={() => {
-                  !isRequiringPasswordUpdate
-                    ? handleRequireEmailChange()
-                    : handleRequirePasswordChange();
-                  onClose();
+                  if (!isRequiringPasswordUpdate) {
+                    handleRequireEmailChange(newEmailForChange);
+                  } else {
+                    handleRequirePasswordChange();
+                    onClose();
+                  }
                 }}
                 ml={3}
                 fontFamily="secondary"
+                isDisabled={!isRequiringPasswordUpdate && !newEmailForChange.trim()}
               >
                 Aceptar
               </Button>

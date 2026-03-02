@@ -59,7 +59,9 @@ const AdminDashboard = () => {
     totalEventsCount: 0,
     totalUsersCount: 0,
     eventsStats: [],
-    topOrganizers: []
+    topOrganizers: [],
+    platformRevenue: { totalCommissions: 0, membershipRevenue: 0, gpCoinsRevenue: 0, total: 0 },
+    organizerRevenue: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -125,10 +127,17 @@ const AdminDashboard = () => {
       revenue: org.totalRevenue || 0
     }));
 
+  const platformTotal = stats.platformRevenue?.total ?? stats.totalCommissions;
+  const organizerTotal = stats.organizerRevenue ?? Math.max(0, stats.totalRevenue - stats.totalCommissions);
   const commissionData = [
-    { name: 'Ganancias', value: stats.totalCommissions },
-    { name: 'Ingresos Organizadores', value: Math.max(0, stats.totalRevenue - stats.totalCommissions) }
+    { name: 'Plataforma (comisiones + planes + GP-Coins)', value: platformTotal },
+    { name: 'Organizadores', value: organizerTotal }
   ];
+  const platformBreakdown = [
+    ...(stats.platformRevenue?.totalCommissions ? [{ name: 'Comisiones (entradas)', value: stats.platformRevenue.totalCommissions }] : []),
+    ...(stats.platformRevenue?.membershipRevenue ? [{ name: 'Planes / Membresías', value: stats.platformRevenue.membershipRevenue }] : []),
+    ...(stats.platformRevenue?.gpCoinsRevenue ? [{ name: 'GP-Coins', value: stats.platformRevenue.gpCoinsRevenue }] : []),
+  ].filter(Boolean);
 
   // Calcular porcentaje de crecimiento (simulado por ahora)
   const revenueGrowth = stats.totalRevenue > 0 ? 12.5 : 0;
@@ -234,8 +243,8 @@ const AdminDashboard = () => {
         >
           <StatCard
             icon={FiDollarSign}
-            label="Ganancias Totales"
-            value={`$${stats.totalCommissions.toLocaleString('es-AR')}`}
+            label="Ganancias Plataforma (comisiones + planes + GP-Coins)"
+            value={`$${platformTotal.toLocaleString('es-AR')}`}
             color="green"
             growth={revenueGrowth}
             onClick={() => navigate('/admin/metrics')}
@@ -243,9 +252,17 @@ const AdminDashboard = () => {
           
           <StatCard
             icon={FiTrendingUp}
-            label="Ingresos Totales"
-            value={`$${stats.totalRevenue.toLocaleString('es-AR')}`}
+            label="Ingresos Organizadores"
+            value={`$${organizerTotal.toLocaleString('es-AR')}`}
             color="blue"
+            onClick={() => navigate('/admin/metrics')}
+          />
+
+          <StatCard
+            icon={FiTrendingUp}
+            label="Ingresos Totales (entradas)"
+            value={`$${stats.totalRevenue.toLocaleString('es-AR')}`}
+            color="gray"
             onClick={() => navigate('/admin/metrics')}
           />
 
@@ -387,7 +404,7 @@ const AdminDashboard = () => {
               </HStack>
             </CardHeader>
             <CardBody>
-              {commissionData[0].value > 0 ? (
+              {(commissionData[0].value + commissionData[1].value) > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie

@@ -33,15 +33,17 @@ import {
   ModalFooter,
   ModalCloseButton,
   Select,
-  Switch
+  Switch,
+  Link,
 } from "@chakra-ui/react";
 import { useEffect } from "react";
 import eventApi from "../../Api/event";
 import { useState } from "react";
 import ticketApi from "../../Api/ticket";
+import { paymentApi } from "../../Api/payment";
 import { DeleteIcon, EditIcon, AddIcon } from "@chakra-ui/icons";
 import { getObjDate, isDateIncluded } from "../../common/utils";
-import { useNavigate } from "react-router";
+import { useNavigate, Link as RouterLink } from "react-router";
 
 const initialTicketData = {
   title: "",
@@ -79,8 +81,15 @@ function CreateTicket() {
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [batchData, setBatchData] = useState(initialBatchData);
+  const [gpCoinsBalance, setGpCoinsBalance] = useState(null);
+  const [addCapacityTicketId, setAddCapacityTicketId] = useState(null);
+  const [addCapacityQty, setAddCapacityQty] = useState("");
+  const [addCapacityLoading, setAddCapacityLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+
+  const isGpCoinsEvent = event?.sellingMethod === "CUSTOM";
+  const balance = gpCoinsBalance?.balance ?? 0;
 
   useEffect(() => {
     const getEventInfo = async () => {
@@ -96,6 +105,17 @@ function CreateTicket() {
     };
     getEventInfo();
   }, []);
+
+  useEffect(() => {
+    if (isGpCoinsEvent) {
+      paymentApi
+        .getGpCoinsBalance()
+        .then((r) => setGpCoinsBalance(r.data))
+        .catch(() => setGpCoinsBalance({ balance: 0, totalPurchased: 0 }));
+    } else {
+      setGpCoinsBalance(null);
+    }
+  }, [isGpCoinsEvent]);
 
   const loadBatches = async (ticketId) => {
     try {
@@ -127,6 +147,32 @@ function CreateTicket() {
       return;
     }
 
+    if (isGpCoinsEvent) {
+      const qty = parseInt(ticketData.maxEntries, 10);
+      if (!qty || qty < 1) {
+        toast({
+          title: "Error",
+          description: "Con plan GP-Coins debés indicar la cantidad de entradas (1 GP-Coin = 1 entrada).",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (qty > balance) {
+        toast({
+          title: "Error",
+          description: `No tenés suficientes GP-Coins. Tenés ${balance}, necesitás ${qty}.`,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const ticket = {
       ...ticketData,
       eventRef: getEventIdFromQuery(),
@@ -136,6 +182,9 @@ function CreateTicket() {
       const { data } = await ticketApi.createTicket(ticket);
       setTickets([...tickets, data.ticket]);
       setTicketData(initialTicketData);
+      if (isGpCoinsEvent) {
+        paymentApi.getGpCoinsBalance().then((r) => setGpCoinsBalance(r.data)).catch(() => {});
+      }
       toast({
         title: "Éxito",
         description: "Ticket creado correctamente",
@@ -385,6 +434,43 @@ function CreateTicket() {
   };
   
 
+  const handleAddCapacity = async () => {
+    const qty = parseInt(addCapacityQty, 10);
+    if (!addCapacityTicketId || !qty || qty < 1) {
+      toast({ title: "Ingresá una cantidad válida (≥1)", status: "warning", duration: 3000 });
+      return;
+    }
+    if (qty > balance) {
+      toast({
+        title: "No tenés suficientes GP-Coins",
+        description: `Tenés ${balance}, necesitás ${qty}.`,
+        status: "error",
+        duration: 4000,
+      });
+      return;
+    }
+    setAddCapacityLoading(true);
+    try {
+      await ticketApi.addCapacityToTicket(addCapacityTicketId, qty);
+      const { data } = await eventApi.getEventById(getEventIdFromQuery());
+      setTickets(data.event.tickets);
+      const res = await paymentApi.getGpCoinsBalance();
+      setGpCoinsBalance(res.data);
+      setAddCapacityTicketId(null);
+      setAddCapacityQty("");
+      toast({ title: "Entradas agregadas", description: `Se sumaron ${qty} entradas.`, status: "success", duration: 3000 });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "No se pudieron agregar entradas",
+        status: "error",
+        duration: 4000,
+      });
+    } finally {
+      setAddCapacityLoading(false);
+    }
+  };
+
   // Función para verificar si una fecha es anterior a la actual
   const isBeforeNow = (dateString) => {
     const now = new Date();
@@ -436,6 +522,30 @@ function CreateTicket() {
             <Heading as="h2" fontFamily="secondary" color="tertiary">
               Crear un ticket
             </Heading>
+
+            {isGpCoinsEvent && (
+              <Box mb={4} p={4} bg="purple.50" borderRadius="lg" borderWidth="1px" borderColor="purple.200">
+                <Text fontFamily="secondary" fontWeight="600" color="purple.800" mb={1}>
+                  GP-Coins disponibles: {balance}
+                </Text>
+                <Text fontSize="sm" color="gray.600" fontFamily="secondary" mb={2}>
+                  1 GP-Coin = 1 entrada. La cantidad de entradas que elijas se descontará de tu saldo.
+                </Text>
+                {balance === 0 && (
+                  <Alert status="warning" borderRadius="md" mt={2}>
+                    <AlertIcon />
+                    <Box>
+                      <Text fontWeight="600">No tenés GP-Coins.</Text>
+                      <Text fontSize="sm">Comprá más para crear entradas para este evento.</Text>
+                      <Link as={RouterLink} to="/seller/gp-coins" color="primary" fontWeight="600" mt={2} display="inline-block">
+                        Comprar GP-Coins →
+                      </Link>
+                    </Box>
+                  </Alert>
+                )}
+              </Box>
+            )}
+
             <form
               onSubmit={(e) => (editMode ? updateTicket(e) : createTicket(e))}
               style={{ width: "100%" }}
@@ -526,16 +636,29 @@ function CreateTicket() {
                 />
               </FormControl>
 
-              <FormControl id="ticket-max-quantity">
-                <FormLabel>Cantidad máxima de entradas</FormLabel>
+              <FormControl id="ticket-max-quantity" isRequired={isGpCoinsEvent}>
+                <FormLabel>
+                  {isGpCoinsEvent
+                    ? "Cantidad de entradas (1 GP-Coin = 1 entrada)"
+                    : "Cantidad máxima de entradas"}
+                </FormLabel>
                 <Input
                   name="ticket-max-quantity"
                   type="number"
+                  min={1}
+                  max={isGpCoinsEvent ? balance : undefined}
+                  isDisabled={isGpCoinsEvent && balance === 0}
                   onChange={(e) =>
                     setTicketData({ ...ticketData, maxEntries: e.target.value })
                   }
                   value={ticketData.maxEntries}
+                  placeholder={isGpCoinsEvent ? `Máximo ${balance}` : undefined}
                 />
+                {isGpCoinsEvent && balance > 0 && (
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Podés crear hasta {balance} entradas con tu saldo actual.
+                  </Text>
+                )}
               </FormControl>
 
               <FormControl id="ticket-start-date" isRequired>
@@ -594,6 +717,7 @@ function CreateTicket() {
                   fontWeight="normal"
                   fontFamily="secondary"
                   isLoading={isLoading}
+                  isDisabled={isGpCoinsEvent && balance === 0}
                 >
                   Crear Ticket
                 </Button>
@@ -672,6 +796,26 @@ function CreateTicket() {
                       </Text>
                       <Text pt="2" fontSize="sm" mb="2">
                         Cant. máxima: {ticket.maxEntries}
+                        {isGpCoinsEvent && (
+                          <>
+                            {" "}
+                            · Vendidos: {ticket.selled ?? 0}
+                            {balance > 0 && (
+                              <Button
+                                size="xs"
+                                ml={2}
+                                colorScheme="purple"
+                                variant="outline"
+                                onClick={() => {
+                                  setAddCapacityTicketId(ticket._id);
+                                  setAddCapacityQty("");
+                                }}
+                              >
+                                Generar más entradas
+                              </Button>
+                            )}
+                          </>
+                        )}
                       </Text>
                       <Accordion allowMultiple>
                         <AccordionItem>
@@ -942,6 +1086,43 @@ function CreateTicket() {
               </Button>
             </ModalFooter>
           </form>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal Generar más entradas (GP-Coins) */}
+      <Modal
+        isOpen={!!addCapacityTicketId}
+        onClose={() => { setAddCapacityTicketId(null); setAddCapacityQty(""); }}
+        size="md"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader fontFamily="secondary">Generar más entradas</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text fontSize="sm" color="gray.600" mb={3}>
+              1 GP-Coin = 1 entrada. Tenés <strong>{balance}</strong> GP-Coins disponibles.
+            </Text>
+            <FormControl>
+              <FormLabel>Cantidad de entradas a agregar</FormLabel>
+              <Input
+                type="number"
+                min={1}
+                max={balance}
+                value={addCapacityQty}
+                onChange={(e) => setAddCapacityQty(e.target.value)}
+                placeholder={`Máximo ${balance}`}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={() => { setAddCapacityTicketId(null); setAddCapacityQty(""); }}>
+              Cancelar
+            </Button>
+            <Button colorScheme="purple" onClick={handleAddCapacity} isLoading={addCapacityLoading} isDisabled={!addCapacityQty || parseInt(addCapacityQty, 10) < 1}>
+              Confirmar
+            </Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
 

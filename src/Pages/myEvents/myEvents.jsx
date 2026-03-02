@@ -67,8 +67,16 @@ function MyEvents() {
 
   useEffect(() => {
     const getScannerUrl = async () => {
-      const { data } = await qrApi.getScannerUrl();
-      setScannerUrl(data.validatorUrl);
+      setUrlLoading(true);
+      try {
+        const { data } = await qrApi.getScannerUrl();
+        setScannerUrl(data.validatorUrl || "");
+      } catch (err) {
+        // No bloquear la página: si falla (ej. sin validador), dejar scannerUrl vacío
+        setScannerUrl("");
+      } finally {
+        setUrlLoading(false);
+      }
     };
     getScannerUrl();
   }, []);
@@ -182,6 +190,10 @@ function MyEvents() {
                   user?.oauth?.mercadoPago?.hasAuthorized === true ||
                   false
                 }
+                hasCbuConfigured={
+                  !!(user?.cbuConfig?.cbu || user?.cbuConfig?.alias)
+                }
+                sellingPlan={user?.sellingPlan}
                 isAdmin={user?.roles?.includes?.("admin") || user?.rol === "admin"}
               />
             )}

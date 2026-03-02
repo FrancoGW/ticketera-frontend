@@ -4,7 +4,7 @@ import Footer from "../../components/footer/Footer.jsx";
 import { Container, Box, Flex, Text, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectFade } from "swiper";
+import { Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-fade";
 import Flyer from "../../components/flyer/Flyer";

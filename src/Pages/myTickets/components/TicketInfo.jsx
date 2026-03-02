@@ -1,50 +1,173 @@
-import { Td, Tr, Button, useDisclosure, Stack, Box } from "@chakra-ui/react";
+import { Td, Tr, Button, useDisclosure, Stack, Box, Text } from "@chakra-ui/react";
 import { Document, Page, View, Text as PdfText, PDFDownloadLink, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
 import { QRCodeCanvas } from 'qrcode.react';
 import { useEffect, useRef, useState } from "react";
-import TransferTicketModal from "../../../components/TransferTicketModal/TransferTicketModal"
+import TransferTicketModal from "../../../components/TransferTicketModal/TransferTicketModal";
+
+const PRIMARY = '#6B46C1';
+const GRAY_LIGHT = '#F7FAFC';
+const GRAY_TEXT = '#4A5568';
+
 const styles = StyleSheet.create({
   page: {
-    marginTop: 100,
-    alignItems: 'center'
+    padding: 0,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#fff',
   },
-  section: {
-    width: '50%',
-    margin: 10,
-    padding: 10,
-    textAlign: 'center'
-  }
+  header: {
+    backgroundColor: PRIMARY,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  logoText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  tagline: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 9,
+    marginTop: 4,
+    letterSpacing: 0.5,
+  },
+  content: {
+    padding: 28,
+    paddingTop: 100,
+    alignItems: 'center',
+  },
+  eventTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1A202C',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  ticketType: {
+    fontSize: 12,
+    color: GRAY_TEXT,
+    marginBottom: 20,
+  },
+  ticketDetail: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: 280,
+    marginBottom: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: GRAY_LIGHT,
+    borderRadius: 6,
+  },
+  ticketDetailLabel: {
+    fontSize: 9,
+    color: GRAY_TEXT,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  ticketDetailValue: {
+    fontSize: 11,
+    color: '#1A202C',
+    fontWeight: 'bold',
+  },
+  qrWrapper: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: PRIMARY,
+    borderRadius: 8,
+    marginBottom: 24,
+  },
+  qrImage: {
+    width: 160,
+    height: 160,
+  },
+  qrLabel: {
+    fontSize: 10,
+    color: GRAY_TEXT,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    left: 0,
+    right: 0,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    backgroundColor: GRAY_LIGHT,
+    borderTopWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 9,
+    color: GRAY_TEXT,
+  },
 });
 
+const formatPdfDate = (date) => {
+  if (!date?.timestampStart) return '—';
+  const d = new Date(date.timestampStart);
+  return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 const QrPDF = ({ ticket, eventTitle, qrCodeDataUri }) => {
-  if (!ticket || !eventTitle  || !qrCodeDataUri) {
-    return null
+  if (!ticket || !eventTitle || !qrCodeDataUri) {
+    return null;
   }
 
+  const dateStr = formatPdfDate(ticket.date);
+  const valueStr = typeof ticket.value === 'number' ? `$${ticket.value.toLocaleString('es-AR')}` : ticket.value;
 
-  return <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <PdfText>
-          {eventTitle}
-        </PdfText>
-      </View>
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header} fixed>
+          <PdfText style={styles.logoText}>GetPass</PdfText>
+          <PdfText style={styles.tagline}>Tu entrada digital</PdfText>
+        </View>
 
+        <View style={styles.content}>
+          <PdfText style={styles.eventTitle}>{eventTitle}</PdfText>
+          <PdfText style={styles.ticketType}>{ticket.title || 'Entrada'}</PdfText>
 
-      <View style={styles.section}>
-        <PdfImage source={{ uri: qrCodeDataUri }} />
-      </View>
-    </Page>
-  </Document>
-}
+          <View style={styles.ticketDetail}>
+            <View>
+              <PdfText style={styles.ticketDetailLabel}>Fecha y hora</PdfText>
+              <PdfText style={styles.ticketDetailValue}>{dateStr}</PdfText>
+            </View>
+            <View>
+              <PdfText style={styles.ticketDetailLabel}>Valor</PdfText>
+              <PdfText style={styles.ticketDetailValue}>{valueStr}</PdfText>
+            </View>
+          </View>
+
+          <View style={styles.qrWrapper}>
+            <PdfImage source={{ uri: qrCodeDataUri }} style={styles.qrImage} />
+            <PdfText style={styles.qrLabel}>Presentá este código QR en la entrada</PdfText>
+          </View>
+        </View>
+
+        <View style={styles.footer} fixed>
+          <PdfText style={styles.footerText}>GetPass · getpass.com.ar</PdfText>
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 const TicketInfo = ({ ticket, index, ticketsData }) => {
+  const isPendiente = ticket.status === 'pendiente';
   const qrCodeCanvasRef = useRef(null)
   const [qrCodeDataUri, setQrCodeDataUri] = useState(null)
   const [isQrReady, setIsQrReady] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   useEffect(() => {
+    if (isPendiente) return;
     // Esperar a que el QR se renderice completamente
     const timer = setTimeout(() => {
       if (qrCodeCanvasRef.current) {
@@ -62,16 +185,52 @@ const TicketInfo = ({ ticket, index, ticketsData }) => {
     }, 100); // Pequeño delay para asegurar que el canvas esté renderizado
 
     return () => clearTimeout(timer);
-  }, [ticket.qrId]) // Depender del qrId en lugar del ref
+  }, [ticket.qrId, isPendiente])
 
   const handleTransferSuccess = () => {
     window.location.reload()
   }
 
+  const placeAndDate = ticket.date?.timestampStart
+    ? new Date(ticket.date.timestampStart).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '—';
+  const valorStr = typeof ticket.value === 'number' ? `$${ticket.value?.toLocaleString?.('es-AR') ?? ticket.value}` : ticket.value ?? '—';
+
+  if (isPendiente) {
+    return (
+      <Tr key={`pendiente-${index}`}>
+        <Td>{ticket.title}</Td>
+        <Td fontSize="sm" color="gray.700">{placeAndDate}</Td>
+        <Td fontWeight="600">{valorStr}</Td>
+        <Td>
+          <Stack direction="column" spacing={1} align="flex-start">
+            <Box
+              px={3}
+              py={2}
+              borderRadius="md"
+              bg="orange.50"
+              borderWidth="1px"
+              borderColor="orange.200"
+              fontSize="sm"
+              color="orange.800"
+              fontFamily="secondary"
+            >
+              Pendiente de aprobación
+            </Box>
+            <Text fontSize="xs" color="gray.600" fontFamily="secondary">
+              El organizador debe aprobar tu comprobante. Cuando lo apruebe, recibirás las entradas por email y podrás descargar el QR acá.
+            </Text>
+          </Stack>
+        </Td>
+      </Tr>
+    );
+  }
+
   return (
     <Tr key={index}>
       <Td>{ticket.title}</Td>
-      <Td>{ticket.value}</Td>
+      <Td fontSize="sm" color="gray.700">{placeAndDate}</Td>
+      <Td fontWeight="600">{valorStr}</Td>
       <Td>
         <Stack direction="row" spacing={4} align="center">
           <Box position="absolute" left="-9999px" visibility="hidden">

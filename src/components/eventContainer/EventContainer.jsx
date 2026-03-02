@@ -107,15 +107,12 @@ function EventContainer() {
           >
             <Flex position="relative" align="center" justify="center" flexDirection="column" gap={4}>
               <Image src="/assets/img/loading.svg" maxW="80px" alt="" />
-              <Heading
-                as="span"
-                fontFamily="'Monument Extended', sans-serif"
-                fontWeight="300"
-                fontSize={{ base: "xl", md: "2xl" }}
-                color="gray.800"
-              >
-                GetPass
-              </Heading>
+              <Image
+                src="/assets/Logo/icon_ifavico.svg"
+                alt="GetPass"
+                maxW="48px"
+                objectFit="contain"
+              />
             </Flex>
           </Flex>
         )}

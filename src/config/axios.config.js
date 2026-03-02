@@ -89,6 +89,7 @@ api.interceptors.response.use(
         '/payment/preview-checkout', // Preview es opcional, no mostrar error si no existe
         '/payment/seller/stats', // Estadísticas del organizador; si no existe aún, mostrar ceros
         '/tickets/seller/sold', // Tickets vendidos del organizador
+        '/qr/validator-url', // Vendedor puede no tener validador aún; se maneja en Mis Eventos
       ];
       
       const shouldSilence = silent404Endpoints.some(endpoint => url.includes(endpoint));

@@ -15,62 +15,45 @@ import {
   Text,
   FormErrorMessage,
 } from '@chakra-ui/react';
-import ticketApi from '../../Api/ticket'
-import api from '../../config/axios.config';
+import ticketApi from '../../Api/ticket';
+
 const TransferTicketModal = ({ isOpen, onClose, ticket, onTransferSuccess }) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const toast = useToast();
 
-  const validateEmail = async (email) => {
-    try {
-      const response = await api.post('/users/check-email', { email });
-      return response.data.exists;
-    } catch (error) {
-      console.error('Error validando email:', error);
-      return false;
-    }
-  };
-
   const handleTransfer = async () => {
-    if (!email) {
-      setEmailError('Por favor ingresa un email');
+    if (!email?.trim()) {
+      setEmailError('Por favor ingresá el email del destinatario');
+      return;
+    }
+
+    const qrId = ticket?.qrId;
+    if (!qrId) {
+      setEmailError('No se puede transferir este ticket');
       return;
     }
 
     setIsLoading(true);
+    setEmailError('');
     try {
-      // Primero validamos si el email existe
-      const emailExists = await validateEmail(email);
-      
-      if (!emailExists) {
-        setEmailError('Este email no está registrado en el sistema');
-        setIsLoading(false);
-        return;
-      }
-
-      // Si el email existe, procedemos con la transferencia
-      await ticketApi.makeTransferable(ticket.id); // Asumiendo que el ID está en ticket.id
-      await ticketApi.transferTicket(ticket.id, email);
-      
+      await ticketApi.transferTicketByQr(qrId, email.trim());
       toast({
-        title: "Éxito",
-        description: "Ticket transferido correctamente",
+        title: "Ticket transferido",
+        description: "El destinatario recibirá un email con el nuevo QR (no necesita cuenta).",
         status: "success",
-        duration: 3000,
+        duration: 4000,
         isClosable: true,
       });
-      
       onTransferSuccess();
       onClose();
     } catch (error) {
-      console.error(error);
       toast({
         title: "Error",
         description: error.response?.data?.message || "No se pudo transferir el ticket",
         status: "error",
-        duration: 3000,
+        duration: 4000,
         isClosable: true,
       });
     } finally {
@@ -101,6 +84,9 @@ const TransferTicketModal = ({ isOpen, onClose, ticket, onTransferSuccess }) => 
               onChange={handleEmailChange}
               placeholder="correo@ejemplo.com"
             />
+            <Text fontSize="xs" color="gray.500" mt={2}>
+              Recibirá el ticket por email con el QR; no necesita tener cuenta.
+            </Text>
             {emailError && (
               <FormErrorMessage>{emailError}</FormErrorMessage>
             )}
@@ -108,15 +94,15 @@ const TransferTicketModal = ({ isOpen, onClose, ticket, onTransferSuccess }) => 
         </ModalBody>
 
         <ModalFooter>
-          {/* <Button
+          <Button
             colorScheme="blue"
             mr={3}
             onClick={handleTransfer}
             isLoading={isLoading}
-            isDisabled={!!emailError}
+            isDisabled={!email?.trim()}
           >
             Transferir
-          </Button> */}
+          </Button>
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>

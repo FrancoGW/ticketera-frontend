@@ -1,7 +1,7 @@
 import api from "../config/axios.config";
 
 const createQr = (eventRef, ticketRef, userEmail) => {
-  return api.post("/qr", { eventRef, ticketRef, userEmail });
+  return api.post("/qr/generate", { eventRef, ticketRef, userEmail });
 };
 
 const validateQr = (qrId, token) => {

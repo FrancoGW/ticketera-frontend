@@ -24,6 +24,11 @@ const previewEmailTemplate = (type, data) => {
   return api.post(`/admin/email-templates/${type}/preview`, data);
 };
 
+// Restaurar plantilla por defecto (desde archivo .hbs)
+const restoreDefaultEmailTemplate = (type) => {
+  return api.post(`/admin/email-templates/${type}/restore-default`);
+};
+
 // Enviar email de prueba
 const testEmailTemplate = (type, email) => {
   return api.post(`/admin/email-templates/${type}/test`, { email });
@@ -34,5 +39,6 @@ export const emailApi = {
   getEmailTemplate,
   updateEmailTemplate,
   previewEmailTemplate,
+  restoreDefaultEmailTemplate,
   testEmailTemplate,
 };

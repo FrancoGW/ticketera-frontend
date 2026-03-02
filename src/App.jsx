@@ -11,6 +11,7 @@ import Register from "./Pages/register/register";
 import RecoverPassword from "./Pages/recoverPassword/RecoverPassword";
 import Politics from "./Pages/politics/Politics";
 import EventDetails from "./components/eventDetails/EventDetails";
+import EventoDemoLanding from "./Pages/eventoDemo/EventoDemoLanding";
 import NewEvent from "./Pages/new-event/NewEvent";
 import Profile from "./Pages/profile/Profile";
 import Productores from "./Pages/productores/Productores";
@@ -20,6 +21,7 @@ import GeneralEvents from "./Pages/eventsAdmin/generalEvents";
 import TicketsPage from "./Pages/ticketsAdmin/ticketsPage";
 import MyTickets from "./Pages/myTickets/myTickets";
 import ChangePassword from "./Pages/changePassword/changePassword";
+import ConfirmUpdateEmail from "./Pages/confirmUpdateEmail/ConfirmUpdateEmail";
 import VerifyEmail from "./Pages/verifyEmail/verifyEmail";
 import PaymentFinished from "./Pages/PaymentFinished/PaymentFinished";
 import Main from "./Pages/main/Main";
@@ -36,16 +38,22 @@ import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
 import SellerDashboard from "./Pages/sellerDashboard/SellerDashboard";
 import SellerQRs from "./Pages/sellerQRs/SellerQRs";
+import SellerComprobantes from "./Pages/sellerComprobantes/SellerComprobantes";
+import SellerGpCoins from "./Pages/sellerGpCoins/SellerGpCoins";
+import SellerRRPP from "./Pages/sellerRRPP/SellerRRPP";
+import SellerConsumiciones from "./Pages/sellerConsumiciones/SellerConsumiciones";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
 import AdminPlanRequests from "./Pages/adminPlanRequests/AdminPlanRequests";
 import AdminSettings from "./Pages/adminSettings/AdminSettings";
 import AdminDashboard from "./Pages/adminDashboard/AdminDashboard";
+import AdminSoporte from "./Pages/adminSoporte/AdminSoporte";
 import MaintenanceMode from "./components/maintenanceMode/MaintenanceMode";
 import { useMaintenanceMode } from "./hooks/useMaintenanceMode";
 import { PreviewRoute } from "./components/previewRoute/PreviewRoute";
 import LandingVender from "./Pages/landingVender/LandingVender";
 import { ConditionalNewEvent } from "./components/conditionalNewEvent/ConditionalNewEvent";
+import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 
 import theme from "../theme";
 import "./main.css";
@@ -155,6 +163,19 @@ function AnimatedRoutes() {
               }
             />
             <Route
+              path="/require-update-email"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <ConfirmUpdateEmail />
+                </motion.div>
+              }
+            />
+            <Route
               path="/register"
               element={
                 <motion.div
@@ -203,6 +224,19 @@ function AnimatedRoutes() {
                   variants={pageVariants}
                 >
                   <EventDetails />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/evento-demo"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={pageVariants}
+                >
+                  <EventoDemoLanding />
                 </motion.div>
               }
             />
@@ -440,11 +474,51 @@ function AnimatedRoutes() {
               }
             />
             <Route
+              path="/seller/rrpp"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerRRPP />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/consumiciones"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerConsumiciones />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/seller/qrs"
               element={
                 <ProtectedRoute roles={["seller", "admin"]}>
                   <LayoutWithSidebar>
                     <SellerQRs />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/comprobantes"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerComprobantes />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/gp-coins"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerGpCoins />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }
@@ -524,6 +598,16 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["admin"]}>
                   <LayoutWithSidebar>
                     <AdminPlanRequests />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/soporte"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <LayoutWithSidebar>
+                    <AdminSoporte />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }
@@ -837,6 +921,7 @@ function App() {
     <Box h="100%">
       <ChakraProvider theme={theme}>
         <AuthProvider>
+          <ScrollToTop />
           <AnimatedRoutes />
         </AuthProvider>
       </ChakraProvider>

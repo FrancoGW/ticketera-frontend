@@ -22,12 +22,14 @@
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
+    "@geoman-io/leaflet-geoman-free": "^2.18.3",
     "@react-pdf/renderer": "^3.1.6",
     "@reduxjs/toolkit": "^1.9.5",
     "axios": "^1.2.5",
     "framer-motion": "^7.10.3",
     "html5-qrcode": "^2.3.8",
     "jwt-decode": "^3.1.2",
+    "leaflet": "^1.9.4",
     "lodash.debounce": "^4.0.8",
     "postcss-import": "^15.1.0",
     "qrcode.react": "^3.1.0",
@@ -45,9 +47,7 @@
     "react-select": "^5.7.0",
     "react-slick": "^0.29.0",
     "recharts": "^2.14.1",
-    "swiper": "^8.4.5",
-    "leaflet": "^1.9.4",
-    "@geoman-io/leaflet-geoman-free": "^2.18.3"
+    "swiper": "^12.1.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.24",

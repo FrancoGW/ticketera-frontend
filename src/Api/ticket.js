@@ -229,6 +229,10 @@ const downloadTicket = (ticketId) => {
     responseType: "blob",
   });
 };
+
+const resendPdvSaleEmail = (paymentId) => {
+  return api.post("/tickets/pdv/resend-email", { paymentId });
+};
 const getTicketsByEventForUser = (eventId) => {
   return api.get(`/tickets/event/getTicketsByEventForUser/${eventId}`);
 };
@@ -264,6 +268,7 @@ const ticketApi = {
   getPdvSpecialTickets,
   sellTicket,
   downloadTicket,
+  resendPdvSaleEmail,
 };
 
 export default ticketApi;

@@ -33,6 +33,9 @@ import PdvDashboard from "./Pages/pdv/PdvDashboard";
 import PdvTickets from "./Pages/pdv/PdvTickets";
 import PdvSales from "./Pages/pdv/PdvSales";
 import PdvSpecialTickets from "./Pages/pdv/PdvSpecialTickets";
+import PdvLogin from "./Pages/pdv/PdvLogin";
+import PdvHome from "./Pages/pdv/PdvHome";
+import PdvPanel from "./Pages/pdv/PdvPanel";
 import MyEvents from "./Pages/myEvents/myEvents";
 import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
@@ -645,7 +648,33 @@ function AnimatedRoutes() {
               }
             />
 
-            {/* Protected Routes for PDV */}
+            {/* PDV Operator Routes */}
+            <Route
+              path="/pdv/login"
+              element={
+                <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants}>
+                  <PdvLogin />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/pdv"
+              element={
+                <ProtectedRoute roles={["pdv", "seller", "admin"]}>
+                  <PdvHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pdv/:pdvId"
+              element={
+                <ProtectedRoute roles={["pdv", "seller", "admin"]}>
+                  <PdvPanel />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected Routes for PDV (legacy) */}
             <Route
               path="/pdv/dashboard"
               element={

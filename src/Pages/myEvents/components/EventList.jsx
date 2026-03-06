@@ -55,9 +55,11 @@ const EventsList = ({ event, setEventDetails }) => {
   const [newPicture, setNewPicture] = useState("");
   const [newRrppName, setNewRrppName] = useState("");
   const [newRrppCode, setNewRrppCode] = useState("");
+  const [newRrppDiscount, setNewRrppDiscount] = useState("");
   const [editingRrppId, setEditingRrppId] = useState(null);
   const [editRrppName, setEditRrppName] = useState("");
   const [editRrppCode, setEditRrppCode] = useState("");
+  const [editRrppDiscount, setEditRrppDiscount] = useState("");
   const [rrppLoading, setRrppLoading] = useState(false);
   const [newConsumicionName, setNewConsumicionName] = useState("");
   const [newConsumicionPrice, setNewConsumicionPrice] = useState("");
@@ -96,12 +98,14 @@ const EventsList = ({ event, setEventDetails }) => {
       toast({ title: "Nombre requerido", status: "warning", duration: 3000 });
       return;
     }
+    const discount = newRrppDiscount !== "" ? Math.min(100, Math.max(0, Number(newRrppDiscount))) / 100 : undefined;
     setRrppLoading(true);
     try {
-      const { data } = await eventApi.createRrpp(eventData._id, { name, code: newRrppCode?.trim() || undefined });
+      const { data } = await eventApi.createRrpp(eventData._id, { name, code: newRrppCode?.trim() || undefined, discountPercentage: discount });
       setEventData(data.event);
       setNewRrppName("");
       setNewRrppCode("");
+      setNewRrppDiscount("");
       toast({ title: "RRPP agregado", status: "success", duration: 3000 });
     } catch (err) {
       toast({ title: "Error", description: err.response?.data?.message || "No se pudo agregar", status: "error", duration: 4000 });
@@ -114,23 +118,27 @@ const EventsList = ({ event, setEventDetails }) => {
     setEditingRrppId(r._id);
     setEditRrppName(r.fullname || "");
     setEditRrppCode(r.code || "");
+    setEditRrppDiscount(r.discountPercentage ? String(Math.round(r.discountPercentage * 100)) : "");
   };
 
   const handleCancelEditRrpp = () => {
     setEditingRrppId(null);
     setEditRrppName("");
     setEditRrppCode("");
+    setEditRrppDiscount("");
   };
 
   const handleSaveRrpp = async () => {
     if (!editingRrppId) return;
+    const discount = editRrppDiscount !== "" ? Math.min(100, Math.max(0, Number(editRrppDiscount))) / 100 : 0;
     setRrppLoading(true);
     try {
-      const { data } = await eventApi.updateRrpp(eventData._id, editingRrppId, { name: editRrppName?.trim() || "", code: editRrppCode?.trim() || undefined });
+      const { data } = await eventApi.updateRrpp(eventData._id, editingRrppId, { name: editRrppName?.trim() || "", code: editRrppCode?.trim() || undefined, discountPercentage: discount });
       setEventData(data.event);
       setEditingRrppId(null);
       setEditRrppName("");
       setEditRrppCode("");
+      setEditRrppDiscount("");
       toast({ title: "RRPP actualizado", status: "success", duration: 3000 });
     } catch (err) {
       toast({ title: "Error", description: err.response?.data?.message || "No se pudo actualizar", status: "error", duration: 4000 });
@@ -653,34 +661,25 @@ const EventsList = ({ event, setEventDetails }) => {
                 </Text>
                 <List spacing={2} mb={4}>
                   {rrppList.map((r) => (
-                    <ListItem key={r._id} display="flex" alignItems="center" gap={2} flexWrap="wrap">
+                    <ListItem key={r._id} display="flex" alignItems="center" gap={2} flexWrap="wrap" p={2} borderRadius="md" border="1px solid" borderColor="gray.100">
                       {editingRrppId === r._id ? (
                         <>
-                          <Input
-                            size="sm"
-                            value={editRrppName}
-                            onChange={(e) => setEditRrppName(e.target.value)}
-                            placeholder="Nombre"
-                            flex="1"
-                            minW="120px"
-                            isDisabled={isDemoMode}
-                          />
-                          <Input
-                            size="sm"
-                            value={editRrppCode}
-                            onChange={(e) => setEditRrppCode(e.target.value)}
-                            placeholder="Código (opcional)"
-                            flex="1"
-                            minW="100px"
-                            isDisabled={isDemoMode}
-                          />
+                          <Input size="sm" value={editRrppName} onChange={(e) => setEditRrppName(e.target.value)} placeholder="Nombre" flex="1" minW="100px" isDisabled={isDemoMode} />
+                          <Input size="sm" value={editRrppCode} onChange={(e) => setEditRrppCode(e.target.value)} placeholder="Código" w="90px" isDisabled={isDemoMode} />
+                          <Flex align="center" gap={1}>
+                            <Input size="sm" type="number" min={0} max={100} w="60px" value={editRrppDiscount} onChange={(e) => setEditRrppDiscount(e.target.value)} placeholder="0" isDisabled={isDemoMode} />
+                            <Text fontSize="xs" color="gray.500">%</Text>
+                          </Flex>
                           <Button size="sm" colorScheme="blue" onClick={handleSaveRrpp} isLoading={rrppLoading} isDisabled={isDemoMode}>Guardar</Button>
                           <Button size="sm" variant="ghost" onClick={handleCancelEditRrpp}>Cancelar</Button>
                         </>
                       ) : (
                         <>
-                          <Text as="span" fontWeight="500">{r.fullname}</Text>
+                          <Text as="span" fontWeight="500" flex="1">{r.fullname}</Text>
                           {r.code && <Badge colorScheme="gray">{r.code}</Badge>}
+                          {r.discountPercentage > 0 && (
+                            <Badge colorScheme="green">{Math.round(r.discountPercentage * 100)}% OFF</Badge>
+                          )}
                           {!isDemoMode && (
                             <>
                               <Button size="xs" variant="outline" onClick={() => handleStartEditRrpp(r)}>Editar</Button>
@@ -694,15 +693,22 @@ const EventsList = ({ event, setEventDetails }) => {
                 </List>
                 {!isDemoMode && (
                 <Flex as="form" onSubmit={handleAddRrpp} gap={2} flexWrap="wrap" alignItems="flex-end">
-                  <FormControl flex="1" minW="120px">
+                  <FormControl flex="1" minW="110px">
                     <FormLabel fontSize="sm">Nombre</FormLabel>
                     <Input size="sm" value={newRrppName} onChange={(e) => setNewRrppName(e.target.value)} placeholder="Nombre del RRPP" />
                   </FormControl>
-                  <FormControl flex="1" minW="100px">
-                    <FormLabel fontSize="sm">Código (opcional)</FormLabel>
-                    <Input size="sm" value={newRrppCode} onChange={(e) => setNewRrppCode(e.target.value)} placeholder="Ej: JUAN24" />
+                  <FormControl w="90px">
+                    <FormLabel fontSize="sm">Código</FormLabel>
+                    <Input size="sm" value={newRrppCode} onChange={(e) => setNewRrppCode(e.target.value)} placeholder="Ej: JP24" />
                   </FormControl>
-                  <Button size="sm" type="submit" colorScheme="blue" isLoading={rrppLoading}>Agregar RRPP</Button>
+                  <FormControl w="80px">
+                    <FormLabel fontSize="sm">Descuento</FormLabel>
+                    <Flex align="center" gap={1}>
+                      <Input size="sm" type="number" min={0} max={100} value={newRrppDiscount} onChange={(e) => setNewRrppDiscount(e.target.value)} placeholder="0" />
+                      <Text fontSize="xs" color="gray.500">%</Text>
+                    </Flex>
+                  </FormControl>
+                  <Button size="sm" type="submit" colorScheme="blue" isLoading={rrppLoading}>Agregar</Button>
                 </Flex>
                 )}
 

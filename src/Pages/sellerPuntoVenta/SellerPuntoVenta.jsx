@@ -30,7 +30,13 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Checkbox,
+  Divider,
+  InputGroup,
+  InputRightElement,
+  IconButton,
 } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { Link as RouterLink } from "react-router-dom";
 import eventApi from "../../Api/event";
 import ticketApi from "../../Api/ticket";
@@ -70,6 +76,9 @@ const SellerPuntoVenta = () => {
   const { isOpen: isOpenAccess, onOpen: onOpenAccess, onClose: onCloseAccess } = useDisclosure();
   const [pdvForm, setPdvForm] = useState({ name: "", code: "" });
   const [pdvAccessEmail, setPdvAccessEmail] = useState("");
+  const [pdvAccessPassword, setPdvAccessPassword] = useState("");
+  const [pdvAccessCreateAccount, setPdvAccessCreateAccount] = useState(true);
+  const [showAccessPassword, setShowAccessPassword] = useState(false);
   const [selectedPdvForAccess, setSelectedPdvForAccess] = useState(null);
   const [savingPdv, setSavingPdv] = useState(false);
   const [savingAccess, setSavingAccess] = useState(false);
@@ -226,6 +235,8 @@ const SellerPuntoVenta = () => {
   const openAccessModal = (pdv) => {
     setSelectedPdvForAccess(pdv);
     setPdvAccessEmail("");
+    setPdvAccessPassword("");
+    setPdvAccessCreateAccount(true);
     onOpenAccess();
   };
 
@@ -236,9 +247,21 @@ const SellerPuntoVenta = () => {
     }
     try {
       setSavingAccess(true);
-      await pointOfSaleApi.addPdvAccess(selectedPdvForAccess._id, pdvAccessEmail.trim());
-      toast({ title: "Acceso agregado", status: "success", duration: 2000 });
+      await pointOfSaleApi.addPdvAccess(selectedPdvForAccess._id, pdvAccessEmail.trim(), {
+        sendInvitation: true,
+        sendPassword: pdvAccessCreateAccount,
+        customPassword: pdvAccessPassword?.trim() || undefined,
+      });
+      toast({
+        title: "Acceso agregado",
+        description: pdvAccessCreateAccount
+          ? "Se envió el email de invitación con los datos de acceso"
+          : "Se envió el email de invitación",
+        status: "success",
+        duration: 3000,
+      });
       setPdvAccessEmail("");
+      setPdvAccessPassword("");
       loadPointsOfSale();
       setSelectedPdvForAccess((prev) => ({
         ...prev,
@@ -652,23 +675,53 @@ const SellerPuntoVenta = () => {
           <ModalHeader>Gestionar acceso — {selectedPdvForAccess?.name}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text fontSize="sm" color="gray.600" mb={3}>
-              Agregá el email de empleados que pueden abrir este punto de venta y registrar ventas. Deben tener cuenta en la plataforma.
+            <Text fontSize="sm" color="gray.600" mb={4}>
+              Invitá a un operador para que use este punto de venta. Le llegará un email con el link de acceso y (opcionalmente) una contraseña generada.
             </Text>
-            <FormControl mb={4}>
-              <FormLabel>Email del empleado</FormLabel>
-              <Flex gap={2}>
+            <Stack spacing={4} mb={4}>
+              <FormControl>
+                <FormLabel>Email del operador</FormLabel>
                 <Input
                   type="email"
                   value={pdvAccessEmail}
                   onChange={(e) => setPdvAccessEmail(e.target.value)}
-                  placeholder="empleado@ejemplo.com"
+                  placeholder="operador@ejemplo.com"
                 />
-                <Button colorScheme="blue" onClick={handleAddAccess} isLoading={savingAccess}>
-                  Agregar
-                </Button>
-              </Flex>
-            </FormControl>
+              </FormControl>
+              <Checkbox
+                isChecked={pdvAccessCreateAccount}
+                onChange={(e) => setPdvAccessCreateAccount(e.target.checked)}
+              >
+                <Text fontSize="sm">Crear cuenta automáticamente si no existe</Text>
+              </Checkbox>
+              {pdvAccessCreateAccount && (
+                <FormControl>
+                  <FormLabel fontSize="sm">Contraseña (opcional — se genera automáticamente si queda vacío)</FormLabel>
+                  <InputGroup>
+                    <Input
+                      type={showAccessPassword ? "text" : "password"}
+                      value={pdvAccessPassword}
+                      onChange={(e) => setPdvAccessPassword(e.target.value)}
+                      placeholder="Dejar vacío para contraseña automática"
+                      fontSize="sm"
+                    />
+                    <InputRightElement>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAccessPassword((p) => !p)}
+                        icon={showAccessPassword ? <ViewOffIcon /> : <ViewIcon />}
+                        aria-label="toggle password"
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
+              )}
+              <Button colorScheme="blue" onClick={handleAddAccess} isLoading={savingAccess}>
+                Invitar operador
+              </Button>
+            </Stack>
+            <Divider mb={3} />
             <FormLabel>Con acceso ({selectedPdvForAccess?.allowedUserEmails?.length || 0})</FormLabel>
             {selectedPdvForAccess?.allowedUserEmails?.length ? (
               <Stack spacing={2}>

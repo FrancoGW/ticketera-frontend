@@ -64,6 +64,7 @@ const EventDetails = () => {
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [selectedRrppId, setSelectedRrppId] = useState("");
+  const [rrppDiscount, setRrppDiscount] = useState(0);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [cbuCheckoutData, setCbuCheckoutData] = useState(null);
   const [proofFile, setProofFile] = useState(null);
@@ -233,46 +234,49 @@ const EventDetails = () => {
     return tickets;
   };
 
+  const recalcPrices = (tickets, currentDiscount, currentRrppDiscount) => {
+    const rawSubtotal = Object.values(tickets).reduce((sum, ticketData) => {
+      return sum + (ticketData.price * ticketData.quantity);
+    }, 0);
+
+    const rrppDiscountAmount = rawSubtotal * currentRrppDiscount;
+    const discountedSubtotal = rawSubtotal - rrppDiscountAmount;
+    setSubtotal(rawSubtotal);
+    setRrppDiscount(rrppDiscountAmount);
+
+    const defaultServiceFee = (event?.sellingMethod === 'SIMPLE' || event?.sellingMethod === 'CUSTOM') ? 0 : 0.10;
+    const serviceFeePercentage = event?.serviceFeePercentage ?? defaultServiceFee;
+    const newServiceCharge = discountedSubtotal * serviceFeePercentage;
+    setServiceCharge(newServiceCharge);
+
+    const newTotal = discountedSubtotal + newServiceCharge - currentDiscount;
+    setTotal(newTotal);
+  };
+
   const addTicketToBuy = (ticket, quantity) => {
     console.log('Adding ticket to buy:', { ticket, quantity });
     if (quantity < 0) return;
     if (quantity > 50) return;
 
-    // Guardar la cantidad y el precio del ticket
     const ticketToBuy = {
       [ticket._id]: {
         quantity,
-        price: ticket.price, // Guardar el precio unitario
+        price: ticket.price,
       },
     };
     const tickets = { ...ticketsToBuy, ...ticketToBuy };
-    console.log('Updated tickets to buy:', tickets);
     setTicketsToBuy(tickets);
-    
-    // Calcular el subtotal de tickets
-    const newSubtotal = Object.values(tickets).reduce((sum, ticketData) => {
-      return sum + (ticketData.price * ticketData.quantity);
-    }, 0);
-    setSubtotal(newSubtotal);
 
-    // Calcular el cargo por servicio usando serviceFeePercentage del evento
-    // CBU (SIMPLE) y Tokens (CUSTOM): sin cargo por defecto. Mercado Pago (FAST): 10% por defecto.
-    const defaultServiceFee = (event?.sellingMethod === 'SIMPLE' || event?.sellingMethod === 'CUSTOM') ? 0 : 0.10;
-    const serviceFeePercentage = event?.serviceFeePercentage ?? defaultServiceFee;
-    const newServiceCharge = newSubtotal * serviceFeePercentage;
-    setServiceCharge(newServiceCharge);
+    const selectedRrpp = event?.rrpp?.find((r) => r._id === selectedRrppId);
+    const currentRrppDiscount = selectedRrpp?.discountPercentage || 0;
+    recalcPrices(tickets, discount, currentRrppDiscount);
+  };
 
-    // Calcular el total: subtotal + cargo por servicio - descuento
-    const newTotal = newSubtotal + newServiceCharge - discount;
-    setTotal(newTotal);
-
-    console.log('Calculated:', {
-      subtotal: newSubtotal,
-      serviceFeePercentage,
-      serviceCharge: newServiceCharge,
-      discount,
-      total: newTotal
-    });
+  const handleRrppChange = (rrppId) => {
+    setSelectedRrppId(rrppId);
+    const selectedRrpp = event?.rrpp?.find((r) => r._id === rrppId);
+    const currentRrppDiscount = selectedRrpp?.discountPercentage || 0;
+    recalcPrices(ticketsToBuy, discount, currentRrppDiscount);
   };
 
   const buyTicket = async () => {
@@ -837,7 +841,7 @@ const EventDetails = () => {
                           </Text>
                           <Select
                             value={selectedRrppId}
-                            onChange={(e) => setSelectedRrppId(e.target.value)}
+                            onChange={(e) => handleRrppChange(e.target.value)}
                             placeholder="Ninguno"
                             borderColor="gray.300"
                             borderWidth="2px"
@@ -847,11 +851,14 @@ const EventDetails = () => {
                             borderRadius="lg"
                           >
                             <option value="">Ninguno</option>
-                            {event.rrpp.map((r) => (
-                              <option key={r._id} value={r._id}>
-                                {r.fullname}{r.code ? ` (${r.code})` : ""}
-                              </option>
-                            ))}
+                            {event.rrpp.map((r) => {
+                              const disc = r.discountPercentage ? Math.round(r.discountPercentage * 100) : 0;
+                              return (
+                                <option key={r._id} value={r._id}>
+                                  {r.fullname}{r.code ? ` (${r.code})` : ""}{disc > 0 ? ` — ${disc}% OFF` : ""}
+                                </option>
+                              );
+                            })}
                           </Select>
                         </Box>
                       </>
@@ -873,16 +880,27 @@ const EventDetails = () => {
                           <Text fontWeight="600" fontSize={{ base: "md", md: "lg" }}>${subtotal.toLocaleString()}</Text>
                         </Flex>
                         
+                        {rrppDiscount > 0 && (
+                          <Flex justify="space-between" fontFamily="secondary" align="center">
+                            <Text color="green.600" fontSize={{ base: "sm", md: "md" }}>
+                              Descuento RRPP ({Math.round((event?.rrpp?.find((r) => r._id === selectedRrppId)?.discountPercentage || 0) * 100)}%):
+                            </Text>
+                            <Text color="green.600" fontWeight="700" fontSize={{ base: "md", md: "lg" }}>
+                              -${Math.round(rrppDiscount).toLocaleString()}
+                            </Text>
+                          </Flex>
+                        )}
+
                         {serviceCharge > 0 && (
                           <Flex justify="space-between" fontFamily="secondary" align="center">
                             <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>Cargo por servicio:</Text>
-                            <Text fontWeight="600" fontSize={{ base: "md", md: "lg" }}>${serviceCharge.toLocaleString()}</Text>
+                            <Text fontWeight="600" fontSize={{ base: "md", md: "lg" }}>${Math.round(serviceCharge).toLocaleString()}</Text>
                           </Flex>
                         )}
                         
                         {discount > 0 && (
                           <Flex justify="space-between" fontFamily="secondary" align="center">
-                            <Text color="green.600" fontSize={{ base: "sm", md: "md" }}>Descuento:</Text>
+                            <Text color="green.600" fontSize={{ base: "sm", md: "md" }}>Descuento código:</Text>
                             <Text color="green.600" fontWeight="700" fontSize={{ base: "md", md: "lg" }}>
                               -${discount.toLocaleString()}
                             </Text>

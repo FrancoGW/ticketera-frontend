@@ -27,8 +27,17 @@ const getPointOfSalePanel = (pdvId) => {
   return api.get(`/points-of-sale/${pdvId}/panel`);
 };
 
-const addPdvAccess = (pdvId, email) => {
-  return api.post(`/points-of-sale/${pdvId}/access`, { email });
+const getMyPdvAccess = () => {
+  return api.get("/points-of-sale/my-access");
+};
+
+const addPdvAccess = (pdvId, email, options = {}) => {
+  return api.post(`/points-of-sale/${pdvId}/access`, {
+    email,
+    sendInvitation: options.sendInvitation !== false,
+    sendPassword: options.sendPassword === true,
+    customPassword: options.customPassword || undefined,
+  });
 };
 
 const removePdvAccess = (pdvId, email) => {
@@ -37,6 +46,7 @@ const removePdvAccess = (pdvId, email) => {
 
 const pointOfSaleApi = {
   getPointsOfSale,
+  getMyPdvAccess,
   createPointOfSale,
   updatePointOfSale,
   deletePointOfSale,

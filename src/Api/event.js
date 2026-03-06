@@ -103,12 +103,12 @@ const updateRrppName = (eventId, rrppId, name) => {
   return api.put(`/events/${eventId}/rrpp/${rrppId}`, { name });
 };
 
-const updateRrpp = (eventId, rrppId, { name, code } = {}) => {
-  return api.put(`/events/${eventId}/rrpp/${rrppId}`, { name, code });
+const updateRrpp = (eventId, rrppId, { name, code, discountPercentage } = {}) => {
+  return api.put(`/events/${eventId}/rrpp/${rrppId}`, { name, code, discountPercentage });
 };
 
-const createRrpp = (eventId, { name, code } = {}) => {
-  return api.post(`/events/${eventId}/rrpp`, { name: name || '', code: code || undefined });
+const createRrpp = (eventId, { name, code, discountPercentage } = {}) => {
+  return api.post(`/events/${eventId}/rrpp`, { name: name || '', code: code || undefined, discountPercentage });
 };
 
 const uploadConsumicionImage = (file) => {

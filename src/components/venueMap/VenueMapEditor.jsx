@@ -52,6 +52,7 @@ export default function VenueMapEditor({
   tickets = [],
   initialVenueMap,
   onSaveVenueMap,
+  hideTitle = false,
 }) {
   const toast = useToast();
   const mapElRef = useRef(null);
@@ -317,8 +318,13 @@ export default function VenueMapEditor({
 
     setIsSaving(true);
     try {
+      const base =
+        initialVenueMap && typeof initialVenueMap === "object"
+          ? initialVenueMap
+          : {};
       await onSaveVenueMap({
-        version: 1,
+        ...base,
+        version: base?.version ?? 1,
         imageUrl,
         imageWidth,
         imageHeight,
@@ -351,28 +357,45 @@ export default function VenueMapEditor({
   return (
     <Card boxShadow="xl" borderRadius="xl" bg="white" border="1px solid" borderColor="gray.200">
       <CardBody p={6}>
-        <Flex justify="space-between" align="center" mb={4} gap={4} flexWrap="wrap">
-          <Box>
-            <Heading as="h2" fontSize="xl" fontFamily="secondary" color="tertiary" fontWeight="600">
-              Mapa de Zonas (opcional)
-            </Heading>
-            <Text fontSize="sm" color="gray.600" fontFamily="secondary" mt={1}>
-              Subí un plano, dibujá zonas y asociá 1 ticket por zona (precio incluido).
-            </Text>
-          </Box>
-          <Button
-            bg="black"
-            color="white"
-            _hover={{ bg: "#1a1a1a" }}
-            borderRadius="lg"
-            fontFamily="secondary"
-            fontWeight="600"
-            onClick={handleSave}
-            isLoading={isSaving}
-          >
-            Guardar mapa
-          </Button>
-        </Flex>
+        {hideTitle ? (
+          <Flex justify="flex-end" align="center" mb={4} gap={4} flexWrap="wrap">
+            <Button
+              bg="black"
+              color="white"
+              _hover={{ bg: "#1a1a1a" }}
+              borderRadius="lg"
+              fontFamily="secondary"
+              fontWeight="600"
+              onClick={handleSave}
+              isLoading={isSaving}
+            >
+              Guardar mapa
+            </Button>
+          </Flex>
+        ) : (
+          <Flex justify="space-between" align="center" mb={4} gap={4} flexWrap="wrap">
+            <Box>
+              <Heading as="h2" fontSize="xl" fontFamily="secondary" color="tertiary" fontWeight="600">
+                Mapa de Zonas (opcional)
+              </Heading>
+              <Text fontSize="sm" color="gray.600" fontFamily="secondary" mt={1}>
+                Subí un plano, dibujá zonas y asociá 1 ticket por zona (precio incluido).
+              </Text>
+            </Box>
+            <Button
+              bg="black"
+              color="white"
+              _hover={{ bg: "#1a1a1a" }}
+              borderRadius="lg"
+              fontFamily="secondary"
+              fontWeight="600"
+              onClick={handleSave}
+              isLoading={isSaving}
+            >
+              Guardar mapa
+            </Button>
+          </Flex>
+        )}
 
         <Divider my={4} />
 

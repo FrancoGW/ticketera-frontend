@@ -10,6 +10,11 @@ import {
   useToast,
   Heading,
   useDisclosure,
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
 } from "@chakra-ui/react";
 import TicketCard from "./components/TicketCard";
 import CreateTicketModal from "./components/CreateTicketModal";
@@ -18,6 +23,7 @@ import ConfirmDialog from "../../components/confirmDialog/ConfirmDialog";
 import useConfirmDialog from "../../hooks/useConfirmDialog";
 import eventApi from "../../Api/event";
 import VenueMapEditor from "../../components/venueMap/VenueMapEditor";
+import SeatMapEditor from "../../components/venueMap/SeatMapEditor";
 
 const TicketsPage = () => {
   console.log("🚀 TicketsPage - Component initialized");
@@ -469,12 +475,65 @@ const TicketsPage = () => {
 
             {selectedEvent && (
               <Box mt={10}>
-                <VenueMapEditor
-                  eventId={selectedEvent}
-                  tickets={tickets}
-                  initialVenueMap={venueMap}
-                  onSaveVenueMap={handleSaveVenueMap}
-                />
+                <Accordion allowMultiple borderRadius="xl" overflow="hidden">
+                  <AccordionItem border="0" bg="white">
+                    <AccordionButton
+                      px={6}
+                      py={5}
+                      _hover={{ bg: "gray.50" }}
+                      borderBottom="1px solid"
+                      borderColor="gray.200"
+                    >
+                      <Box flex="1" textAlign="left">
+                        <Text fontFamily="secondary" fontWeight="700" color="tertiary">
+                          Mapa de Zonas (opcional)
+                        </Text>
+                        <Text fontFamily="secondary" fontSize="sm" color="gray.600">
+                          Subí un plano, dibujá zonas y asociá 1 ticket por zona.
+                        </Text>
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={6} pt={6} bg="gray.50">
+                      <VenueMapEditor
+                        eventId={selectedEvent}
+                        tickets={tickets}
+                        initialVenueMap={venueMap}
+                        onSaveVenueMap={handleSaveVenueMap}
+                        hideTitle
+                      />
+                    </AccordionPanel>
+                  </AccordionItem>
+
+                  <AccordionItem border="0" bg="white">
+                    <AccordionButton
+                      px={6}
+                      py={5}
+                      _hover={{ bg: "gray.50" }}
+                      borderBottom="1px solid"
+                      borderColor="gray.200"
+                    >
+                      <Box flex="1" textAlign="left">
+                        <Text fontFamily="secondary" fontWeight="700" color="tertiary">
+                          Mapa de Butacas (opcional)
+                        </Text>
+                        <Text fontFamily="secondary" fontSize="sm" color="gray.600">
+                          Creá zonas de butacas por filas/columnas y asociá 1 ticket por zona.
+                        </Text>
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={6} pt={6} bg="gray.50">
+                      <SeatMapEditor
+                        eventId={selectedEvent}
+                        tickets={tickets}
+                        initialVenueMap={venueMap}
+                        onSaveVenueMap={handleSaveVenueMap}
+                        hideTitle
+                      />
+                    </AccordionPanel>
+                  </AccordionItem>
+                </Accordion>
               </Box>
             )}
 

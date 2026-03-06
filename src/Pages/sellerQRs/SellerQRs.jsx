@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Container,
@@ -30,11 +30,126 @@ import {
   IconButton,
   Tooltip,
 } from "@chakra-ui/react";
-import { FiSearch, FiXCircle, FiFileText, FiShare2, FiSend } from "react-icons/fi";
+import { Document, Page, View, Text as PdfText, PDFDownloadLink, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
+import { QRCodeCanvas } from "qrcode.react";
+import { FiSearch, FiXCircle, FiFileText, FiDownload, FiSend } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import ticketApi from "../../Api/ticket";
 import eventApi from "../../Api/event";
 import TransferTicketModal from "../../components/TransferTicketModal/TransferTicketModal";
+
+// Estilos del PDF (mismo diseño que el que se envía por mail)
+const pdfStyles = StyleSheet.create({
+  page: { padding: 0, fontFamily: "Helvetica", backgroundColor: "#fff" },
+  header: { backgroundColor: "#6B46C1", paddingVertical: 20, paddingHorizontal: 24, alignItems: "center" },
+  logoText: { color: "#fff", fontSize: 24, fontWeight: "bold", letterSpacing: 1 },
+  tagline: { color: "rgba(255,255,255,0.9)", fontSize: 9, marginTop: 4, letterSpacing: 0.5 },
+  content: { padding: 28, paddingTop: 100, alignItems: "center" },
+  eventTitle: { fontSize: 18, fontWeight: "bold", color: "#1A202C", textAlign: "center", marginBottom: 6 },
+  ticketType: { fontSize: 12, color: "#4A5568", marginBottom: 20 },
+  ticketDetail: { flexDirection: "row", justifyContent: "space-between", width: "100%", maxWidth: 280, marginBottom: 20, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: "#F7FAFC", borderRadius: 6 },
+  ticketDetailLabel: { fontSize: 9, color: "#4A5568", textTransform: "uppercase", letterSpacing: 0.5 },
+  ticketDetailValue: { fontSize: 11, color: "#1A202C", fontWeight: "bold" },
+  qrWrapper: { padding: 20, backgroundColor: "#fff", borderWidth: 2, borderColor: "#6B46C1", borderRadius: 8, marginBottom: 24 },
+  qrImage: { width: 160, height: 160 },
+  qrLabel: { fontSize: 10, color: "#4A5568", marginTop: 12, textAlign: "center" },
+  footer: { position: "absolute", bottom: 0, width: "100%", left: 0, right: 0, paddingVertical: 14, paddingHorizontal: 24, backgroundColor: "#F7FAFC", borderTopWidth: 1, borderColor: "#E2E8F0", alignItems: "center" },
+  footerText: { fontSize: 9, color: "#4A5568" },
+});
+
+const QrPdfDocument = ({ eventTitle, ticketTitle, amount, qrCodeDataUri }) => {
+  const valueStr = amount != null && !isNaN(amount) ? new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(amount) : "—";
+  return (
+    <Document>
+      <Page size="A4" style={pdfStyles.page}>
+        <View style={pdfStyles.header} fixed>
+          <PdfText style={pdfStyles.logoText}>GetPass</PdfText>
+          <PdfText style={pdfStyles.tagline}>Tu entrada digital</PdfText>
+        </View>
+        <View style={pdfStyles.content}>
+          <PdfText style={pdfStyles.eventTitle}>{eventTitle || "Evento"}</PdfText>
+          <PdfText style={pdfStyles.ticketType}>{ticketTitle || "Entrada"}</PdfText>
+          <View style={pdfStyles.ticketDetail}>
+            <View>
+              <PdfText style={pdfStyles.ticketDetailLabel}>Monto</PdfText>
+              <PdfText style={pdfStyles.ticketDetailValue}>{valueStr}</PdfText>
+            </View>
+          </View>
+          <View style={pdfStyles.qrWrapper}>
+            <PdfImage source={{ uri: qrCodeDataUri }} style={pdfStyles.qrImage} />
+            <PdfText style={pdfStyles.qrLabel}>Presentá este código QR en la entrada</PdfText>
+          </View>
+        </View>
+        <View style={pdfStyles.footer} fixed>
+          <PdfText style={pdfStyles.footerText}>GetPass · getpass.com.ar</PdfText>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+const DownloadQrPdfButton = ({ item }) => {
+  const qrCanvasRef = useRef(null);
+  const [qrDataUri, setQrDataUri] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const wrapper = qrCanvasRef.current;
+      if (!wrapper) return;
+      const canvas = wrapper.querySelector("canvas");
+      if (canvas) {
+        try {
+          setQrDataUri(canvas.toDataURL("image/png", 1.0));
+        } catch (e) {
+          console.error("Error generando QR para PDF:", e);
+        }
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [item.qrId]);
+
+  return (
+    <>
+      <Box position="absolute" left="-9999px" visibility="hidden" aria-hidden="true">
+        <div ref={qrCanvasRef}>
+          <QRCodeCanvas value={item.qrId || ""} size={200} level="H" />
+        </div>
+      </Box>
+      {qrDataUri ? (
+        <PDFDownloadLink
+          document={
+            <QrPdfDocument
+              eventTitle={item.eventTitle}
+              ticketTitle={item.ticketTitle}
+              amount={item.amount}
+              qrCodeDataUri={qrDataUri}
+            />
+          }
+          fileName={`QR - ${(item.eventTitle || "entrada").replace(/[^a-z0-9áéíóúñ\s]/gi, "")} - ${(item.ticketTitle || "ticket").replace(/[^a-z0-9áéíóúñ\s]/gi, "")}.pdf`}
+        >
+          {({ loading }) => (
+            <Tooltip label="Descargar QR en PDF">
+              <IconButton
+                icon={<FiDownload />}
+                size="sm"
+                colorScheme="purple"
+                variant="ghost"
+                aria-label="Descargar QR en PDF"
+                isLoading={loading}
+                as="span"
+                display="inline-flex"
+              />
+            </Tooltip>
+          )}
+        </PDFDownloadLink>
+      ) : (
+        <Tooltip label="Preparando PDF...">
+          <IconButton icon={<FiDownload />} size="sm" colorScheme="purple" variant="ghost" aria-label="Descargar QR" isDisabled isLoading as="span" display="inline-flex" />
+        </Tooltip>
+      )}
+    </>
+  );
+};
 
 const SellerQRs = () => {
   const [items, setItems] = useState([]);
@@ -100,13 +215,6 @@ const SellerQRs = () => {
     onReceiptOpen();
   };
 
-  const handleCompartirQr = (item) => {
-    const url = `${window.location.origin}/profile/my-tickets`;
-    const text = `Entrada: ${item.eventTitle} - ${item.ticketTitle}. Código QR: ${item.qrId}`;
-    navigator.clipboard.writeText(text);
-    toast({ title: "Texto copiado", description: "Podés pegarlo y enviarlo al comprador.", status: "success", duration: 3000, isClosable: true });
-  };
-
   const handleTransferir = (item) => {
     setTransferItem(item);
     onTransferOpen();
@@ -161,7 +269,7 @@ const SellerQRs = () => {
               Ver QRs / Tickets vendidos
             </Heading>
             <Text fontFamily="secondary" color="gray.600" fontSize="md">
-              Acá podés ver todos los tickets que vendiste, buscarlos por nombre, apellido o mail. También podés cancelar un QR, ver el comprobante de pago y compartir el QR.
+              Acá podés ver todos los tickets que vendiste, buscarlos por nombre, apellido o mail. También podés cancelar un QR, ver el comprobante de pago y descargar el QR en PDF.
             </Text>
           </Box>
 
@@ -247,16 +355,7 @@ const SellerQRs = () => {
                                         onClick={() => handleVerComprobante(item)}
                                       />
                                     </Tooltip>
-                                    <Tooltip label="Compartir QR">
-                                      <IconButton
-                                        icon={<FiShare2 />}
-                                        size="sm"
-                                        colorScheme="purple"
-                                        variant="ghost"
-                                        aria-label="Compartir QR"
-                                        onClick={() => handleCompartirQr(item)}
-                                      />
-                                    </Tooltip>
+                                    <DownloadQrPdfButton item={item} />
                                     <Tooltip label="Transferir a otro email">
                                       <IconButton
                                         icon={<FiSend />}

@@ -216,7 +216,11 @@ const sellTicket = (data) => {
     ticketId: data.ticketId,
     customerEmail: data.customerEmail,
     quantity: data.quantity,
-    specialType: data.specialType, // 'student' or 'senior'
+    customerFirstname: data.customerFirstname,
+    customerLastname: data.customerLastname,
+    pointOfSaleId: data.pointOfSaleId || undefined,
+    pdvPaymentType: data.pdvPaymentType || "efectivo",
+    specialType: data.specialType,
   });
 };
 

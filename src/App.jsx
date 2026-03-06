@@ -42,6 +42,8 @@ import SellerComprobantes from "./Pages/sellerComprobantes/SellerComprobantes";
 import SellerGpCoins from "./Pages/sellerGpCoins/SellerGpCoins";
 import SellerRRPP from "./Pages/sellerRRPP/SellerRRPP";
 import SellerConsumiciones from "./Pages/sellerConsumiciones/SellerConsumiciones";
+import SellerPuntoVenta from "./Pages/sellerPuntoVenta/SellerPuntoVenta";
+import SellerPuntoVentaPanel from "./Pages/sellerPuntoVenta/SellerPuntoVentaPanel";
 import AdminEventDetails from "./Pages/eventsAdmin/AdminEventDetails";
 import AdminMails from "./Pages/adminMails/AdminMails";
 import AdminPlanRequests from "./Pages/adminPlanRequests/AdminPlanRequests";
@@ -459,6 +461,26 @@ function AnimatedRoutes() {
                 <ProtectedRoute roles={["seller", "admin"]}>
                   <LayoutWithSidebar>
                     <SellerDashboard />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/punto-venta"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerPuntoVenta />
+                  </LayoutWithSidebar>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seller/punto-venta/panel/:pdvId"
+              element={
+                <ProtectedRoute roles={["seller", "admin"]}>
+                  <LayoutWithSidebar>
+                    <SellerPuntoVentaPanel />
                   </LayoutWithSidebar>
                 </ProtectedRoute>
               }

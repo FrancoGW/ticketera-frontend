@@ -100,6 +100,7 @@ const SellerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const yAxisWidth = useBreakpointValue({ base: 90, sm: 120, md: 160 });
   const { data: user } = useSelector((state) => state.user);
   const isDemoOrganizer = user?.isDemo === true;
 
@@ -194,9 +195,9 @@ const SellerDashboard = () => {
   const hasSales = (stats?.sales ?? []).length > 0;
 
   return (
-    <Box w="100%" minH="calc(100vh - 80px)" bg="gray.50" py={{ base: 6, md: 8 }} px={{ base: 2, md: 0 }}>
-      <Container maxW="container.xl" px={{ base: 4, md: 8 }}>
-        <VStack spacing={8} align="stretch">
+    <Box w="100%" minW={0} maxW="100%" minH="calc(100vh - 80px)" bg="gray.50" py={{ base: 6, md: 8 }} px={{ base: 2, md: 0 }} overflowX="hidden">
+      <Container maxW="container.xl" px={{ base: 4, md: 8 }} minW={0} w="100%">
+        <VStack spacing={8} align="stretch" minW={0}>
           <Box>
             <Heading
               as="h1"
@@ -221,6 +222,7 @@ const SellerDashboard = () => {
               borderColor="blue.200"
               bg="blue.50"
               overflow="hidden"
+              minW={0}
             >
               <CardBody p={5}>
                 <Flex align="center" justify="space-between" flexWrap="wrap" gap={4}>
@@ -246,7 +248,7 @@ const SellerDashboard = () => {
             </Card>
           )}
 
-          <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6} minW={0}>
             <StatCard
               icon={FiCalendar}
               label="Eventos activos"
@@ -277,9 +279,9 @@ const SellerDashboard = () => {
             />
           </SimpleGrid>
 
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} minW={0}>
               {byMethodData.length > 0 ? (
-                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200">
+                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" overflow="hidden" minW={0}>
                   <CardHeader>
                     <Flex align="center" gap={2}>
                       <FiPieChart />
@@ -289,28 +291,55 @@ const SellerDashboard = () => {
                     </Flex>
                   </CardHeader>
                   <CardBody pt={0}>
-                    <ResponsiveContainer width="100%" height={280}>
-                      <PieChart>
-                        <Pie
-                          data={byMethodData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={90}
-                          label={({ name, value }) => (value > 0 ? `${name}: ${formatMoney(value)}` : null)}
-                        >
-                          {byMethodData.map((entry, index) => (
-                            <Cell key={index} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => formatMoney(value)} />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <Flex
+                      direction={{ base: "column", sm: "row" }}
+                      align={{ base: "stretch", sm: "center" }}
+                      gap={4}
+                      w="100%"
+                      minW={0}
+                    >
+                      <Box flex="0 0 auto" w={{ base: "100%", sm: "50%" }} minW={0} maxW={{ base: "100%", sm: "200px" }}>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <PieChart>
+                            <Pie
+                              data={byMethodData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={isMobile ? 70 : 90}
+                              label={!isMobile ? ({ name, value }) => (value > 0 ? `${name}: ${formatMoney(value)}` : null) : false}
+                            >
+                              {byMethodData.map((entry, index) => (
+                                <Cell key={index} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => formatMoney(value)} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </Box>
+                      <VStack
+                        align="stretch"
+                        spacing={2}
+                        flex="1"
+                        minW={0}
+                        justify="center"
+                        fontSize="sm"
+                      >
+                        {byMethodData.map((entry, index) => (
+                          <Flex key={index} align="center" gap={2} wrap="nowrap" minW={0}>
+                            <Box w="10px" h="10px" borderRadius="full" bg={entry.color} flexShrink={0} />
+                            <Text isTruncated title={`${entry.name}: ${formatMoney(entry.value)}`} minW={0}>
+                              {entry.name}: {formatMoney(entry.value)}
+                            </Text>
+                          </Flex>
+                        ))}
+                      </VStack>
+                    </Flex>
                   </CardBody>
                 </Card>
               ) : (
-                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200">
+                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" minW={0}>
                   <CardHeader>
                     <Flex align="center" gap={2}>
                       <FiPieChart />
@@ -328,7 +357,7 @@ const SellerDashboard = () => {
               )}
 
               {salesByDay.length > 0 ? (
-                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200">
+                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" minW={0}>
                   <CardHeader>
                     <Flex align="center" gap={2}>
                       <FiTrendingUp />
@@ -350,7 +379,7 @@ const SellerDashboard = () => {
                   </CardBody>
                 </Card>
               ) : (
-                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200">
+                <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" minW={0}>
                   <CardHeader>
                     <Flex align="center" gap={2}>
                       <FiTrendingUp />
@@ -367,7 +396,7 @@ const SellerDashboard = () => {
                 </Card>
               )}
 
-              <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" gridColumn={{ base: "1", lg: "1 / -1" }}>
+              <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" gridColumn={{ base: "1", lg: "1 / -1" }} minW={0}>
                 <CardHeader>
                   <Flex align="center" gap={2}>
                     <FiCreditCard />
@@ -376,21 +405,23 @@ const SellerDashboard = () => {
                     </Heading>
                   </Flex>
                 </CardHeader>
-                <CardBody pt={0}>
-                    <ResponsiveContainer width="100%" height={260}>
-                      <BarChart data={byMethodDataFull} layout="vertical" margin={{ left: 20, right: 30 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(v) => `$${v}`} />
-                        <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 12 }} />
-                        <Tooltip formatter={(value) => formatMoney(value)} />
-                        <Bar dataKey="value" name="Monto" fill="#B78DEA" radius={[0, 4, 4, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                <CardBody pt={0} minW={0} overflowX="auto">
+                    <Box minW={0} w="100%" minH="260px">
+                      <ResponsiveContainer width="100%" height={260}>
+                        <BarChart data={byMethodDataFull} layout="vertical" margin={{ left: 10, right: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" tickFormatter={(v) => `$${v}`} tick={{ fontSize: 10 }} />
+                          <YAxis type="category" dataKey="name" width={yAxisWidth} tick={{ fontSize: 11 }} />
+                          <Tooltip formatter={(value) => formatMoney(value)} />
+                          <Bar dataKey="value" name="Monto" fill="#B78DEA" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Box>
                 </CardBody>
               </Card>
             </SimpleGrid>
 
-          <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200">
+          <Card borderRadius="xl" boxShadow="md" border="1px solid" borderColor="gray.200" minW={0}>
             <CardHeader>
               <Heading size="md" fontFamily="secondary">
                 Registro de compras

@@ -73,9 +73,9 @@ const LayoutWithSidebar = ({ children }) => {
   }, [location.pathname, prevLocation]);
 
   return (
-    <Flex minH="100vh" bg="gray.50">
+    <Flex minH="100vh" bg="gray.50" minW={0}>
       {renderSidebar()}
-      <Box flex="1" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px">
+      <Box flex="1" minW={0} maxW="100%" ml={{ base: 0, md: "280px" }} minH="calc(100vh - 80px)" mt="80px" overflowX="hidden">
         <Header key="header" />
         <LoadingBar isLoading={isLoading} />
         
@@ -86,7 +86,7 @@ const LayoutWithSidebar = ({ children }) => {
             initial="initial"
             animate="animate"
             exit="exit"
-            style={{ width: "100%" }}
+            style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}
           >
             <Box
               as="main"
@@ -94,6 +94,8 @@ const LayoutWithSidebar = ({ children }) => {
               pb={20}
               bg="white"
               pt={8}
+              minW={0}
+              maxW="100%"
             >
               {children}
             </Box>

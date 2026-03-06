@@ -27,6 +27,10 @@ const getPointOfSalePanel = (pdvId) => {
   return api.get(`/points-of-sale/${pdvId}/panel`);
 };
 
+const getPdvSales = (pdvId) => {
+  return api.get(`/points-of-sale/${pdvId}/sales`);
+};
+
 const getMyPdvAccess = () => {
   return api.get("/points-of-sale/my-access");
 };
@@ -51,6 +55,7 @@ const pointOfSaleApi = {
   updatePointOfSale,
   deletePointOfSale,
   getPointOfSalePanel,
+  getPdvSales,
   addPdvAccess,
   removePdvAccess,
 };

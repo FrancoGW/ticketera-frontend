@@ -233,6 +233,19 @@ const downloadTicket = (ticketId) => {
 const resendPdvSaleEmail = (paymentId) => {
   return api.post("/tickets/pdv/resend-email", { paymentId });
 };
+
+const sellConsumicion = (data) => {
+  return api.post("/tickets/pdv/sell-consumicion", {
+    eventId: data.eventId,
+    consumacionId: data.consumacionId,
+    quantity: data.quantity,
+    customerEmail: data.customerEmail,
+    customerFirstname: data.customerFirstname,
+    customerLastname: data.customerLastname,
+    pointOfSaleId: data.pointOfSaleId,
+    pdvPaymentType: data.pdvPaymentType || "efectivo",
+  });
+};
 const getTicketsByEventForUser = (eventId) => {
   return api.get(`/tickets/event/getTicketsByEventForUser/${eventId}`);
 };
@@ -269,6 +282,7 @@ const ticketApi = {
   sellTicket,
   downloadTicket,
   resendPdvSaleEmail,
+  sellConsumicion,
 };
 
 export default ticketApi;

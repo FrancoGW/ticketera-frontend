@@ -27,6 +27,7 @@ import {
   import axios from "axios";
   import { bufferToBase64, getBase64FromFile, validateSelectedImg } from "../../../common/utils";
   import eventApi from "../../../Api/event";
+import FileInput from "../../../components/FileInput/FileInput";
   
   const EventDetailsModal = ({ isOpen, onClose, event: initialEvent }) => {
     const [event, setEvent] = useState(initialEvent);
@@ -137,14 +138,42 @@ import {
     };
   
     return (
-      <Modal isOpen={isOpen} onClose={onClose} size="6xl">
+      <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "6xl" }} scrollBehavior="inside">
         <ModalOverlay />
-        <ModalContent maxW="90vw">
-          <ModalHeader>Editar Evento</ModalHeader>
+        <ModalContent maxW={{ base: "100vw", md: "90vw" }} borderRadius={{ base: 0, md: "md" }}>
+          <ModalHeader fontSize={{ base: "lg", md: "xl" }}>Editar Evento</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Flex justifyContent="space-between" gap={8}>
-              <Box flex="1">
+          <ModalBody pb={6}>
+            <Flex direction={{ base: "column", md: "row" }} gap={{ base: 6, md: 8 }}>
+
+              {/* Portada — arriba en mobile, derecha en desktop */}
+              <Box w={{ base: "100%", md: "280px" }} flexShrink={0} order={{ base: 0, md: 1 }}>
+                <Text fontSize="lg" fontWeight="semibold" mb={3}>Portada del evento</Text>
+                <Image
+                  src={loadImage()}
+                  alt="Event cover"
+                  mb={4}
+                  borderRadius="md"
+                  w="100%"
+                  maxH={{ base: "220px", md: "none" }}
+                  objectFit="cover"
+                />
+                <FormControl>
+                  <FileInput
+                    name="pictures"
+                    accept="image/*"
+                    value={newPicture?.name}
+                    onChange={handleInputChange}
+                    size="sm"
+                  />
+                  <Text fontSize="xs" color="gray.500" mt={2}>
+                    La imagen debe medir 800 x 800 píxeles y no pesar más de 1MB.
+                  </Text>
+                </FormControl>
+              </Box>
+
+              {/* Formulario */}
+              <Box flex="1" order={{ base: 1, md: 0 }}>
                 <form onSubmit={handleSubmit}>
                   <FormControl id="title" isRequired mb={4}>
                     <FormLabel>Nombre del Evento</FormLabel>
@@ -183,7 +212,7 @@ import {
                       <CardBody>
                         {eventDates.map((date, index) => (
                           <Box key={index} mb={2}>
-                            <Text>
+                            <Text fontSize={{ base: "sm", md: "md" }}>
                               {new Date(date.timestampStart).toLocaleDateString()} - 
                               Inicio: {new Date(date.timestampStart).toLocaleTimeString()} - 
                               Fin: {new Date(date.timestampEnd).toLocaleTimeString()}
@@ -203,7 +232,6 @@ import {
                     >
                       <option value="Buenos Aires">Buenos Aires</option>
                       <option value="Ciudad Autónoma de Buenos Aires">Ciudad Autónoma de Buenos Aires</option>
-                      {/* Agregar el resto de las provincias */}
                     </Select>
                   </FormControl>
   
@@ -249,32 +277,17 @@ import {
                     />
                   </FormControl>
   
-                  <Button type="submit" colorScheme="blue" mr={3}>
-                    Guardar cambios
-                  </Button>
-                  <Button onClick={onClose}>Cancelar</Button>
+                  <Flex gap={3} mt={2} direction={{ base: "column", sm: "row" }}>
+                    <Button type="submit" colorScheme="blue" w={{ base: "100%", sm: "auto" }}>
+                      Guardar cambios
+                    </Button>
+                    <Button onClick={onClose} w={{ base: "100%", sm: "auto" }}>
+                      Cancelar
+                    </Button>
+                  </Flex>
                 </form>
               </Box>
-  
-              <Box w="300px">
-                <Text fontSize="xl" mb={4}>Portada del evento</Text>
-                <Image
-                  src={loadImage()}
-                  alt="Event cover"
-                  mb={4}
-                />
-                <FormControl>
-                  <Input
-                    type="file"
-                    name="pictures"
-                    accept="image/*"
-                    onChange={handleInputChange}
-                  />
-                  <Text fontSize="sm" color="gray.500" mt={2}>
-                    La imagen debe medir 800 x 800 píxeles y no pesar más de 1MB.
-                  </Text>
-                </FormControl>
-              </Box>
+
             </Flex>
           </ModalBody>
         </ModalContent>

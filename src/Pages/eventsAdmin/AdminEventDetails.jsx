@@ -36,6 +36,7 @@ import eventApi from "../../Api/event";
 import userService from "../../Api/user";
 import { getObjDate, bufferToBase64, getBase64FromFile, validateSelectedImg } from "../../common/utils";
 import AddDates from "../../components/AddDates";
+import FileInput from "../../components/FileInput/FileInput";
 import AsyncSelect from "react-select/async";
 import axios from "axios";
 
@@ -861,10 +862,10 @@ const AdminEventDetails = () => {
                               objectFit="contain"
                             />
                             <FormControl>
-                              <Input
-                                type="file"
+                              <FileInput
                                 name="pictures"
                                 accept="image/*"
+                                value={newPicture?.name}
                                 onChange={handleInputChange}
                                 fontFamily="secondary"
                               />

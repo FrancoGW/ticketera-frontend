@@ -40,6 +40,7 @@ import AddDates from "../../../components/AddDates";
 import axios from "axios";
 import eventApi from "../../../Api/event";
 import { bufferToBase64, getBase64FromFile, validateSelectedImg } from "../../../common/utils";
+import FileInput from "../../../components/FileInput/FileInput";
 
 const EventsList = ({ event, setEventDetails }) => {
   const navigate = useNavigate();
@@ -472,12 +473,12 @@ const EventsList = ({ event, setEventDetails }) => {
         </CardFooter>
       </Card>
 
-      <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} size="6xl">
+      <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} size={{ base: "full", md: "6xl" }} scrollBehavior="inside">
         <ModalOverlay />
-        <ModalContent maxW="90vw">
-          <ModalHeader>Editar Evento</ModalHeader>
+        <ModalContent maxW={{ base: "100vw", md: "90vw" }} borderRadius={{ base: 0, md: "md" }}>
+          <ModalHeader fontSize={{ base: "lg", md: "xl" }}>Editar Evento</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody pb={6}>
             {isDemoMode && (
               <Alert status="info" mb={4} borderRadius="md">
                 <AlertIcon />
@@ -487,8 +488,8 @@ const EventsList = ({ event, setEventDetails }) => {
                 </Box>
               </Alert>
             )}
-            <Flex justifyContent="space-between" gap={8}>
-              <Box flex="1">
+            <Flex direction={{ base: "column", md: "row" }} gap={{ base: 6, md: 8 }}>
+              <Box flex="1" minW={0}>
                 <form onSubmit={handleSubmit}>
                   <FormControl id="title" isRequired mb={4}>
                     <FormLabel>Nombre del Evento</FormLabel>
@@ -720,7 +721,7 @@ const EventsList = ({ event, setEventDetails }) => {
                             )}
                             <FormControl>
                               <FormLabel fontSize="xs">Foto</FormLabel>
-                              <Input size="sm" type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; setEditConsumicionFile(f || null); setEditConsumicionPreview(f ? URL.createObjectURL(f) : null); }} />
+                              <FileInput size="sm" accept="image/*" value={editConsumicionFile?.name} onChange={(e) => { const f = e.target.files?.[0]; setEditConsumicionFile(f || null); setEditConsumicionPreview(f ? URL.createObjectURL(f) : null); }} />
                             </FormControl>
                           </Box>
                           <Input size="sm" value={editConsumicionName} onChange={(e) => setEditConsumicionName(e.target.value)} placeholder="Nombre" flex="1" minW="100px" isDisabled={isDemoMode} />
@@ -755,7 +756,7 @@ const EventsList = ({ event, setEventDetails }) => {
                     <FormLabel fontSize="sm">Foto (opc.)</FormLabel>
                     <Flex align="center" gap={2}>
                       {newConsumicionPreview && <Image src={newConsumicionPreview} alt="" boxSize="12" objectFit="cover" borderRadius="md" />}
-                      <Input size="sm" type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; setNewConsumicionFile(f || null); setNewConsumicionPreview(f ? URL.createObjectURL(f) : null); }} />
+                      <FileInput size="sm" accept="image/*" value={newConsumicionFile?.name} onChange={(e) => { const f = e.target.files?.[0]; setNewConsumicionFile(f || null); setNewConsumicionPreview(f ? URL.createObjectURL(f) : null); }} />
                     </Flex>
                   </FormControl>
                   <FormControl flex="1" minW="100px">
@@ -780,19 +781,23 @@ const EventsList = ({ event, setEventDetails }) => {
                 )}
               </Box>
 
-              <Box w="300px">
-                <Text fontSize="xl" mb={4}>Portada del evento</Text>
+              <Box w={{ base: "100%", md: "300px" }} flexShrink={0}>
+                <Text fontSize="lg" fontWeight="semibold" mb={3}>Portada del evento</Text>
                 <Image
                   src={loadImage()}
                   alt="Event cover"
                   mb={4}
+                  borderRadius="md"
+                  w="100%"
+                  maxH={{ base: "220px", md: "none" }}
+                  objectFit="cover"
                 />
                 {!isDemoMode && (
                 <FormControl>
-                  <Input
-                    type="file"
+                  <FileInput
                     name="pictures"
                     accept="image/*"
+                    value={newPicture?.name}
                     onChange={handleInputChange}
                   />
                   <Text fontSize="sm" color="gray.500" mt={2}>

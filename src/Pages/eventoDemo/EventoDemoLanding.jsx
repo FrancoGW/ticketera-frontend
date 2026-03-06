@@ -39,6 +39,7 @@ import {
 } from "@chakra-ui/react";
 import { RiCalendar2Line, RiMapPinLine, RiTicket2Line } from "react-icons/ri";
 import { getObjDate } from "../../common/utils";
+import FileInput from "../../components/FileInput/FileInput";
 import { useSelector } from "react-redux";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -140,8 +141,12 @@ const EventoDemoLanding = () => {
 
   const subtotalTickets = tickets.reduce((sum, t) => sum + (ticketsToBuy[t._id] || 0) * Number(t.price || 0), 0);
   const subtotalConsumiciones = consumiciones.reduce((sum, c, idx) => sum + (consumicionesQty[c._id ?? `consumicion-${idx}`] || 0) * Number(c.price || 0), 0);
-  const serviceFee = subtotalTickets * (event.serviceFeePercentage ?? (event.sellingMethod === 'SIMPLE' || event.sellingMethod === 'CUSTOM' ? 0 : 0.1));
-  const total = subtotalTickets + serviceFee + subtotalConsumiciones;
+  const isFastMethod = event.sellingMethod !== 'SIMPLE' && event.sellingMethod !== 'CUSTOM';
+  const serviceFeePercentage = isFastMethod
+    ? (event.serviceFeePercentage || 0.1)
+    : (event.serviceFeePercentage ?? 0);
+  const serviceFee = (subtotalTickets + subtotalConsumiciones) * serviceFeePercentage;
+  const total = subtotalTickets + subtotalConsumiciones + serviceFee;
   const hasSelection = Object.keys(ticketsToBuy).some((id) => (ticketsToBuy[id] || 0) > 0) || Object.keys(consumicionesQty).some((id) => (consumicionesQty[id] || 0) > 0);
   const isTransferMethod = event.sellingMethod === "SIMPLE";
   const hasCbuInfo = isTransferMethod && event.cbuInfo && (event.cbuInfo.cbu || event.cbuInfo.alias);
@@ -518,7 +523,7 @@ const EventoDemoLanding = () => {
                         </Box>
                         <FormControl>
                           <FormLabel fontSize="sm" fontWeight="500" fontFamily="secondary">Comprobante de pago (captura de la transferencia)</FormLabel>
-                          <Input type="file" accept="image/*" onChange={handleProofFileChange} p={1} size="sm" />
+                          <FileInput accept="image/*" value={proofFile?.name} onChange={handleProofFileChange} size="sm" />
                           {proofPreview && (
                             <Box mt={2}>
                               <Image src={proofPreview} alt="Vista previa comprobante" maxH="120px" borderRadius="md" />

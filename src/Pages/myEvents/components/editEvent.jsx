@@ -42,6 +42,7 @@ import {
   validateSelectedImg,
 } from "../../common/utils";
 import AddDates from "../../components/AddDates";
+import FileInput from "../../components/FileInput/FileInput";
 import SendInvitationsModal from "./components/SendInvitationsModal";
 
 function EditEvent() {
@@ -319,7 +320,7 @@ function EditEvent() {
   return (
     <>
       <Header />
-      <Container maxW="7xl" minH="70vh" my="10">
+      <Container maxW="7xl" minH="70vh" my={{ base: 6, md: 10 }} px={{ base: 4, md: 8 }}>
         <SendInvitationsModal
           eventId={eventId}
           isOpen={showSendInvitation}
@@ -340,11 +341,17 @@ function EditEvent() {
                 </Box>
               </Alert>
             )}
-            <Flex justify="space-between">
-              <Heading fontFamily="secondary" color="tertiary" fontSize="2xl">
+            <Flex
+              justify="space-between"
+              align={{ base: "flex-start", sm: "center" }}
+              direction={{ base: "column", sm: "row" }}
+              gap={3}
+              mb={2}
+            >
+              <Heading fontFamily="secondary" color="tertiary" fontSize={{ base: "xl", md: "2xl" }}>
                 Detalles del evento
               </Heading>
-              <Flex gap="4">
+              <Flex gap="3" wrap="wrap">
                 {!isEditing && (
                   <>
                     {(user?.roles || (user?.rol ? [user.rol] : [])).includes("admin") && (
@@ -353,45 +360,37 @@ function EditEvent() {
                         variant="solid"
                         fontFamily="secondary"
                         fontWeight="400"
-                        px="2"
-                        fontSize="sm"
+                        size={{ base: "sm", md: "md" }}
                         onClick={openSendInvitation}
                       >
-                        <Text display={{ base: "none", md: "block" }} ml="2">
-                          Enviar invitaciones
-                        </Text>
+                        <Icon fontSize="md" as={AiOutlineEdit} />
+                        <Text ml="2">Enviar invitaciones</Text>
                       </Button>
                     )}
                     <Button
                       color="white"
                       bg="primary"
-                      _hover={{
-                        borderTop: "1px solid #000",
-                        color: "white",
-                        bg: "buttonHover",
-                      }}
+                      _hover={{ color: "white", bg: "buttonHover" }}
                       _active=""
                       fontFamily="secondary"
                       fontWeight="400"
-                      px="2"
-                      fontSize="sm"
+                      size={{ base: "sm", md: "md" }}
                       onClick={() => setIsEditing(true)}
                       disabled={isDemoMode}
+                      leftIcon={<Icon as={AiOutlineEdit} />}
                     >
-                      <Icon fontSize="md" mb="0.5" as={AiOutlineEdit} />
-                      <Text display={{ base: "none", md: "block" }} ml="2">
-                        Editar evento
-                      </Text>
+                      Editar evento
                     </Button>
                     <Button
                       colorScheme="red"
                       fontFamily="secondary"
                       fontWeight="400"
-                      px="2"
+                      size={{ base: "sm", md: "md" }}
                       onClick={() => setIsAlertOpen(true)}
                       disabled={isLoading || isDemoMode}
+                      leftIcon={<Icon as={DeleteIcon} />}
                     >
-                      <Icon fontSize="md" as={DeleteIcon} />
+                      Eliminar
                     </Button>
                   </>
                 )}
@@ -401,8 +400,9 @@ function EditEvent() {
               justifyContent="space-between"
               mt="5"
               flexDir={{ base: "column", md: "row" }}
+              gap={6}
             >
-              <form onSubmit={handleSubmit} className="contentForm">
+              <form onSubmit={handleSubmit} style={{ flex: 1, minWidth: 0 }}>
                 <FormControl id="title" isRequired>
                   <FormLabel>Nombre del Evento</FormLabel>
                   <Input
@@ -660,12 +660,13 @@ function EditEvent() {
                 )}
               </form>
               <Flex
-                w={{ base: "100%", md: "25%" }}
+                w={{ base: "100%", md: "280px" }}
                 flexDir="column"
                 bg="#7253c9"
                 alignSelf="flex-start"
-                my={{ base: 8, md: 0 }}
+                flexShrink={0}
                 borderRadius="10px"
+                overflow="hidden"
               >
                 <Text
                   fontSize="lg"
@@ -677,18 +678,18 @@ function EditEvent() {
                   Portada del evento
                 </Text>
                 <Image
-                  src={
-                    event?.pictures ? loadImage() : "/assets/img/loading.svg"
-                  }
+                  src={event?.pictures ? loadImage() : "/assets/img/loading.svg"}
+                  maxH={{ base: "220px", md: "none" }}
+                  objectFit="cover"
+                  w="100%"
                 />
                 {isEditing && !isDemoMode && (
                   <Flex flexDir="column" px="4" bg="white">
                     <FormControl id="pictures" isRequired>
-                      <Input
-                        type="file"
+                      <FileInput
                         name="pictures"
-                        id="picturesInput"
                         accept="image/*"
+                        value={newPicture?.name}
                         onChange={handleInputChange}
                         mt="2"
                         p="0"

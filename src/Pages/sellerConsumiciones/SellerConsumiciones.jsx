@@ -32,6 +32,7 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import eventApi from "../../Api/event";
+import FileInput from "../../components/FileInput/FileInput";
 
 const SellerConsumiciones = () => {
   const [events, setEvents] = useState([]);
@@ -284,7 +285,7 @@ const SellerConsumiciones = () => {
                     <FormLabel fontSize="sm">Foto (opc.)</FormLabel>
                     <Flex align="center" gap={2}>
                       {newPreview && <Image src={newPreview} alt="" boxSize="14" objectFit="cover" borderRadius="md" />}
-                      <Input size="sm" type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; setNewFile(f || null); setNewPreview(f ? URL.createObjectURL(f) : null); }} />
+                      <FileInput size="sm" accept="image/*" value={newFile?.name} onChange={(e) => { const f = e.target.files?.[0]; setNewFile(f || null); setNewPreview(f ? URL.createObjectURL(f) : null); }} />
                     </Flex>
                   </FormControl>
                   <FormControl flex="1" minW="140px">
@@ -327,7 +328,7 @@ const SellerConsumiciones = () => {
                           {(editPreview || (list.find((x) => x._id === editingId)?.imageUrl)) && (
                             <Image src={editPreview || list.find((x) => x._id === editingId)?.imageUrl} alt="" boxSize="20" objectFit="cover" borderRadius="md" />
                           )}
-                          <Input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; setEditFile(f || null); setEditPreview(f ? URL.createObjectURL(f) : (list.find((x) => x._id === editingId)?.imageUrl || null)); }} />
+                          <FileInput size="sm" accept="image/*" value={editFile?.name} onChange={(e) => { const f = e.target.files?.[0]; setEditFile(f || null); setEditPreview(f ? URL.createObjectURL(f) : (list.find((x) => x._id === editingId)?.imageUrl || null)); }} />
                         </Flex>
                       </FormControl>
                       <FormControl>

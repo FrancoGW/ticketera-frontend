@@ -40,6 +40,7 @@ import {
 import { FiGift } from "react-icons/fi";
 import AsyncSelect from "react-select/async";
 import AddDates from "../../components/AddDates";
+import FileInput from "../../components/FileInput/FileInput";
 import eventApi from "../../Api/event";
 import ticketApi from "../../Api/ticket";
 import CourtesyTicketModal from "../../Pages/myEvents/components/CourtesyTicketModal";
@@ -1201,10 +1202,10 @@ const AdminEventCard = ({ event, pictures, id, title, status, onStatusChange, on
                 </Text>
                 <Image src={loadImage()} alt="Event cover" mb={4} />
                 <FormControl>
-                  <Input
-                    type="file"
+                  <FileInput
                     name="pictures"
                     accept="image/*"
+                    value={newPicture?.name}
                     onChange={handleInputChange}
                   />
                   <Text fontSize="sm" color="gray.500" mt={2}>

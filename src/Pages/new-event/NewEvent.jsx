@@ -28,6 +28,7 @@ import {
 import { DeleteIcon, AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import img from "/assets/img/banner.png";
 import eventApi from "../../Api/event";
+import FileInput from "../../components/FileInput/FileInput";
 import userService from "../../Api/user";
 import "./Style.css";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -567,8 +568,7 @@ function NewEvent() {
                         <FormLabel fontFamily="secondary" fontWeight="500">
                           Selecciona una imagen
                         </FormLabel>
-                        <Input
-                          type="file"
+                        <FileInput
                           name="pictures"
                           id="picturesInput"
                           accept="image/*"
@@ -577,10 +577,6 @@ function NewEvent() {
                               e.target.value = "";
                             }
                           }}
-                          size="lg"
-                          borderRadius="lg"
-                          borderColor="gray.200"
-                          _focus={{ borderColor: "primary", boxShadow: "0 0 0 1px primary" }}
                         />
                       </FormControl>
                       <Alert status="info" borderRadius="lg">

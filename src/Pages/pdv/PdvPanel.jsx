@@ -339,8 +339,8 @@ const PdvPanel = () => {
       if (saleTab === 0) {
         if (!selectedTicket) { toast({ title: "Seleccioná un tipo de entrada", status: "error", duration: 2000 }); return; }
         const comboList = Object.entries(comboItems)
-          .filter(([, qty]) => (qty as number) > 0)
-          .map(([consumacionId, quantity]) => ({ consumacionId, quantity: quantity as number }));
+          .filter(([, qty]) => Number(qty) > 0)
+          .map(([consumacionId, quantity]) => ({ consumacionId, quantity: Number(quantity) }));
         const comboTotal = availableConsumiciones
           .filter((c) => comboItems[c._id] > 0)
           .reduce((s, c) => s + c.price * (comboItems[c._id] || 0), 0);

@@ -74,6 +74,18 @@ import pointOfSaleApi from "../../Api/pointOfSale";
 import { useAuth } from "../../auth/context/AuthContext";
 import ThermalTicket from "../../components/ThermalTicket/ThermalTicket";
 
+const getEventImage = (pictures) => {
+  if (!pictures) return null;
+  if (typeof pictures === "string") {
+    if (pictures.startsWith("http://") || pictures.startsWith("https://")) return pictures;
+    if (pictures.startsWith("data:")) return pictures;
+    return `data:image/png;base64,${pictures}`;
+  }
+  return null;
+};
+
+const DEMO_QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAABsElEQVR4nO3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgAAAABJRU5ErkJggg==";
+
 const PDV_PAYMENT_OPTIONS = [
   { value: "efectivo", label: "Efectivo" },
   { value: "transferencia", label: "Transferencia" },
@@ -84,9 +96,9 @@ const PAYMENT_LABELS = { efectivo: "Efectivo", transferencia: "Transferencia", m
 
 const EventCard = ({ event, onSell }) => {
   const totalAvailable = (event.tickets || []).reduce((s, t) => s + (t.available || 0), 0);
-  const hasConsumaciones = (event.consumaciones || []).length > 0;
-  const hasSome = totalAvailable > 0 || hasConsumaciones;
-  const coverImg = event.pictures?.[0] || null;
+  const hasConsumiciones = (event.consumiciones || []).length > 0;
+  const hasSome = totalAvailable > 0 || hasConsumiciones;
+  const coverImg = getEventImage(event.pictures);
 
   return (
     <Card
@@ -145,9 +157,9 @@ const EventCard = ({ event, onSell }) => {
                     {totalAvailable} entradas
                   </Badge>
                 )}
-                {hasConsumaciones && (
+                {hasConsumiciones && (
                   <Badge colorScheme="purple" borderRadius="md" fontSize="xs">
-                    {event.consumaciones.length} consumaciones
+                    {event.consumiciones.length} consumiciones
                   </Badge>
                 )}
                 {!hasSome && (
@@ -250,11 +262,11 @@ const PdvPanel = () => {
 
   const handleOpenSale = (event) => {
     const availableTickets = (event.tickets || []).filter((t) => t.available > 0);
-    const availableConsumaciones = event.consumaciones || [];
+    const availableConsumiciones = event.consumiciones || [];
     setSelectedEvent(event);
     setSelectedTicket(availableTickets[0] || null);
     setTicketQty(1);
-    setSelectedConsumacion(availableConsumaciones[0] || null);
+    setSelectedConsumacion(availableConsumiciones[0] || null);
     setConsumacionQty(1);
     setPdvPaymentType("efectivo");
     setCustomerData({ email: "", firstname: "", lastname: "" });
@@ -269,9 +281,52 @@ const PdvPanel = () => {
     onSaleClose();
   };
 
+  const isDemo = user?.isDemo === true;
+
   const handleConfirmSale = async () => {
     if (!customerData.email) {
       toast({ title: "Ingresá el email del cliente", status: "error", duration: 2000 });
+      return;
+    }
+
+    // Modo demo: simular venta sin llamar a la API
+    if (isDemo) {
+      const name = [customerData.firstname, customerData.lastname].filter(Boolean).join(" ") || customerData.email;
+      if (saleTab === 0) {
+        if (!selectedTicket) { toast({ title: "Seleccioná un tipo de entrada", status: "error", duration: 2000 }); return; }
+        setLastSale({
+          paymentId: `demo-${Date.now()}`,
+          type: "ticket",
+          isDemo: true,
+          eventName: selectedEvent.title,
+          itemName: selectedTicket.title,
+          quantity: ticketQty,
+          total: selectedTicket.price * ticketQty,
+          customerName: name,
+          customerEmail: customerData.email,
+          paymentType: pdvPaymentType,
+          qrImages: Array.from({ length: ticketQty }, () => DEMO_QR),
+          pdvName: pdv?.name,
+        });
+      } else {
+        if (!selectedConsumacion) { toast({ title: "Seleccioná una consumación", status: "error", duration: 2000 }); return; }
+        setLastSale({
+          paymentId: `demo-${Date.now()}`,
+          type: "consumacion",
+          isDemo: true,
+          eventName: selectedEvent.title,
+          itemName: selectedConsumacion.name,
+          quantity: consumacionQty,
+          total: selectedConsumacion.price * consumacionQty,
+          customerName: name,
+          customerEmail: customerData.email,
+          paymentType: pdvPaymentType,
+          qrImages: [],
+          pdvName: pdv?.name,
+        });
+      }
+      onSaleClose();
+      onSuccessOpen();
       return;
     }
 
@@ -279,11 +334,7 @@ const PdvPanel = () => {
       setIsProcessing(true);
 
       if (saleTab === 0) {
-        // Venta de ticket
-        if (!selectedTicket) {
-          toast({ title: "Seleccioná un tipo de entrada", status: "error", duration: 2000 });
-          return;
-        }
+        if (!selectedTicket) { toast({ title: "Seleccioná un tipo de entrada", status: "error", duration: 2000 }); return; }
         const { data } = await ticketApi.sellTicket({
           eventId: selectedEvent._id,
           ticketId: selectedTicket._id,
@@ -308,11 +359,7 @@ const PdvPanel = () => {
           pdvName: pdv?.name,
         });
       } else {
-        // Venta de consumación
-        if (!selectedConsumacion) {
-          toast({ title: "Seleccioná una consumación", status: "error", duration: 2000 });
-          return;
-        }
+        if (!selectedConsumacion) { toast({ title: "Seleccioná una consumación", status: "error", duration: 2000 }); return; }
         const { data } = await ticketApi.sellConsumicion({
           eventId: selectedEvent._id,
           consumacionId: selectedConsumacion._id,
@@ -384,7 +431,7 @@ const PdvPanel = () => {
   }
 
   const availableTickets = selectedEvent ? (selectedEvent.tickets || []).filter((t) => t.available > 0) : [];
-  const availableConsumaciones = selectedEvent ? (selectedEvent.consumaciones || []) : [];
+  const availableConsumiciones = selectedEvent ? (selectedEvent.consumiciones || []) : [];
 
   return (
     <Flex minH="100vh" bg="gray.50" direction="column">
@@ -540,8 +587,8 @@ const PdvPanel = () => {
                   <Tab _selected={{ bg: "black", color: "white" }} isDisabled={availableTickets.length === 0}>
                     Entradas ({availableTickets.length})
                   </Tab>
-                  <Tab _selected={{ bg: "black", color: "white" }} isDisabled={availableConsumaciones.length === 0}>
-                    Consumaciones ({availableConsumaciones.length})
+                  <Tab _selected={{ bg: "black", color: "white" }} isDisabled={availableConsumiciones.length === 0}>
+                    Consumaciones ({availableConsumiciones.length})
                   </Tab>
                 </TabList>
 
@@ -592,12 +639,12 @@ const PdvPanel = () => {
                   {/* Panel Consumaciones */}
                   <TabPanel p={0}>
                     <Stack spacing={3}>
-                      {availableConsumaciones.length === 0 ? (
+                      {availableConsumiciones.length === 0 ? (
                         <Text color="gray.500" fontSize="sm">Este evento no tiene consumaciones disponibles.</Text>
                       ) : (
                         <>
                           <SimpleGrid columns={2} spacing={2} mb={2}>
-                            {availableConsumaciones.map((c) => (
+                            {availableConsumiciones.map((c) => (
                               <Box
                                 key={c._id}
                                 borderWidth="2px"
@@ -712,9 +759,13 @@ const PdvPanel = () => {
                   <Icon as={MdCheckCircle} boxSize={10} color="green.500" />
                 </Flex>
                 <Box textAlign="center">
-                  <Heading size="md" mb={1}>¡Venta registrada!</Heading>
+                  <Heading size="md" mb={1}>
+                    {lastSale.isDemo ? "Venta simulada (demo)" : "¡Venta registrada!"}
+                  </Heading>
                   <Text color="gray.500" fontSize="sm">
-                    {lastSale.type === "ticket"
+                    {lastSale.isDemo
+                      ? "En modo demo la venta es ilustrativa, no descuenta stock ni envía emails reales."
+                      : lastSale.type === "ticket"
                       ? "El ticket se envió por email al cliente"
                       : "La consumación se registró correctamente"}
                   </Text>

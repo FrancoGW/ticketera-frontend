@@ -73,16 +73,7 @@ import ticketApi from "../../Api/ticket";
 import pointOfSaleApi from "../../Api/pointOfSale";
 import { useAuth } from "../../auth/context/AuthContext";
 import ThermalTicket from "../../components/ThermalTicket/ThermalTicket";
-
-const getEventImage = (pictures) => {
-  if (!pictures) return null;
-  if (typeof pictures === "string") {
-    if (pictures.startsWith("http://") || pictures.startsWith("https://")) return pictures;
-    if (pictures.startsWith("data:")) return pictures;
-    return `data:image/png;base64,${pictures}`;
-  }
-  return null;
-};
+import { getEventImage } from "../../utils/eventUtils";
 
 const DEMO_QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAABsElEQVR4nO3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgAAAABJRU5ErkJggg==";
 
@@ -208,9 +199,12 @@ const PdvPanel = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [ticketQty, setTicketQty] = useState(1);
 
-  // Consumacion sale state
+  // Consumacion sale state (tab separado)
   const [selectedConsumacion, setSelectedConsumacion] = useState(null);
   const [consumacionQty, setConsumacionQty] = useState(1);
+
+  // Combo: consumaciones agregadas junto con la entrada
+  const [comboItems, setComboItems] = useState({}); // {consumacionId: qty}
 
   const [pdvPaymentType, setPdvPaymentType] = useState("efectivo");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -268,6 +262,7 @@ const PdvPanel = () => {
     setTicketQty(1);
     setSelectedConsumacion(availableConsumiciones[0] || null);
     setConsumacionQty(1);
+    setComboItems({});
     setPdvPaymentType("efectivo");
     setCustomerData({ email: "", firstname: "", lastname: "" });
     setSaleTab(availableTickets.length > 0 ? 0 : 1);
@@ -292,8 +287,15 @@ const PdvPanel = () => {
     // Modo demo: simular venta sin llamar a la API
     if (isDemo) {
       const name = [customerData.firstname, customerData.lastname].filter(Boolean).join(" ") || customerData.email;
+      const comboList = Object.entries(comboItems)
+        .filter(([, qty]) => qty > 0)
+        .map(([consumacionId, quantity]) => ({ consumacionId, quantity }));
+
       if (saleTab === 0) {
         if (!selectedTicket) { toast({ title: "Seleccioná un tipo de entrada", status: "error", duration: 2000 }); return; }
+        const comboTotal = availableConsumiciones
+          .filter((c) => comboItems[c._id] > 0)
+          .reduce((s, c) => s + c.price * (comboItems[c._id] || 0), 0);
         setLastSale({
           paymentId: `demo-${Date.now()}`,
           type: "ticket",
@@ -301,12 +303,13 @@ const PdvPanel = () => {
           eventName: selectedEvent.title,
           itemName: selectedTicket.title,
           quantity: ticketQty,
-          total: selectedTicket.price * ticketQty,
+          total: selectedTicket.price * ticketQty + comboTotal,
           customerName: name,
           customerEmail: customerData.email,
           paymentType: pdvPaymentType,
           qrImages: Array.from({ length: ticketQty }, () => DEMO_QR),
           pdvName: pdv?.name,
+          comboItems: comboList,
         });
       } else {
         if (!selectedConsumacion) { toast({ title: "Seleccioná una consumación", status: "error", duration: 2000 }); return; }
@@ -335,6 +338,12 @@ const PdvPanel = () => {
 
       if (saleTab === 0) {
         if (!selectedTicket) { toast({ title: "Seleccioná un tipo de entrada", status: "error", duration: 2000 }); return; }
+        const comboList = Object.entries(comboItems)
+          .filter(([, qty]) => (qty as number) > 0)
+          .map(([consumacionId, quantity]) => ({ consumacionId, quantity: quantity as number }));
+        const comboTotal = availableConsumiciones
+          .filter((c) => comboItems[c._id] > 0)
+          .reduce((s, c) => s + c.price * (comboItems[c._id] || 0), 0);
         const { data } = await ticketApi.sellTicket({
           eventId: selectedEvent._id,
           ticketId: selectedTicket._id,
@@ -344,6 +353,7 @@ const PdvPanel = () => {
           customerLastname: customerData.lastname,
           pointOfSaleId: pdvId,
           pdvPaymentType,
+          consumacionesOrden: comboList.length > 0 ? comboList : undefined,
         });
         setLastSale({
           paymentId: data.paymentId,
@@ -351,12 +361,13 @@ const PdvPanel = () => {
           eventName: selectedEvent.title,
           itemName: selectedTicket.title,
           quantity: ticketQty,
-          total: selectedTicket.price * ticketQty,
+          total: selectedTicket.price * ticketQty + comboTotal,
           customerName: [customerData.firstname, customerData.lastname].filter(Boolean).join(" ") || customerData.email,
           customerEmail: customerData.email,
           paymentType: pdvPaymentType,
           qrImages: data.qrImages || [],
           pdvName: pdv?.name,
+          comboItems: comboList,
         });
       } else {
         if (!selectedConsumacion) { toast({ title: "Seleccioná una consumación", status: "error", duration: 2000 }); return; }
@@ -626,12 +637,61 @@ const PdvPanel = () => {
                         </FormControl>
                       )}
                       {selectedTicket && (
-                        <Box bg="gray.50" borderRadius="xl" p={3}>
-                          <Flex justify="space-between">
-                            <Text fontSize="sm" color="gray.600">Subtotal</Text>
-                            <Text fontSize="sm" fontWeight="700">${selectedTicket.price * ticketQty}</Text>
-                          </Flex>
-                        </Box>
+                        <>
+                          {/* Agregar consumaciones al combo */}
+                          {availableConsumiciones.length > 0 && (
+                            <Accordion allowToggle>
+                              <AccordionItem border="none">
+                                <AccordionButton px={0} _hover={{ bg: "transparent" }}>
+                                  <Text fontSize="sm" color="gray.500" flex="1" textAlign="left">
+                                    + Agregar consumaciones al combo
+                                  </Text>
+                                  <AccordionIcon />
+                                </AccordionButton>
+                                <AccordionPanel px={0} pt={2}>
+                                  <Stack spacing={2}>
+                                    {availableConsumiciones.map((c) => (
+                                      <Flex key={c._id} align="center" justify="space-between" bg="gray.50" borderRadius="lg" px={3} py={2}>
+                                        <HStack spacing={2} flex="1">
+                                          {c.imageUrl && <Image src={c.imageUrl} alt={c.name} w="32px" h="32px" objectFit="cover" borderRadius="md" />}
+                                          <Box>
+                                            <Text fontSize="sm" fontWeight="500">{c.name}</Text>
+                                            <Text fontSize="xs" color="gray.500">${c.price}</Text>
+                                          </Box>
+                                        </HStack>
+                                        <HStack spacing={1}>
+                                          <Button size="xs" variant="ghost" onClick={() => setComboItems((p) => ({ ...p, [c._id]: Math.max(0, (p[c._id] || 0) - 1) }))}>−</Button>
+                                          <Text fontSize="sm" w="20px" textAlign="center">{comboItems[c._id] || 0}</Text>
+                                          <Button size="xs" variant="ghost" onClick={() => setComboItems((p) => ({ ...p, [c._id]: (p[c._id] || 0) + 1 }))}>+</Button>
+                                        </HStack>
+                                      </Flex>
+                                    ))}
+                                  </Stack>
+                                </AccordionPanel>
+                              </AccordionItem>
+                            </Accordion>
+                          )}
+
+                          <Box bg="gray.50" borderRadius="xl" p={3}>
+                            <Flex justify="space-between" mb={1}>
+                              <Text fontSize="sm" color="gray.600">Entrada x{ticketQty}</Text>
+                              <Text fontSize="sm">${selectedTicket.price * ticketQty}</Text>
+                            </Flex>
+                            {availableConsumiciones.filter((c) => comboItems[c._id] > 0).map((c) => (
+                              <Flex key={c._id} justify="space-between" mb={1}>
+                                <Text fontSize="sm" color="gray.600">{c.name} x{comboItems[c._id]}</Text>
+                                <Text fontSize="sm">${c.price * comboItems[c._id]}</Text>
+                              </Flex>
+                            ))}
+                            <Divider my={1} />
+                            <Flex justify="space-between">
+                              <Text fontSize="sm" fontWeight="700">Total</Text>
+                              <Text fontSize="sm" fontWeight="700">
+                                ${selectedTicket.price * ticketQty + availableConsumiciones.filter((c) => comboItems[c._id] > 0).reduce((s, c) => s + c.price * comboItems[c._id], 0)}
+                              </Text>
+                            </Flex>
+                          </Box>
+                        </>
                       )}
                     </Stack>
                   </TabPanel>

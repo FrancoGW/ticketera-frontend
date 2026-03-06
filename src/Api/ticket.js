@@ -221,6 +221,7 @@ const sellTicket = (data) => {
     pointOfSaleId: data.pointOfSaleId || undefined,
     pdvPaymentType: data.pdvPaymentType || "efectivo",
     specialType: data.specialType,
+    consumacionesOrden: data.consumacionesOrden || undefined,
   });
 };
 

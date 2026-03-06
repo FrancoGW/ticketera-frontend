@@ -36,6 +36,8 @@ import PdvSpecialTickets from "./Pages/pdv/PdvSpecialTickets";
 import PdvLogin from "./Pages/pdv/PdvLogin";
 import PdvHome from "./Pages/pdv/PdvHome";
 import PdvPanel from "./Pages/pdv/PdvPanel";
+import BarScannerHome from "./Pages/barScanner/BarScannerHome";
+import BarScanner from "./Pages/barScanner/BarScanner";
 import MyEvents from "./Pages/myEvents/myEvents";
 import SellerTicketsPage from "./Pages/sellerTickets/SellerTicketsPage";
 import SellerScanner from "./Pages/sellerScanner/SellerScanner";
@@ -670,6 +672,24 @@ function AnimatedRoutes() {
               element={
                 <ProtectedRoute roles={["pdv", "seller", "admin"]}>
                   <PdvPanel />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Bar Scanner Routes */}
+            <Route
+              path="/bar-scanner"
+              element={
+                <ProtectedRoute roles={["seller", "admin", "barscanner"]}>
+                  <BarScannerHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bar-scanner/:eventId"
+              element={
+                <ProtectedRoute roles={["seller", "admin", "barscanner"]}>
+                  <BarScanner />
                 </ProtectedRoute>
               }
             />

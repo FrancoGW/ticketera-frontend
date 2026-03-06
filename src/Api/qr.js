@@ -30,6 +30,14 @@ const getScannerUrl = () => {
   return api.get("/qr/validator-url");
 };
 
+const getQrInfoBar = (qrId) => {
+  return api.get(`/qr/bar/${qrId}`);
+};
+
+const entregarConsumacion = (paymentId, idx) => {
+  return api.put(`/qr/bar/entregar/${paymentId}/${idx}`);
+};
+
 export const qrApi = {
   createQr,
   validateQr,
@@ -37,4 +45,6 @@ export const qrApi = {
   validateValidator,
   generateValidatorUrl,
   getScannerUrl,
+  getQrInfoBar,
+  entregarConsumacion,
 };

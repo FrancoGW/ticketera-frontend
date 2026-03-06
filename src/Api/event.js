@@ -147,6 +147,18 @@ const updateCommissionPercentage = (eventId, commissionPercentage) => {
   return api.patch(`/events/${eventId}/commission`, { commissionPercentage });
 };
 
+const getBarScannerEvents = () => {
+  return api.get("/events/bar-scanner/my-events");
+};
+
+const addBarScannerAccess = (eventId, email) => {
+  return api.post(`/events/${eventId}/bar-scanner-access`, { email });
+};
+
+const removeBarScannerAccess = (eventId, email) => {
+  return api.delete(`/events/${eventId}/bar-scanner-access/${encodeURIComponent(email)}`);
+};
+
 const getEventStats = async () => {
   try {
     // Métricas consolidadas de backend (plataforma vs organizadores, GP-Coins, membresías)
@@ -385,7 +397,10 @@ const eventApi = {
   updateConsumicion,
   deleteConsumicion,
   updateCommissionPercentage,
-  getEventStats
+  getEventStats,
+  getBarScannerEvents,
+  addBarScannerAccess,
+  removeBarScannerAccess,
 };
 
 export default eventApi;

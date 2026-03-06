@@ -35,8 +35,16 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  HStack,
+  Icon,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { MdLocalBar } from "react-icons/md";
 import { Link as RouterLink } from "react-router-dom";
 import eventApi from "../../Api/event";
 import ticketApi from "../../Api/ticket";
@@ -82,6 +90,12 @@ const SellerPuntoVenta = () => {
   const [selectedPdvForAccess, setSelectedPdvForAccess] = useState(null);
   const [savingPdv, setSavingPdv] = useState(false);
   const [savingAccess, setSavingAccess] = useState(false);
+
+  // Bar scanner access
+  const { isOpen: isBarOpen, onOpen: onBarOpen, onClose: onBarClose } = useDisclosure();
+  const [selectedEventForBar, setSelectedEventForBar] = useState(null);
+  const [barEmail, setBarEmail] = useState("");
+  const [savingBar, setSavingBar] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -292,6 +306,45 @@ const SellerPuntoVenta = () => {
     }
   };
 
+  const openBarModal = (event) => {
+    setSelectedEventForBar(event);
+    setBarEmail("");
+    onBarOpen();
+  };
+
+  const handleAddBarAccess = async () => {
+    if (!barEmail.trim()) return;
+    setSavingBar(true);
+    try {
+      const { data } = await eventApi.addBarScannerAccess(selectedEventForBar._id, barEmail.trim());
+      setSelectedEventForBar((prev) => ({ ...prev, barScannerEmails: data.event?.barScannerEmails || [] }));
+      setEvents((prev) => prev.map((e) => e._id === selectedEventForBar._id
+        ? { ...e, barScannerEmails: data.event?.barScannerEmails || [] } : e));
+      setBarEmail("");
+      toast({ title: "Acceso agregado", status: "success", duration: 2000 });
+    } catch {
+      toast({ title: "Error al agregar acceso", status: "error", duration: 3000 });
+    } finally {
+      setSavingBar(false);
+    }
+  };
+
+  const handleRemoveBarAccess = async (email) => {
+    setSavingBar(true);
+    try {
+      const { data } = await eventApi.removeBarScannerAccess(selectedEventForBar._id, email);
+      const updated = data.event?.barScannerEmails || (selectedEventForBar.barScannerEmails || []).filter((e) => e !== email);
+      setSelectedEventForBar((prev) => ({ ...prev, barScannerEmails: updated }));
+      setEvents((prev) => prev.map((e) => e._id === selectedEventForBar._id
+        ? { ...e, barScannerEmails: updated } : e));
+      toast({ title: "Acceso quitado", status: "success", duration: 2000 });
+    } catch {
+      toast({ title: "Error al quitar acceso", status: "error", duration: 3000 });
+    } finally {
+      setSavingBar(false);
+    }
+  };
+
   const loadEvents = async () => {
     try {
       setLoading(true);
@@ -477,14 +530,28 @@ const SellerPuntoVenta = () => {
                       {event.tickets?.reduce((sum, t) => sum + t.available, 0) ?? 0}
                     </Text>
                   </Box>
-                  <Button
-                    colorScheme="primary"
-                    onClick={() => handleOpenTickets(event)}
-                    isDisabled={!event.tickets?.some((t) => t.available > 0)}
-                    w={{ base: "100%", sm: "auto" }}
-                  >
-                    Vender entradas
-                  </Button>
+                  <Flex gap={2} flexWrap="wrap" w={{ base: "100%", sm: "auto" }}>
+                    <Button
+                      colorScheme="primary"
+                      onClick={() => handleOpenTickets(event)}
+                      isDisabled={!event.tickets?.some((t) => t.available > 0)}
+                      w={{ base: "100%", sm: "auto" }}
+                    >
+                      Vender entradas
+                    </Button>
+                    {event.consumiciones?.length > 0 && (
+                      <Button
+                        variant="outline"
+                        colorScheme="orange"
+                        leftIcon={<Icon as={MdLocalBar} />}
+                        onClick={() => openBarModal(event)}
+                        w={{ base: "100%", sm: "auto" }}
+                        size="md"
+                      >
+                        Scanner barra
+                      </Button>
+                    )}
+                  </Flex>
                 </Flex>
               </CardBody>
             </Card>
@@ -740,6 +807,77 @@ const SellerPuntoVenta = () => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={onCloseAccess}>Cerrar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {/* Modal scanner de barra */}
+      <Modal isOpen={isBarOpen} onClose={onBarClose} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <HStack spacing={2}>
+              <Icon as={MdLocalBar} color="orange.500" />
+              <Text>Scanner de barra — {selectedEventForBar?.title}</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={5}>
+            <Stack spacing={4}>
+              <Text fontSize="sm" color="gray.600">
+                Agregá los emails de los operadores de barra que pueden escanear QRs y gestionar entregas de consumaciones en este evento.
+              </Text>
+
+              <FormControl>
+                <FormLabel>Agregar operador</FormLabel>
+                <Flex gap={2}>
+                  <Input
+                    type="email"
+                    value={barEmail}
+                    onChange={(e) => setBarEmail(e.target.value)}
+                    placeholder="operador@ejemplo.com"
+                    onKeyDown={(e) => e.key === "Enter" && handleAddBarAccess()}
+                  />
+                  <Button
+                    colorScheme="orange"
+                    onClick={handleAddBarAccess}
+                    isLoading={savingBar}
+                    flexShrink={0}
+                  >
+                    Agregar
+                  </Button>
+                </Flex>
+              </FormControl>
+
+              {selectedEventForBar?.barScannerEmails?.length > 0 ? (
+                <Box>
+                  <Text fontSize="sm" fontWeight="600" mb={2}>Con acceso:</Text>
+                  <Wrap>
+                    {selectedEventForBar.barScannerEmails.map((email) => (
+                      <WrapItem key={email}>
+                        <Tag borderRadius="full" colorScheme="orange" size="md">
+                          <TagLabel>{email}</TagLabel>
+                          <TagCloseButton onClick={() => handleRemoveBarAccess(email)} isDisabled={savingBar} />
+                        </Tag>
+                      </WrapItem>
+                    ))}
+                  </Wrap>
+                </Box>
+              ) : (
+                <Text fontSize="sm" color="gray.400" textAlign="center" py={2}>
+                  Todavía no hay operadores asignados
+                </Text>
+              )}
+
+              <Divider />
+              <Alert status="info" borderRadius="lg" fontSize="sm">
+                <AlertIcon />
+                El operador debe iniciar sesión y acceder a{" "}
+                <Text as="span" fontWeight="700" ml={1}>getpass.com.ar/bar-scanner</Text>
+              </Alert>
+            </Stack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onBarClose}>Cerrar</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
